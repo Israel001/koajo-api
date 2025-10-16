@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Koajo - Account Verification</title>
+    <style>
+      @media only screen and (max-width: 620px) {
+        .wrapper {
+          width: 100% !important;
+          padding: 24px !important;
+        }
+        .card {
+          padding: 32px 24px !important;
+        }
+        .footer-col {
+          display: block !important;
+          width: 100% !important;
+          text-align: left !important;
+        }
+        .social-icons {
+          justify-content: flex-start !important;
+          margin-top: 16px !important;
+        }
+      }
+    </style>
+  </head>
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      background-color: #f3f4f6;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      color: #1f2937;
+    "
+  >
+    <table
+      role="presentation"
+      width="100%"
+      cellspacing="0"
+      cellpadding="0"
+      border="0"
+      style="background-color: #f3f4f6; padding: 40px 0"
+    >
+      <tr>
+        <td align="center">
+          <table
+            role="presentation"
+            width="600"
+            cellspacing="0"
+            cellpadding="0"
+            border="0"
+            class="wrapper"
+            style="width: 600px; background-color: #f3f4f6; padding: 0 20px"
+          >
+            <tr>
+              <td>
+                <table
+                  role="presentation"
+                  width="100%"
+                  cellspacing="0"
+                  cellpadding="0"
+                  border="0"
+                  style="
+                    background-color: #ffffff;
+                    border-radius: 20px;
+                    overflow: hidden;
+                    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+                  "
+                  class="card"
+                >
+                  <tr>
+                    <td style="padding: 40px 48px 32px 48px">
+                      <table
+                        role="presentation"
+                        width="100%"
+                        cellspacing="0"
+                        cellpadding="0"
+                        border="0"
+                      >
+                        <tr>
+                          <td align="left" style="padding-bottom: 24px">
+                            <img
+                              src="https://res.cloudinary.com/dyrn5jw78/image/upload/v1760445183/koajo_logo_2_mfrtoj.png"
+                              alt="Koajo"
+                              style="display: block; height: 32px; width: auto"
+                            />
+                          </td>
+                        </tr>
+                        <tr>
+                          <td
+                            style="
+                              font-size: 18px;
+                              font-weight: 600;
+                              color: #111827;
+                              padding-bottom: 16px;
+                            "
+                          >
+                            Hey Rich friend,
+                          </td>
+                        </tr>
+                        <tr>
+                          <td
+                            style="
+                              font-size: 16px;
+                              line-height: 24px;
+                              color: #4b5563;
+                              padding-bottom: 16px;
+                            "
+                          >
+                            This email confirms that your Koajo account has been
+                            closed as of <srong>{{currentDate}}</srong>.
+                          </td>
+                        </tr>
+                        <tr>
+                          <td
+                            style="
+                              font-size: 16px;
+                              line-height: 24px;
+                              color: #4b5563;
+                              padding-bottom: 16px;
+                            "
+                          >
+                            If you requested this, your information has been
+                            securely removed according to our privacy policy.
+                          </td>
+                        </tr>
+                        <tr>
+                          <td
+                            style="
+                              font-size: 16px;
+                              line-height: 24px;
+                              color: #4b5563;
+                              padding-bottom: 16px;
+                            "
+                          >
+                            If you did not request this closure or believe it
+                            was done in error, please contact us immediately.
+                          </td>
+                        </tr>
+                        <tr>
+                          <td
+                            style="
+                              font-size: 16px;
+                              line-height: 24px;
+                              color: #4b5563;
+                              padding-bottom: 16px;
+                            "
+                          >
+                            For your records:
+                            <ul>
+                              <li>
+                                Any active pod memberships have been deactivated
+                              </li>
+                              <li>
+                                Pending payouts (if any) will be reviewed
+                                manually
+                              </li>
+                              <li>
+                                Linked bank data has been deleted or deactivated
+                                per security protocol
+                              </li>
+                            </ul>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td
+                            style="
+                              font-size: 16px;
+                              line-height: 24px;
+                              color: #4b5563;
+                              padding-bottom: 16px;
+                            "
+                          >
+                            <strong
+                              >We built Koajo to help people fund their futures
+                              with peace, not pressure.</strong
+                            >
+                          </td>
+                        </tr>
+                        <tr>
+                          <td
+                            style="
+                              font-size: 16px;
+                              line-height: 24px;
+                              color: #4b5563;
+                              padding-bottom: 16px;
+                            "
+                          >
+                            Whether our paths cross again or not, we hope you
+                            continue to choose yourself, your goals, and the
+                            life you deserve, on your own terms. We appreciate
+                            the time you spent with Koajo and hope your savings
+                            journey continues wherever life takes you.
+                          </td>
+                        </tr>
+                        <tr>
+                          <td
+                            style="
+                              font-size: 16px;
+                              line-height: 24px;
+                              color: #4b5563;
+                              padding-bottom: 16px;
+                            "
+                          >
+                            <strong
+                              >Need help or want to return in the
+                              future?</strong
+                            ><br />
+                            You're always welcome back.
+                          </td>
+                        </tr>
+                        <tr>
+                          <td
+                            style="
+                              font-size: 15px;
+                              line-height: 24px;
+                              color: #4b5563;
+                              padding-bottom: 16px;
+                            "
+                          >
+                            Here for your journey,<br />
+                            Koajo Pod Operations
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td
+                      style="
+                        background-color: #f9fafb;
+                        padding: 32px 48px 40px 48px;
+                        border-top: 1px solid #e5e7eb;
+                      "
+                    >
+                      <table
+                        role="presentation"
+                        width="100%"
+                        cellspacing="0"
+                        cellpadding="0"
+                        border="0"
+                      >
+                        <tr>
+                          <td
+                            class="footer-col"
+                            style="width: 60%; vertical-align: top"
+                          >
+                            <table
+                              role="presentation"
+                              cellspacing="0"
+                              cellpadding="0"
+                              border="0"
+                            >
+                              <tr>
+                                <td style="padding-bottom: 16px">
+                                  <img
+                                    src="https://res.cloudinary.com/dyrn5jw78/image/upload/v1760445183/koajo_logo_2_mfrtoj.png"
+                                    alt="Koajo"
+                                    style="
+                                      display: block;
+                                      height: 24px;
+                                      width: auto;
+                                    "
+                                  />
+                                </td>
+                              </tr>
+                              <tr>
+                                <td
+                                  style="
+                                    font-size: 13px;
+                                    color: #6b7280;
+                                    padding-bottom: 8px;
+                                  "
+                                >
+                                  © koajo.com All rights reserved
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                          <td
+                            class="footer-col"
+                            style="
+                              width: 40%;
+                              vertical-align: top;
+                              text-align: right;
+                            "
+                          >
+                            <table
+                              role="presentation"
+                              cellspacing="0"
+                              cellpadding="0"
+                              border="0"
+                              style="width: 100%"
+                            >
+                              <tr>
+                                <td>
+                                  <table
+                                    role="presentation"
+                                    cellspacing="0"
+                                    cellpadding="0"
+                                    border="0"
+                                    class="social-icons"
+                                    style="
+                                      width: 100%;
+                                      display: flex;
+                                      justify-content: flex-end;
+                                      gap: 12px;
+                                    "
+                                  >
+                                    <tr>
+                                      <td style="padding: 0 4px">
+                                        <a
+                                          href="https://www.facebook.com/dailyhelp"
+                                          style="display: inline-block"
+                                        >
+                                          <img
+                                            src="https://res.cloudinary.com/dyrn5jw78/image/upload/v1760404111/Socials_ksetwo.png"
+                                            alt="Facebook"
+                                            style="
+                                              display: block;
+                                              height: 20px;
+                                              width: auto;
+                                            "
+                                          />
+                                        </a>
+                                      </td>
+                                      <td style="padding: 0 4px">
+                                        <a
+                                          href="https://www.instagram.com/joinkoajo?igsh=b3Q4NjFtaWJodDJl"
+                                          style="display: inline-block"
+                                        >
+                                          <img
+                                            src="https://res.cloudinary.com/dyrn5jw78/image/upload/v1760404111/Socials_1_sbdprq.png"
+                                            alt="Instagram"
+                                            style="
+                                              display: block;
+                                              height: 20px;
+                                              width: auto;
+                                            "
+                                          />
+                                        </a>
+                                      </td>
+                                      <td style="padding: 0 4px">
+                                        <a
+                                          href="https://www.x.com/dailyhelp"
+                                          style="display: inline-block"
+                                        >
+                                          <img
+                                            src="https://res.cloudinary.com/dyrn5jw78/image/upload/v1760404111/Socials_2_uqgbaw.png"
+                                            alt="X"
+                                            style="
+                                              display: block;
+                                              height: 20px;
+                                              width: auto;
+                                            "
+                                          />
+                                        </a>
+                                      </td>
+                                    </tr>
+                                  </table>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td
+                            colspan="2"
+                            style="
+                              padding-top: 16px;
+                              font-size: 13px;
+                              color: #6b7280;
+                              text-align: left;
+                            "
+                          >
+                            <a
+                              href="https://www.koajo.com"
+                              style="
+                                color: #0ea5e9;
+                                text-decoration: none;
+                                margin-right: 16px;
+                              "
+                              >www.koajo.com</a
+                            >
+                            <a
+                              href="https://www.koajo.com/privacy"
+                              style="
+                                color: #0ea5e9;
+                                text-decoration: none;
+                                margin-right: 16px;
+                              "
+                              >Privacy Policy</a
+                            >
+                            <a
+                              href="https://www.koajo.com/terms"
+                              style="color: #0ea5e9; text-decoration: none"
+                              >Terms of Use</a
+                            >
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

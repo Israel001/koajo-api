@@ -1,0 +1,35 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Node
+node_modules/
+coverage/
+dist/
+tmp/
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor
+.idea/
+.vscode/
+*.swp
+
+# Build artifacts
+*.tsbuildinfo
+*.log
+
+# Misc
+package-lock.json
+.pnpm-store/
+
+dist
+node_modules
