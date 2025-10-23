@@ -5,9 +5,42 @@ import { PodEntity } from '../../../pods/entities/pod.entity';
 import { ListAdminPodsQuery } from '../list-admin-pods.query';
 import {
   AdminPodDetail,
+  AdminPodMembershipSummary,
   AdminPodSummary,
   AdminPodsListResult,
 } from '../../contracts/admin-results';
+
+export const toAdminPodSummary = (pod: PodEntity): AdminPodSummary => ({
+  id: pod.id,
+  type: pod.type,
+  status: pod.status,
+  amount: pod.amount,
+  lifecycleWeeks: pod.lifecycleWeeks,
+  maxMembers: pod.maxMembers,
+  currentMembers: pod.memberships.length,
+  creatorId: pod.creator?.id ?? null,
+  createdAt: pod.createdAt.toISOString(),
+});
+
+export const toAdminPodDetail = (pod: PodEntity): AdminPodDetail => {
+  const memberships: AdminPodMembershipSummary[] = pod.memberships
+    .getItems()
+    .map((membership) => ({
+      id: membership.id,
+      accountId: membership.account?.id ?? null,
+      joinOrder: membership.joinOrder,
+      finalOrder: membership.finalOrder ?? null,
+      payoutDate: membership.payoutDate
+        ? membership.payoutDate.toISOString()
+        : null,
+      paidOut: membership.paidOut,
+    }));
+
+  return {
+    ...toAdminPodSummary(pod),
+    memberships,
+  };
+};
 
 @QueryHandler(ListAdminPodsQuery)
 export class ListAdminPodsHandler
@@ -15,7 +48,7 @@ export class ListAdminPodsHandler
 {
   constructor(
     @InjectRepository(PodEntity)
-    protected readonly podRepository: EntityRepository<PodEntity>,
+    private readonly podRepository: EntityRepository<PodEntity>,
   ) {}
 
   async execute(query: ListAdminPodsQuery): Promise<AdminPodsListResult> {
@@ -34,39 +67,7 @@ export class ListAdminPodsHandler
 
     return {
       total,
-      items: pods.map((pod) => this.toSummary(pod)),
-    };
-  }
-
-  protected toSummary(pod: PodEntity): AdminPodSummary {
-    return {
-      id: pod.id,
-      type: pod.type,
-      status: pod.status,
-      amount: pod.amount,
-      lifecycleWeeks: pod.lifecycleWeeks,
-      maxMembers: pod.maxMembers,
-      currentMembers: pod.memberships.length,
-      creatorId: pod.creator?.id ?? null,
-      createdAt: pod.createdAt.toISOString(),
-    };
-  }
-
-  protected toDetail(pod: PodEntity): AdminPodDetail {
-    const memberships = pod.memberships.getItems().map((membership) => ({
-      id: membership.id,
-      accountId: membership.account?.id ?? null,
-      joinOrder: membership.joinOrder,
-      finalOrder: membership.finalOrder ?? null,
-      payoutDate: membership.payoutDate
-        ? membership.payoutDate.toISOString()
-        : null,
-      paidOut: membership.paidOut,
-    }));
-
-    return {
-      ...this.toSummary(pod),
-      memberships,
+      items: pods.map((pod) => toAdminPodSummary(pod)),
     };
   }
 }

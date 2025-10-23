@@ -38,6 +38,13 @@ export interface AdminAccountsListResult {
 
 export interface AdminAccountDetail extends AdminAccountListItem {}
 
+export interface AdminDashboardMetrics {
+  totalActiveUsers: MetricWithChange<number>;
+  newSignupsToday: MetricWithChange<number>;
+  averageDailyUserGrowth: MetricWithChange<number>;
+  averageMonthlyUserGrowth: MetricWithChange<number>;
+}
+
 export interface AdminPodSummary {
   id: string;
   type: string;
@@ -131,12 +138,7 @@ export interface KycSummary {
 }
 
 export interface AdminDashboardResult {
-  metrics: {
-    totalActiveUsers: MetricWithChange<number>;
-    newSignupsToday: MetricWithChange<number>;
-    averageDailyUserGrowth: MetricWithChange<number>;
-    averageMonthlyUserGrowth: MetricWithChange<number>;
-  };
+  metrics: AdminDashboardMetrics;
   incomeAnalysis: IncomeAnalysis;
   payoutAnalysis: PayoutAnalysis;
   podContributions: PodContributionSummary[];

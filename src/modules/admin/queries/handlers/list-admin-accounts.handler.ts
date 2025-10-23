@@ -8,6 +8,21 @@ import {
   AdminAccountsListResult,
 } from '../../contracts/admin-results';
 
+export const toAdminAccountDetail = (
+  account: AccountEntity,
+): AdminAccountDetail => ({
+  id: account.id,
+  email: account.email,
+  phoneNumber: account.phoneNumber,
+  firstName: account.firstName ?? null,
+  lastName: account.lastName ?? null,
+  avatarUrl: account.avatarUrl ?? null,
+  createdAt: account.createdAt.toISOString(),
+  isActive: account.isActive,
+  emailNotificationsEnabled: account.emailNotificationsEnabled,
+  transactionNotificationsEnabled: account.transactionNotificationsEnabled,
+});
+
 @QueryHandler(ListAdminAccountsQuery)
 export class ListAdminAccountsHandler
   implements IQueryHandler<ListAdminAccountsQuery, AdminAccountsListResult>
@@ -42,22 +57,7 @@ export class ListAdminAccountsHandler
 
     return {
       total,
-      items: accounts.map((account) => this.toAccountDto(account)),
-    };
-  }
-
-  protected toAccountDto(account: AccountEntity): AdminAccountDetail {
-    return {
-      id: account.id,
-      email: account.email,
-      phoneNumber: account.phoneNumber,
-      firstName: account.firstName ?? null,
-      lastName: account.lastName ?? null,
-      avatarUrl: account.avatarUrl ?? null,
-      createdAt: account.createdAt.toISOString(),
-      isActive: account.isActive,
-      emailNotificationsEnabled: account.emailNotificationsEnabled,
-      transactionNotificationsEnabled: account.transactionNotificationsEnabled,
+      items: accounts.map((account) => toAdminAccountDetail(account)),
     };
   }
 }

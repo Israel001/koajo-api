@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { AdminRole } from '../admin-role.enum';
 import type {
+  AdminDashboardMetrics,
   AdminDashboardResult,
   AdminLoginResult,
   AdminUserDto,
@@ -197,9 +198,7 @@ export class TransactionSummaryDto implements TransactionSummary {
   podPlanCode!: string;
 }
 
-export class AdminDashboardMetricsDto
-  implements AdminDashboardResult['metrics']
-{
+export class AdminDashboardMetricsDto implements AdminDashboardMetrics {
   @ApiProperty({ description: 'Total active users and day-over-day delta.', type: MetricWithChangeNumberDto })
   totalActiveUsers!: MetricWithChangeNumberDto;
 

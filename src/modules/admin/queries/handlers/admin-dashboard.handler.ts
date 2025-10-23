@@ -3,7 +3,11 @@ import { InjectRepository } from '@mikro-orm/nestjs';
 import { EntityRepository } from '@mikro-orm/mysql';
 import { AdminDashboardQuery } from '../admin-dashboard.query';
 import { AccountEntity } from '../../../accounts/entities/account.entity';
-import { AdminDashboardResult } from '../../contracts/admin-results';
+import {
+  AdminDashboardMetrics,
+  AdminDashboardResult,
+  MetricWithChange,
+} from '../../contracts/admin-results';
 import { PaymentEntity } from '../../../finance/entities/payment.entity';
 import { PayoutEntity } from '../../../finance/entities/payout.entity';
 import { TransactionEntity } from '../../../finance/entities/transaction.entity';
@@ -83,7 +87,7 @@ export class AdminDashboardHandler
       this.computeRecentTransactions(),
     ]);
 
-    const metrics: AdminDashboardResult['metrics'] = {
+    const metrics: AdminDashboardMetrics = {
       totalActiveUsers: {
         value: totalActiveUsers,
         percentageChange: this.percentageChange(
@@ -114,7 +118,7 @@ export class AdminDashboardHandler
 
   private async computeDailyGrowth(
     startOfToday: Date,
-  ): Promise<AdminDashboardResult['metrics']['averageDailyUserGrowth']> {
+  ): Promise<MetricWithChange<number>> {
     const fourteenDaysAgo = this.addDays(startOfToday, -13);
     const accounts = await this.accountRepository.find(
       { createdAt: { $gte: fourteenDaysAgo } },
@@ -157,7 +161,7 @@ export class AdminDashboardHandler
   private async computeMonthlyGrowth(
     startOfMonth: Date,
     startOfNextMonth: Date,
-  ): Promise<AdminDashboardResult['metrics']['averageMonthlyUserGrowth']> {
+  ): Promise<MetricWithChange<number>> {
     const startOfPreviousMonth = this.addMonths(startOfMonth, -1);
     const [currentMonthSignups, previousMonthSignups] = await Promise.all([
       this.accountRepository.count({
@@ -238,8 +242,8 @@ export class AdminDashboardHandler
     };
   }
 
-  private async collectMonthlyTotals(
-    repository: EntityRepository<PaymentEntity | PayoutEntity>,
+  private async collectMonthlyTotals<T extends PaymentEntity | PayoutEntity>(
+    repository: EntityRepository<T>,
     monthStarts: Date[],
   ) {
     const sortedStarts = monthStarts
@@ -251,15 +255,19 @@ export class AdminDashboardHandler
         const end = this.addMonths(start, 1);
         return repository
           .createQueryBuilder('record')
-          .select('COALESCE(SUM(record.amount), 0)', 'total')
-          .where('record.createdAt >= :start', { start })
-          .andWhere('record.createdAt < :end', { end })
-          .execute<{ total: string }>()
-          .then((rows) => this.formatAmount(rows[0]?.total ?? '0'))
-          .then((total) => ({
-            month: this.toMonthKey(start),
-            total,
-          }));
+          .select(['coalesce(sum(record.amount), 0) as total'])
+          .where({
+            createdAt: { $gte: start, $lt: end },
+          })
+          .execute()
+          .then((rows) => {
+            const list = rows as Array<{ total?: string | number }>;
+            const total = this.formatAmount(list[0]?.total ?? '0');
+            return {
+              month: this.toMonthKey(start),
+              total,
+            };
+          });
       }),
     );
 
@@ -267,23 +275,25 @@ export class AdminDashboardHandler
   }
 
   private async sumPaymentsBetween(start: Date, end: Date) {
-    const rows = await this.paymentRepository
+    const rows = (await this.paymentRepository
       .createQueryBuilder('payment')
-      .select('COALESCE(SUM(payment.amount), 0)', 'total')
-      .where('payment.createdAt >= :start', { start })
-      .andWhere('payment.createdAt < :end', { end })
-      .execute<{ total: string }>();
+      .select(['coalesce(sum(payment.amount), 0) as total'])
+      .where({
+        createdAt: { $gte: start, $lt: end },
+      })
+      .execute()) as Array<{ total?: string | number }>;
 
     return this.formatAmount(rows[0]?.total ?? '0');
   }
 
   private async sumPayoutsBetween(start: Date, end: Date) {
-    const rows = await this.payoutRepository
+    const rows = (await this.payoutRepository
       .createQueryBuilder('payout')
-      .select('COALESCE(SUM(payout.amount), 0)', 'total')
-      .where('payout.createdAt >= :start', { start })
-      .andWhere('payout.createdAt < :end', { end })
-      .execute<{ total: string }>();
+      .select(['coalesce(sum(payout.amount), 0) as total'])
+      .where({
+        createdAt: { $gte: start, $lt: end },
+      })
+      .execute()) as Array<{ total?: string | number }>;
 
     return this.formatAmount(rows[0]?.total ?? '0');
   }
@@ -293,19 +303,23 @@ export class AdminDashboardHandler
       this.podPlanRepository.findAll({ orderBy: { code: 'ASC' } }),
       this.paymentRepository
         .createQueryBuilder('payment')
-        .select('pod.planCode', 'planCode')
-        .addSelect('COALESCE(SUM(payment.amount), 0)', 'total')
+        .select([
+          'pod.planCode as planCode',
+          'coalesce(sum(payment.amount), 0) as total',
+        ])
         .leftJoin('payment.pod', 'pod')
         .groupBy('pod.planCode')
-        .getResult(),
+        .execute(),
     ]);
 
     const totalsMap = new Map<string, string>();
-    groupedTotals.forEach((row) => {
-      if (row.planCode) {
-        totalsMap.set(row.planCode, this.formatAmount(row.total ?? '0'));
+    (groupedTotals as Array<{ planCode?: string | null; total?: string | number }>).forEach(
+      (row) => {
+        if (row.planCode) {
+          totalsMap.set(row.planCode, this.formatAmount(row.total ?? '0'));
+        }
       }
-    });
+    );
 
     return plans.map((plan) => ({
       planCode: plan.code,
@@ -314,15 +328,17 @@ export class AdminDashboardHandler
   }
 
   private async computeKycSummary() {
-    const statusCounts = await this.verificationAttemptRepository
+    const statusCounts = (await this.verificationAttemptRepository
       .createQueryBuilder('attempt')
-      .select('LOWER(attempt.status)', 'status')
-      .addSelect('COUNT(*)', 'count')
+      .select([
+        'lower(attempt.status) as status',
+        'count(*) as count',
+      ])
       .groupBy('status')
-      .getResult();
+      .execute()) as Array<{ status?: string; count?: string | number }>;
 
     const totals = statusCounts.reduce(
-      (acc, row) => acc + Number.parseInt(row.count ?? '0', 10),
+      (acc, row) => acc + Number.parseInt(String(row.count ?? '0'), 10),
       0,
     );
 
@@ -341,7 +357,7 @@ export class AdminDashboardHandler
 
     statusCounts.forEach((row) => {
       const status = String(row.status ?? '').toLowerCase();
-      const count = Number.parseInt(row.count ?? '0', 10);
+      const count = Number.parseInt(String(row.count ?? '0'), 10);
       if (successStatuses.has(status)) {
         successCount += count;
       } else if (rejectedStatuses.has(status)) {

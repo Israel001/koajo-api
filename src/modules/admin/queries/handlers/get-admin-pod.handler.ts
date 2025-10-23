@@ -5,19 +5,20 @@ import { NotFoundException } from '@nestjs/common';
 import { GetAdminPodQuery } from '../get-admin-pod.query';
 import { PodEntity } from '../../../pods/entities/pod.entity';
 import { AdminPodDetail } from '../../contracts/admin-results';
-import { ListAdminPodsHandler } from './list-admin-pods.handler';
+import { toAdminPodDetail } from './list-admin-pods.handler';
 
 @QueryHandler(GetAdminPodQuery)
 export class GetAdminPodHandler
-  extends ListAdminPodsHandler
   implements IQueryHandler<GetAdminPodQuery, AdminPodDetail>
 {
   constructor(
     @InjectRepository(PodEntity)
     podRepository: EntityRepository<PodEntity>,
   ) {
-    super(podRepository);
+    this.podRepository = podRepository;
   }
+
+  private readonly podRepository: EntityRepository<PodEntity>;
 
   async execute(query: GetAdminPodQuery): Promise<AdminPodDetail> {
     const pod = await this.podRepository.findOne(
@@ -32,6 +33,6 @@ export class GetAdminPodHandler
     }
 
     await pod.memberships.init();
-    return this.toDetail(pod);
+    return toAdminPodDetail(pod);
   }
 }
