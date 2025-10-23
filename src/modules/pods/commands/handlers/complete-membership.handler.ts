@@ -79,6 +79,7 @@ export class CompleteMembershipHandler
 
     await this.achievementService.handlePodCompletion({
       account: membership.account,
+      membership,
       completedPods,
     });
   }

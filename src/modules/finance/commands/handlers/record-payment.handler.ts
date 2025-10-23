@@ -12,6 +12,8 @@ import { TransactionEntity } from '../../entities/transaction.entity';
 import { PodMembershipEntity } from '../../../pods/entities/pod-membership.entity';
 import { TransactionType } from '../../transaction-type.enum';
 import { RecordPaymentResult } from '../../contracts/payment-results';
+import { AchievementService } from '../../../achievements/achievements.service';
+import { isSuccessfulPaymentStatus } from '../../../achievements/achievement.helpers';
 
 @Injectable()
 @CommandHandler(RecordPaymentCommand)
@@ -25,6 +27,7 @@ export class RecordPaymentHandler
     private readonly transactionRepository: EntityRepository<TransactionEntity>,
     @InjectRepository(PodMembershipEntity)
     private readonly membershipRepository: EntityRepository<PodMembershipEntity>,
+    private readonly achievementService: AchievementService,
   ) {}
 
   async execute(
@@ -113,6 +116,12 @@ export class RecordPaymentHandler
     em.persist(transaction);
     em.persist(membership);
     await em.flush();
+
+    if (isSuccessfulPaymentStatus(status)) {
+      await this.achievementService.handleSuccessfulPayment({
+        account,
+      });
+    }
 
     return {
       paymentId: payment.id,

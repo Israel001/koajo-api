@@ -10,6 +10,18 @@ import { AchievementsSummaryDto } from '../../dto/achievements-summary.dto';
 import { AchievementCode } from '../../achievement-code.enum';
 import { PodType } from '../../../pods/pod-type.enum';
 import { PodStatus } from '../../../pods/pod-status.enum';
+import { PaymentEntity } from '../../../finance/entities/payment.entity';
+import {
+  PaymentLike,
+  completedOnTime,
+  completedWithoutMissingContributions,
+  computeLongestMonthlyStreak,
+  PERFECT_STREAK_MIN_MONTHS,
+  SAVINGS_CHAMPION_THRESHOLD_UNITS,
+  SIX_FIGURES_THRESHOLD_UNITS,
+  sumSuccessfulContributions,
+  WEALTH_BUILDER_THRESHOLD_UNITS,
+} from '../../achievement.helpers';
 
 type AchievementStats = {
   totalJoinedPods: number;
@@ -19,6 +31,10 @@ type AchievementStats = {
   podsWithThreeAcceptedInvites: number;
   podsWithAllInvitesAccepted: number;
   maxCompletedPodsWithSameGroup: number;
+  sprinterCompletions: number;
+  onTimeCompletions: number;
+  totalContributionUnits: number;
+  longestMonthlyStreak: number;
 };
 
 @QueryHandler(GetAchievementsSummaryQuery)
@@ -34,6 +50,8 @@ export class GetAchievementsSummaryHandler
     private readonly podMembershipRepository: EntityRepository<PodMembershipEntity>,
     @InjectRepository(PodInviteEntity)
     private readonly podInviteRepository: EntityRepository<PodInviteEntity>,
+    @InjectRepository(PaymentEntity)
+    private readonly paymentRepository: EntityRepository<PaymentEntity>,
   ) {}
 
   async execute(query: GetAchievementsSummaryQuery): Promise<AchievementsSummaryDto> {
@@ -67,10 +85,52 @@ export class GetAchievementsSummaryHandler
       },
     );
 
+    const payments = await this.paymentRepository.find(
+      { account: query.accountId },
+      {
+        orderBy: { createdAt: 'ASC' },
+        populate: ['membership', 'membership.pod'] as const,
+      },
+    );
+
+    const paymentSnapshots: PaymentLike[] = payments.map((payment) => ({
+      amount: payment.amount,
+      status: payment.status,
+      createdAt: payment.createdAt,
+      membership: payment.membership,
+    }));
+
+    const paymentsByMembership = new Map<string, PaymentLike[]>();
+    paymentSnapshots.forEach((snapshot) => {
+      const membershipId = snapshot.membership?.id;
+      if (!membershipId) {
+        return;
+      }
+
+      const bucket = paymentsByMembership.get(membershipId) ?? [];
+      bucket.push(snapshot);
+      paymentsByMembership.set(membershipId, bucket);
+    });
+
     const completedPods = completedMemberships.length;
     const maxCompletedPodsWithSameGroup = this.getMaxCompletedPodsWithSameGroup(
       completedMemberships,
     );
+
+    let sprinterCompletions = 0;
+    let onTimeCompletions = 0;
+
+    completedMemberships.forEach((membership) => {
+      const bucket = paymentsByMembership.get(membership.id) ?? [];
+
+      if (completedWithoutMissingContributions(membership, bucket)) {
+        sprinterCompletions += 1;
+      }
+
+      if (completedOnTime(membership, bucket)) {
+        onTimeCompletions += 1;
+      }
+    });
 
     const invites = await this.podInviteRepository.find(
       {
@@ -87,6 +147,9 @@ export class GetAchievementsSummaryHandler
       podsWithThreeAcceptedInvites,
       podsWithAllInvitesAccepted,
     } = this.computeInviteStats(invites);
+
+    const totalContributionUnits = sumSuccessfulContributions(paymentSnapshots);
+    const longestMonthlyStreak = computeLongestMonthlyStreak(paymentSnapshots);
 
     const earnedAchievements = accountAchievements.map((aa) => ({
       code: aa.achievement.code,
@@ -109,6 +172,10 @@ export class GetAchievementsSummaryHandler
           podsWithThreeAcceptedInvites,
           podsWithAllInvitesAccepted,
           maxCompletedPodsWithSameGroup,
+          sprinterCompletions,
+          onTimeCompletions,
+          totalContributionUnits,
+          longestMonthlyStreak,
         }),
         remaining: this.computeRemaining(achievement.code, {
           totalJoinedPods,
@@ -118,6 +185,10 @@ export class GetAchievementsSummaryHandler
           podsWithThreeAcceptedInvites,
           podsWithAllInvitesAccepted,
           maxCompletedPodsWithSameGroup,
+          sprinterCompletions,
+          onTimeCompletions,
+          totalContributionUnits,
+          longestMonthlyStreak,
         }),
       }))
       .sort((a, b) => a.remaining - b.remaining)
@@ -162,6 +233,32 @@ export class GetAchievementsSummaryHandler
         return Math.min(stats.podsWithAllInvitesAccepted / 1, 1);
       case AchievementCode.TEAM_PLAYER:
         return Math.min(stats.maxCompletedPodsWithSameGroup / 5, 1);
+      case AchievementCode.FIRST_PAYOUT:
+        return Math.min(stats.completedPods / 1, 1);
+      case AchievementCode.SAVINGS_SPRINTER:
+        return Math.min(stats.sprinterCompletions / 1, 1);
+      case AchievementCode.WEALTH_BUILDER:
+        return Math.min(
+          stats.totalContributionUnits / WEALTH_BUILDER_THRESHOLD_UNITS,
+          1,
+        );
+      case AchievementCode.SIX_FIGURES_ROCKSTAR:
+        return Math.min(
+          stats.totalContributionUnits / SIX_FIGURES_THRESHOLD_UNITS,
+          1,
+        );
+      case AchievementCode.ON_TIME_HERO:
+        return Math.min(stats.onTimeCompletions / 1, 1);
+      case AchievementCode.PERFECT_STREAK:
+        return Math.min(
+          stats.longestMonthlyStreak / PERFECT_STREAK_MIN_MONTHS,
+          1,
+        );
+      case AchievementCode.SAVINGS_CHAMPION:
+        return Math.min(
+          stats.totalContributionUnits / SAVINGS_CHAMPION_THRESHOLD_UNITS,
+          1,
+        );
       default:
         return 0;
     }
@@ -192,6 +289,29 @@ export class GetAchievementsSummaryHandler
         return Math.max(1 - stats.podsWithAllInvitesAccepted, 0);
       case AchievementCode.TEAM_PLAYER:
         return Math.max(5 - stats.maxCompletedPodsWithSameGroup, 0);
+      case AchievementCode.FIRST_PAYOUT:
+        return Math.max(1 - stats.completedPods, 0);
+      case AchievementCode.SAVINGS_SPRINTER:
+        return Math.max(1 - stats.sprinterCompletions, 0);
+      case AchievementCode.WEALTH_BUILDER:
+        return Math.max(
+          (WEALTH_BUILDER_THRESHOLD_UNITS - stats.totalContributionUnits) / 100,
+          0,
+        );
+      case AchievementCode.SIX_FIGURES_ROCKSTAR:
+        return Math.max(
+          (SIX_FIGURES_THRESHOLD_UNITS - stats.totalContributionUnits) / 100,
+          0,
+        );
+      case AchievementCode.ON_TIME_HERO:
+        return Math.max(1 - stats.onTimeCompletions, 0);
+      case AchievementCode.PERFECT_STREAK:
+        return Math.max(PERFECT_STREAK_MIN_MONTHS - stats.longestMonthlyStreak, 0);
+      case AchievementCode.SAVINGS_CHAMPION:
+        return Math.max(
+          (SAVINGS_CHAMPION_THRESHOLD_UNITS - stats.totalContributionUnits) / 100,
+          0,
+        );
       default:
         return 1;
     }

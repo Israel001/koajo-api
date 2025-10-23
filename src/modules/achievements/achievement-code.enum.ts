@@ -9,4 +9,11 @@ export enum AchievementCode {
   POD_LEADER = 'pod_leader',
   TEAM_PLAYER = 'team_player',
   REFERRAL_MASTER = 'referral_master',
+  FIRST_PAYOUT = 'first_payout',
+  SAVINGS_SPRINTER = 'savings_sprinter',
+  WEALTH_BUILDER = 'wealth_builder',
+  SIX_FIGURES_ROCKSTAR = 'six_figures_rockstar',
+  ON_TIME_HERO = 'on_time_hero',
+  PERFECT_STREAK = 'perfect_streak',
+  SAVINGS_CHAMPION = 'savings_champion',
 }

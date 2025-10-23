@@ -13,6 +13,7 @@ import { PodMembershipEntity } from '../pods/entities/pod-membership.entity';
 import { PodEntity } from '../pods/entities/pod.entity';
 import { AccountEntity } from '../accounts/entities/account.entity';
 import { JwtAuthGuard } from '../accounts/guards/jwt-auth.guard';
+import { AchievementsModule } from '../achievements/achievements.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { JwtAuthGuard } from '../accounts/guards/jwt-auth.guard';
       AccountEntity,
     ]),
     CqrsModule,
+    AchievementsModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {

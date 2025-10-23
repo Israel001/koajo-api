@@ -1,3 +1,4 @@
+import { raw } from '@mikro-orm/core';
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { EntityRepository } from '@mikro-orm/mysql';
@@ -120,14 +121,25 @@ export class AdminDashboardHandler
     startOfToday: Date,
   ): Promise<MetricWithChange<number>> {
     const fourteenDaysAgo = this.addDays(startOfToday, -13);
-    const accounts = await this.accountRepository.find(
-      { createdAt: { $gte: fourteenDaysAgo } },
-      { fields: ['createdAt'], orderBy: { createdAt: 'ASC' } },
-    );
+    const rows = (await this.accountRepository
+      .createQueryBuilder('account')
+      .select([raw('account.created_at as createdAt')])
+      .where({ createdAt: { $gte: fourteenDaysAgo } })
+      .orderBy({ createdAt: 'ASC' })
+      .execute('all')) as Array<{ createdAt?: Date | string }>;
 
     const dailyBuckets = new Map<string, number>();
-    accounts.forEach((account) => {
-      const key = this.toDayKey(account.createdAt);
+    rows.forEach((row) => {
+      const createdAt =
+        row.createdAt instanceof Date
+          ? row.createdAt
+          : row.createdAt
+            ? new Date(row.createdAt)
+            : null;
+      if (!createdAt) {
+        return;
+      }
+      const key = this.toDayKey(createdAt);
       dailyBuckets.set(key, (dailyBuckets.get(key) ?? 0) + 1);
     });
 
@@ -255,7 +267,7 @@ export class AdminDashboardHandler
         const end = this.addMonths(start, 1);
         return repository
           .createQueryBuilder('record')
-          .select(['coalesce(sum(record.amount), 0) as total'])
+          .select([raw('coalesce(sum(record.amount), 0) as total')])
           .where({
             createdAt: { $gte: start, $lt: end },
           })
@@ -277,7 +289,7 @@ export class AdminDashboardHandler
   private async sumPaymentsBetween(start: Date, end: Date) {
     const rows = (await this.paymentRepository
       .createQueryBuilder('payment')
-      .select(['coalesce(sum(payment.amount), 0) as total'])
+      .select([raw('coalesce(sum(payment.amount), 0) as total')])
       .where({
         createdAt: { $gte: start, $lt: end },
       })
@@ -289,7 +301,7 @@ export class AdminDashboardHandler
   private async sumPayoutsBetween(start: Date, end: Date) {
     const rows = (await this.payoutRepository
       .createQueryBuilder('payout')
-      .select(['coalesce(sum(payout.amount), 0) as total'])
+      .select([raw('coalesce(sum(payout.amount), 0) as total')])
       .where({
         createdAt: { $gte: start, $lt: end },
       })
@@ -304,11 +316,11 @@ export class AdminDashboardHandler
       this.paymentRepository
         .createQueryBuilder('payment')
         .select([
-          'pod.planCode as planCode',
-          'coalesce(sum(payment.amount), 0) as total',
+          raw('pod.plan_code as planCode'),
+          raw('coalesce(sum(payment.amount), 0) as total'),
         ])
         .leftJoin('payment.pod', 'pod')
-        .groupBy('pod.planCode')
+        .groupBy('pod.plan_code')
         .execute(),
     ]);
 
@@ -331,8 +343,8 @@ export class AdminDashboardHandler
     const statusCounts = (await this.verificationAttemptRepository
       .createQueryBuilder('attempt')
       .select([
-        'lower(attempt.status) as status',
-        'count(*) as count',
+        raw('lower(attempt.status) as status'),
+        raw('count(*) as count'),
       ])
       .groupBy('status')
       .execute()) as Array<{ status?: string; count?: string | number }>;

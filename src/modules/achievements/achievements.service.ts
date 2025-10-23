@@ -7,6 +7,18 @@ import { AchievementCode } from './achievement-code.enum';
 import type { AccountEntity } from '../accounts/entities/account.entity';
 import { PodMembershipEntity } from '../pods/entities/pod-membership.entity';
 import { PodStatus } from '../pods/pod-status.enum';
+import { PaymentEntity } from '../finance/entities/payment.entity';
+import {
+  PaymentLike,
+  completedOnTime,
+  completedWithoutMissingContributions,
+  computeLongestMonthlyStreak,
+  PERFECT_STREAK_MIN_MONTHS,
+  SAVINGS_CHAMPION_THRESHOLD_UNITS,
+  SIX_FIGURES_THRESHOLD_UNITS,
+  sumSuccessfulContributions,
+  WEALTH_BUILDER_THRESHOLD_UNITS,
+} from './achievement.helpers';
 
 @Injectable()
 export class AchievementService {
@@ -17,6 +29,8 @@ export class AchievementService {
     private readonly accountAchievementRepository: EntityRepository<AccountAchievementEntity>,
     @InjectRepository(PodMembershipEntity)
     private readonly podMembershipRepository: EntityRepository<PodMembershipEntity>,
+    @InjectRepository(PaymentEntity)
+    private readonly paymentRepository: EntityRepository<PaymentEntity>,
   ) {}
 
   async handlePodJoin(options: {
@@ -46,9 +60,10 @@ export class AchievementService {
 
   async handlePodCompletion(options: {
     account: AccountEntity | null | undefined;
+    membership: PodMembershipEntity | null | undefined;
     completedPods: number;
   }): Promise<void> {
-    const { account, completedPods } = options;
+    const { account, membership, completedPods } = options;
 
     if (!account) {
       return;
@@ -74,6 +89,33 @@ export class AchievementService {
 
     if (completedPods >= 5) {
       await this.evaluateTeamPlayer(account);
+    }
+
+    if (completedPods === 1) {
+      await this.award(account, AchievementCode.FIRST_PAYOUT);
+    }
+
+    if (!membership || membership.isSystemBot || !membership.pod) {
+      return;
+    }
+
+    const payments = await this.paymentRepository.find(
+      { membership },
+      { orderBy: { createdAt: 'ASC' } },
+    );
+
+    const snapshots: PaymentLike[] = payments.map((payment) => ({
+      amount: payment.amount,
+      status: payment.status,
+      createdAt: payment.createdAt,
+    }));
+
+    if (completedWithoutMissingContributions(membership, snapshots)) {
+      await this.award(account, AchievementCode.SAVINGS_SPRINTER);
+    }
+
+    if (completedOnTime(membership, snapshots)) {
+      await this.award(account, AchievementCode.ON_TIME_HERO);
     }
   }
 
@@ -101,6 +143,34 @@ export class AchievementService {
     }
   }
 
+  async handleSuccessfulPayment(options: {
+    account: AccountEntity | null | undefined;
+  }): Promise<void> {
+    const { account } = options;
+
+    if (!account) {
+      return;
+    }
+
+    const payments = await this.paymentRepository.find(
+      { account },
+      {
+        orderBy: { createdAt: 'ASC' },
+        populate: ['membership', 'membership.pod'] as const,
+      },
+    );
+
+    const snapshots: PaymentLike[] = payments.map((payment) => ({
+      amount: payment.amount,
+      status: payment.status,
+      createdAt: payment.createdAt,
+      membership: payment.membership,
+    }));
+
+    await this.evaluateSavingsMilestones(account, snapshots);
+    await this.evaluatePerfectStreak(account, snapshots);
+  }
+
   private async award(account: AccountEntity, code: AchievementCode): Promise<boolean> {
     const achievement = await this.getAchievement(code);
 
@@ -126,6 +196,35 @@ export class AchievementService {
     );
 
     return true;
+  }
+
+  private async evaluateSavingsMilestones(
+    account: AccountEntity,
+    payments: PaymentLike[],
+  ): Promise<void> {
+    const totalUnits = sumSuccessfulContributions(payments);
+
+    if (totalUnits >= WEALTH_BUILDER_THRESHOLD_UNITS) {
+      await this.award(account, AchievementCode.WEALTH_BUILDER);
+    }
+
+    if (totalUnits >= SAVINGS_CHAMPION_THRESHOLD_UNITS) {
+      await this.award(account, AchievementCode.SAVINGS_CHAMPION);
+    }
+
+    if (totalUnits >= SIX_FIGURES_THRESHOLD_UNITS) {
+      await this.award(account, AchievementCode.SIX_FIGURES_ROCKSTAR);
+    }
+  }
+
+  private async evaluatePerfectStreak(
+    account: AccountEntity,
+    payments: PaymentLike[],
+  ): Promise<void> {
+    const streak = computeLongestMonthlyStreak(payments);
+    if (streak >= PERFECT_STREAK_MIN_MONTHS) {
+      await this.award(account, AchievementCode.PERFECT_STREAK);
+    }
   }
 
   private async evaluateTeamPlayer(account: AccountEntity): Promise<void> {

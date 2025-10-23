@@ -13,6 +13,7 @@ import { JwtAuthGuard } from '../accounts/guards/jwt-auth.guard';
 import { PodMembershipEntity } from '../pods/entities/pod-membership.entity';
 import { PodEntity } from '../pods/entities/pod.entity';
 import { PodInviteEntity } from '../pods/entities/pod-invite.entity';
+import { PaymentEntity } from '../finance/entities/payment.entity';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { PodInviteEntity } from '../pods/entities/pod-invite.entity';
       PodMembershipEntity,
       PodEntity,
       PodInviteEntity,
+      PaymentEntity,
     ]),
     CqrsModule,
     JwtModule.registerAsync({
