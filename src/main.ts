@@ -1,6 +1,7 @@
 import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import swaggerUi from 'swagger-ui-express';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -34,11 +35,19 @@ async function bootstrap() {
     )
     .build();
   const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('docs', app, swaggerDocument, {
-    swaggerOptions: {
-      persistAuthorization: true,
-      displayRequestDuration: true,
-    },
+  app.use(
+    '/docs',
+    swaggerUi.serve,
+    swaggerUi.setup(swaggerDocument, {
+      swaggerOptions: {
+        persistAuthorization: true,
+        displayRequestDuration: true,
+      },
+      customSiteTitle: 'Koajo API',
+    }),
+  );
+  app.use('/docs-json', (_req, res) => {
+    res.type('application/json').send(swaggerDocument);
   });
 
   const port = Number(process.env.PORT ?? 3000);
