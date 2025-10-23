@@ -9,6 +9,7 @@ import { ChecksumModule } from './common/security/checksum.module';
 import authConfig from './config/auth.config';
 import databaseConfig from './config/database.config';
 import mailConfig from './config/mail.config';
+import adminConfig from './config/admin.config';
 import { AccountsModule } from './modules/accounts/accounts.module';
 import { MikroOrmEntityManagerCleanupInterceptor } from './common/interceptors/mikro-orm-entity-manager-cleanup.interceptor';
 import { MikroOrmRequestContextMiddleware } from './common/middleware/mikro-orm-request-context.middleware';
@@ -16,13 +17,15 @@ import { RequestLoggerMiddleware } from './common/middleware/request-logger.midd
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { PodsModule } from './modules/pods/pods.module';
 import { AchievementsModule } from './modules/achievements/achievements.module';
+import { AdminModule } from './modules/admin/admin.module';
+import { FinanceModule } from './modules/finance/finance.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ['.env'],
-      load: [databaseConfig, authConfig, mailConfig],
+      load: [databaseConfig, authConfig, mailConfig, adminConfig],
     }),
     CqrsModule,
     ChecksumModule,
@@ -41,6 +44,8 @@ import { AchievementsModule } from './modules/achievements/achievements.module';
     AchievementsModule,
     AccountsModule,
     PodsModule,
+    FinanceModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [

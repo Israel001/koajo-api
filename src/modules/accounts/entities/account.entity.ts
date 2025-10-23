@@ -31,6 +31,9 @@ export class AccountEntity {
   @Property({ columnType: 'varchar(255)' })
   passwordHash!: string;
 
+  @Property({ columnType: 'varchar(512)', nullable: true })
+  avatarUrl?: string | null;
+
   @Property({ columnType: 'varchar(128)' })
   checksum!: string;
 
@@ -40,20 +43,14 @@ export class AccountEntity {
   @Property({ columnType: 'tinyint(1)', default: false })
   stripeVerificationCompleted = false;
 
-  @Property({ columnType: 'int unsigned', default: 0 })
-  stripeVerificationAttemptCount = 0;
-
-  @Property({ columnType: 'datetime(6)', nullable: true })
-  stripeVerificationFirstAttemptAt?: Date | null;
-
-  @Property({ columnType: 'datetime(6)', nullable: true })
-  stripeVerificationLastAttemptAt?: Date | null;
-
-  @Property({ columnType: 'varchar(64)', nullable: true })
-  stripeVerificationStatus?: string | null;
-
   @Property({ columnType: 'tinyint(1)', default: true })
   isActive = true;
+
+  @Property({ columnType: 'tinyint(1)', default: true })
+  emailNotificationsEnabled = true;
+
+  @Property({ columnType: 'tinyint(1)', default: true })
+  transactionNotificationsEnabled = true;
 
   @Property({ columnType: 'datetime(6)', nullable: true })
   lastPodJoinedAt?: Date | null;
@@ -93,21 +90,32 @@ export class AccountEntity {
     passwordHash: string;
     firstName?: string | null;
     lastName?: string | null;
+    avatarUrl?: string | null;
     stripeVerificationCompleted?: boolean;
     isActive?: boolean;
     lastPodJoinedAt?: Date | null;
     deactivatedAt?: Date | null;
+    emailNotificationsEnabled?: boolean;
+    transactionNotificationsEnabled?: boolean;
   }) {
     this.email = params.email.toLowerCase();
     this.phoneNumber = params.phoneNumber;
     this.passwordHash = params.passwordHash;
     this.firstName = params.firstName ?? null;
     this.lastName = params.lastName ?? null;
+    this.avatarUrl = params.avatarUrl ?? null;
     if (typeof params.stripeVerificationCompleted === 'boolean') {
       this.stripeVerificationCompleted = params.stripeVerificationCompleted;
     }
     if (typeof params.isActive === 'boolean') {
       this.isActive = params.isActive;
+    }
+    if (typeof params.emailNotificationsEnabled === 'boolean') {
+      this.emailNotificationsEnabled = params.emailNotificationsEnabled;
+    }
+    if (typeof params.transactionNotificationsEnabled === 'boolean') {
+      this.transactionNotificationsEnabled =
+        params.transactionNotificationsEnabled;
     }
     this.lastPodJoinedAt = params.lastPodJoinedAt ?? null;
     this.deactivatedAt = params.deactivatedAt ?? null;
@@ -119,36 +127,6 @@ export class AccountEntity {
 
   markStripeVerificationCompleted() {
     this.stripeVerificationCompleted = true;
-  }
-
-  updateStripeVerificationMetadata(params: {
-    attemptCount?: number | null;
-    firstAttemptAt?: Date | null;
-    lastAttemptAt?: Date | null;
-    status?: string | null;
-  }) {
-    if (typeof params.attemptCount === 'number') {
-      this.stripeVerificationAttemptCount = Math.max(
-        0,
-        Math.trunc(params.attemptCount),
-      );
-    } else if (params.attemptCount === null) {
-      this.stripeVerificationAttemptCount = 0;
-    }
-
-    if (params.firstAttemptAt instanceof Date || params.firstAttemptAt === null) {
-      this.stripeVerificationFirstAttemptAt = params.firstAttemptAt ?? null;
-    }
-
-    if (params.lastAttemptAt instanceof Date || params.lastAttemptAt === null) {
-      this.stripeVerificationLastAttemptAt = params.lastAttemptAt ?? null;
-    }
-
-    if (typeof params.status === 'string') {
-      this.stripeVerificationStatus = params.status;
-    } else if (params.status === null) {
-      this.stripeVerificationStatus = null;
-    }
   }
 
   markPodJoined(at: Date = new Date()) {

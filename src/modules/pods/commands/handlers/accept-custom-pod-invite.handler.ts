@@ -32,6 +32,7 @@ import {
   shuffle,
 } from '../../pod.utils';
 import { PodGoalType } from '../../pod-goal.enum';
+import { AchievementService } from '../../../achievements/achievements.service';
 
 @Injectable()
 @CommandHandler(AcceptCustomPodInviteCommand)
@@ -48,6 +49,7 @@ export class AcceptCustomPodInviteHandler
     @InjectRepository(AccountEntity)
     private readonly accountRepository: EntityRepository<AccountEntity>,
     private readonly checksumService: ChecksumService,
+    private readonly achievementService: AchievementService,
   ) {}
 
   async execute(
@@ -157,6 +159,16 @@ export class AcceptCustomPodInviteHandler
       { pod },
       { orderBy: { inviteOrder: 'ASC' }, populate: ['account'] as const },
     );
+
+    const acceptedInviteCount = invites.filter(
+      (item) => !!item.acceptedAt,
+    ).length;
+
+    await this.achievementService.handleCustomPodInviteProgress({
+      creator: pod.creator,
+      acceptedInviteCount,
+      totalInviteCount: invites.length,
+    });
 
     const allAccepted = invites.every((item) => item.acceptedAt);
 

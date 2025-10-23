@@ -11,17 +11,12 @@ export const accountChecksumFields = (
   account.emailVerifiedAt ? account.emailVerifiedAt.getTime() : 0,
   account.createdAt.getTime(),
   account.lastPodJoinedAt ? account.lastPodJoinedAt.getTime() : 0,
+  account.avatarUrl ?? '',
   account.stripeVerificationCompleted ? 1 : 0,
-  account.stripeVerificationAttemptCount,
-  account.stripeVerificationFirstAttemptAt
-    ? account.stripeVerificationFirstAttemptAt.getTime()
-    : 0,
-  account.stripeVerificationLastAttemptAt
-    ? account.stripeVerificationLastAttemptAt.getTime()
-    : 0,
-  account.stripeVerificationStatus ?? '',
   account.inactivityWarningSentAt ? account.inactivityWarningSentAt.getTime() : 0,
   account.inactivityClosureSentAt ? account.inactivityClosureSentAt.getTime() : 0,
   account.isActive ? 1 : 0,
   account.deactivatedAt ? account.deactivatedAt.getTime() : 0,
+  account.emailNotificationsEnabled ? 1 : 0,
+  account.transactionNotificationsEnabled ? 1 : 0,
 ];

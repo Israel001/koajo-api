@@ -4,9 +4,9 @@ export class CompleteStripeVerificationCommand {
     public readonly firstName: string,
     public readonly lastName: string,
     public readonly stripeVerificationCompleted: boolean,
-    public readonly verificationAttemptCount?: number | null,
-    public readonly verificationFirstAttemptDate?: Date | null,
-    public readonly verificationLastAttemptDate?: Date | null,
-    public readonly verificationStatus?: string | null,
+    public readonly sessionId: string,
+    public readonly stripeReference: string,
+    public readonly verificationType: string,
+    public readonly verificationStatus: string,
   ) {}
 }

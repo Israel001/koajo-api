@@ -11,6 +11,8 @@ import { CompleteStripeVerificationCommand } from '../commands/complete-stripe-v
 import { ChangePasswordCommand } from '../commands/change-password.command';
 import { ForgotPasswordCommand } from '../commands/forgot-password.command';
 import { ResetPasswordCommand } from '../commands/reset-password.command';
+import { UpdateAvatarCommand } from '../commands/update-avatar.command';
+import { UpdateNotificationPreferencesCommand } from '../commands/update-notification-preferences.command';
 import { SignupDto } from '../dto/signup.dto';
 import { VerifyEmailDto } from '../dto/verify-email.dto';
 import { ResendVerificationDto } from '../dto/resend-verification.dto';
@@ -28,6 +30,8 @@ import type {
   ChangePasswordResult,
   ForgotPasswordResult,
   ResetPasswordResult,
+  UpdateAvatarResult,
+  UpdateNotificationPreferencesResult,
 } from '../contracts/auth-results';
 
 describe('AuthController', () => {
@@ -71,6 +75,7 @@ describe('AuthController', () => {
         email: 'user@example.com',
         phoneNumber: '+2348012345678',
         password: 'Str0ngP@ssword!',
+        avatarUrl: 'https://cdn.example.com/avatar.png',
       };
       const request = {
         ip: '127.0.0.1',
@@ -83,6 +88,7 @@ describe('AuthController', () => {
         accountId: 'account-123',
         email: dto.email,
         phoneNumber: dto.phoneNumber,
+        avatarUrl: dto.avatarUrl,
         emailVerified: false,
         verification: null,
       };
@@ -99,6 +105,7 @@ describe('AuthController', () => {
       expect(command.email).toEqual(dto.email);
       expect(command.phoneNumber).toEqual(dto.phoneNumber);
       expect(command.password).toEqual(dto.password);
+      expect(command.avatarUrl).toEqual(dto.avatarUrl);
       expect(command.metadata).toEqual({
         ipAddress: request.ip,
         userAgent: request.headers['user-agent'],
@@ -139,19 +146,24 @@ describe('AuthController', () => {
         firstName: 'Jane',
         lastName: 'Doe',
         stripeVerificationCompleted: true,
-        verificationAttemptCount: 2,
-        verificationFirstAttemptDate: '2024-05-01T09:30:00.000Z',
-        verificationLastAttemptDate: '2024-05-02T16:45:00.000Z',
-        verificationStatus: 'pending',
+        sessionId: 'sess_123',
+        stripeReference: 'vs_123',
+        verificationType: 'document',
+        verificationStatus: 'verified',
       };
 
       const expected: CompleteStripeVerificationResult = {
         email: dto.email,
         stripeVerificationCompleted: true,
-        verificationAttemptCount: dto.verificationAttemptCount ?? null,
-        verificationFirstAttemptDate: dto.verificationFirstAttemptDate ?? null,
-        verificationLastAttemptDate: dto.verificationLastAttemptDate ?? null,
-        verificationStatus: dto.verificationStatus ?? null,
+        latestAttempt: {
+          id: 'attempt-1',
+          sessionId: dto.sessionId,
+          stripeReference: dto.stripeReference,
+          status: dto.verificationStatus,
+          type: dto.verificationType,
+          recordedAt: new Date().toISOString(),
+          completedAt: new Date().toISOString(),
+        },
         verification: {
           expiresAt: new Date().toISOString(),
           sentAt: new Date().toISOString(),
@@ -176,15 +188,9 @@ describe('AuthController', () => {
       expect(command.stripeVerificationCompleted).toEqual(
         dto.stripeVerificationCompleted,
       );
-      expect(command.verificationAttemptCount).toEqual(
-        dto.verificationAttemptCount,
-      );
-      expect(command.verificationFirstAttemptDate?.toISOString()).toEqual(
-        dto.verificationFirstAttemptDate,
-      );
-      expect(command.verificationLastAttemptDate?.toISOString()).toEqual(
-        dto.verificationLastAttemptDate,
-      );
+      expect(command.sessionId).toEqual(dto.sessionId);
+      expect(command.stripeReference).toEqual(dto.stripeReference);
+      expect(command.verificationType).toEqual(dto.verificationType);
       expect(command.verificationStatus).toEqual(dto.verificationStatus);
     });
   });
@@ -304,6 +310,79 @@ describe('AuthController', () => {
       expect(command.accountId).toEqual('account-123');
       expect(command.currentPassword).toEqual(dto.currentPassword);
       expect(command.newPassword).toEqual(dto.newPassword);
+    });
+  });
+
+  describe('updateAvatar', () => {
+    it('executes UpdateAvatarCommand and returns the result', async () => {
+      const dto = {
+        avatarUrl: 'https://cdn.example.com/new-avatar.png',
+      };
+
+      const expected: UpdateAvatarResult = {
+        avatarUrl: dto.avatarUrl,
+      };
+
+      commandBus.execute.mockResolvedValue(expected);
+
+      const request = {
+        user: {
+          accountId: 'account-123',
+        },
+      } as unknown as Request;
+
+      await expect(controller.updateAvatar(request, dto as any)).resolves.toEqual(
+        expected,
+      );
+
+      expect(commandBus.execute).toHaveBeenCalledWith(
+        expect.any(UpdateAvatarCommand),
+      );
+
+      const command =
+        commandBus.execute.mock.calls[0][0] as UpdateAvatarCommand;
+      expect(command.accountId).toEqual('account-123');
+      expect(command.avatarUrl).toEqual(dto.avatarUrl);
+    });
+  });
+
+  describe('updateNotificationPreferences', () => {
+    it('executes UpdateNotificationPreferencesCommand and returns the result', async () => {
+      const dto = {
+        emailNotificationsEnabled: false,
+        transactionNotificationsEnabled: true,
+      };
+
+      const expected: UpdateNotificationPreferencesResult = {
+        emailNotificationsEnabled: dto.emailNotificationsEnabled,
+        transactionNotificationsEnabled: dto.transactionNotificationsEnabled,
+      };
+
+      commandBus.execute.mockResolvedValue(expected);
+
+      const request = {
+        user: {
+          accountId: 'account-123',
+        },
+      } as unknown as Request;
+
+      await expect(
+        controller.updateNotificationPreferences(request, dto as any),
+      ).resolves.toEqual(expected);
+
+      expect(commandBus.execute).toHaveBeenCalledWith(
+        expect.any(UpdateNotificationPreferencesCommand),
+      );
+
+      const command =
+        commandBus.execute.mock.calls[0][0] as UpdateNotificationPreferencesCommand;
+      expect(command.accountId).toEqual('account-123');
+      expect(command.emailNotificationsEnabled).toEqual(
+        dto.emailNotificationsEnabled,
+      );
+      expect(command.transactionNotificationsEnabled).toEqual(
+        dto.transactionNotificationsEnabled,
+      );
     });
   });
 

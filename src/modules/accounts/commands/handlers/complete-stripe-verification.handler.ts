@@ -9,6 +9,7 @@ import { AccountEntity } from '../../entities/account.entity';
 import { EmailVerificationService } from '../../services/email-verification.service';
 import { CompleteStripeVerificationCommand } from '../complete-stripe-verification.command';
 import { CompleteStripeVerificationResult } from '../../contracts/auth-results';
+import { AccountVerificationAttemptEntity } from '../../entities/account-verification-attempt.entity';
 
 @Injectable()
 @CommandHandler(CompleteStripeVerificationCommand)
@@ -22,6 +23,8 @@ export class CompleteStripeVerificationHandler
   constructor(
     @InjectRepository(AccountEntity)
     private readonly accountRepository: EntityRepository<AccountEntity>,
+    @InjectRepository(AccountVerificationAttemptEntity)
+    private readonly verificationAttemptRepository: EntityRepository<AccountVerificationAttemptEntity>,
     private readonly emailVerificationService: EmailVerificationService,
   ) {}
 
@@ -37,19 +40,29 @@ export class CompleteStripeVerificationHandler
 
     account.firstName = command.firstName.trim();
     account.lastName = command.lastName.trim();
-    account.updateStripeVerificationMetadata({
-      attemptCount: command.verificationAttemptCount ?? undefined,
-      firstAttemptAt: command.verificationFirstAttemptDate ?? null,
-      lastAttemptAt: command.verificationLastAttemptDate ?? null,
-      status: command.verificationStatus ?? null,
-    });
 
     let verification: CompleteStripeVerificationResult['verification'] = null;
 
+    const sessionId = command.sessionId.trim();
+    const verificationType = command.verificationType.trim();
+    const verificationStatus = command.verificationStatus.trim();
+    const stripeReference = command.stripeReference.trim();
+
+    const attempt = this.verificationAttemptRepository.create(
+      {
+        account,
+        provider: 'stripe',
+        type: verificationType,
+        sessionId,
+        stripeReference,
+        status: verificationStatus,
+        completedAt: command.stripeVerificationCompleted ? new Date() : null,
+      },
+      { partial: true },
+    );
+
     if (command.stripeVerificationCompleted) {
-      if (!account.stripeVerificationCompleted) {
-        account.markStripeVerificationCompleted();
-      }
+      account.markStripeVerificationCompleted();
     } else {
       account.stripeVerificationCompleted = false;
     }
@@ -69,17 +82,25 @@ export class CompleteStripeVerificationHandler
       };
     }
 
-    await this.accountRepository.getEntityManager().flush();
+    const em = this.accountRepository.getEntityManager();
+    em.persist(account);
+    em.persist(attempt);
+    await em.flush();
 
     return {
       email: account.email,
       stripeVerificationCompleted: account.stripeVerificationCompleted,
-      verificationAttemptCount: account.stripeVerificationAttemptCount,
-      verificationFirstAttemptDate:
-        account.stripeVerificationFirstAttemptAt?.toISOString() ?? null,
-      verificationLastAttemptDate:
-        account.stripeVerificationLastAttemptAt?.toISOString() ?? null,
-      verificationStatus: account.stripeVerificationStatus ?? null,
+      latestAttempt: {
+        id: attempt.id,
+        sessionId,
+        stripeReference,
+        status: verificationStatus,
+        type: verificationType,
+        recordedAt: attempt.createdAt.toISOString(),
+        completedAt: attempt.completedAt
+          ? attempt.completedAt.toISOString()
+          : null,
+      },
       verification,
     };
   }

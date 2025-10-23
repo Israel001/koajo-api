@@ -8,6 +8,7 @@ import { AuthController } from './controllers/auth.controller';
 import { AccountEmailVerificationEntity } from './entities/account-email-verification.entity';
 import { AccountPasswordResetEntity } from './entities/account-password-reset.entity';
 import { AccountEntity } from './entities/account.entity';
+import { AccountVerificationAttemptEntity } from './entities/account-verification-attempt.entity';
 import { EmailVerificationService } from './services/email-verification.service';
 import { PasswordResetService } from './services/password-reset.service';
 import { NotificationsModule } from '../notifications/notifications.module';
@@ -21,6 +22,7 @@ import { AccountInactivityScheduler } from './account-inactivity.scheduler';
       AccountEntity,
       AccountEmailVerificationEntity,
       AccountPasswordResetEntity,
+      AccountVerificationAttemptEntity,
     ]),
     NotificationsModule,
     JwtModule.registerAsync({

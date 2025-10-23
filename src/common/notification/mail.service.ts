@@ -2,6 +2,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import nodemailer, { Transporter } from 'nodemailer';
 import { NotificationTemplateService } from '../../modules/notifications/notification-template.service';
+import { InjectRepository } from '@mikro-orm/nestjs';
+import { EntityRepository } from '@mikro-orm/mysql';
+import { AccountEntity } from '../../modules/accounts/entities/account.entity';
 
 interface SendOptions {
   from?: string;
@@ -18,6 +21,8 @@ export class MailService {
   constructor(
     private readonly configService: ConfigService,
     private readonly notificationTemplateService: NotificationTemplateService,
+    @InjectRepository(AccountEntity)
+    private readonly accountRepository: EntityRepository<AccountEntity>,
   ) {
     const mailConfig = this.configService.get('mail', { infer: true })!;
 
@@ -44,6 +49,10 @@ export class MailService {
     expiresAt: Date,
     options: SendOptions = {},
   ): Promise<void> {
+    if (!(await this.shouldSendEmail(email, 'system'))) {
+      return;
+    }
+
     const from = options.from ?? this.defaultFrom;
     const subject = 'Account Verification';
     const expiresLabel = expiresAt.toLocaleString('en-US', {
@@ -96,6 +105,10 @@ export class MailService {
     expiresAt: Date,
     options: SendOptions = {},
   ): Promise<void> {
+    if (!(await this.shouldSendEmail(email, 'system'))) {
+      return;
+    }
+
     const from = options.from ?? this.defaultFrom;
     const subject = 'Reset your Koajo password';
     const expiresLabel = expiresAt.toLocaleString('en-US', {
@@ -160,6 +173,10 @@ export class MailService {
   }
 
   async sendWelcomeEmail(email: string, firstname: string): Promise<void> {
+    if (!(await this.shouldSendEmail(email, 'system'))) {
+      return;
+    }
+
     const subject = "You're in! Let's fund what matters";
     let htmlBody: string;
     try {
@@ -206,6 +223,10 @@ export class MailService {
   }
 
   async sendPasswordChangedEmail(email: string, firstname: string): Promise<void> {
+    if (!(await this.shouldSendEmail(email, 'system'))) {
+      return;
+    }
+
     const subject = 'Your Koajo password was changed';
     let htmlBody: string;
     try {
@@ -262,6 +283,10 @@ export class MailService {
     cadence: string;
     amount: number;
   }): Promise<void> {
+    if (!(await this.shouldSendEmail(options.email, 'system'))) {
+      return;
+    }
+
     const from = this.defaultFrom;
     const subject = `${options.inviterName} invited you to join a custom pod`;
 
@@ -337,6 +362,10 @@ export class MailService {
   }
 
   async sendAccountInactivityReminder(email: string): Promise<void> {
+    if (!(await this.shouldSendEmail(email, 'system'))) {
+      return;
+    }
+
     const subject = 'We miss you at Koajo';
     const templateCode = '60_days_inactive';
 
@@ -381,6 +410,10 @@ export class MailService {
   }
 
   async sendAccountClosureNotice(email: string, currentDate: Date): Promise<void> {
+    if (!(await this.shouldSendEmail(email, 'system'))) {
+      return;
+    }
+
     const subject = 'Your Koajo account has been closed';
     const templateCode = 'account_closure';
     const variables = {
@@ -426,5 +459,45 @@ export class MailService {
       );
       throw error;
     }
+  }
+
+  private async shouldSendEmail(
+    email: string,
+    category: 'system' | 'transaction',
+  ): Promise<boolean> {
+    const normalized = email.trim().toLowerCase();
+
+    let account: AccountEntity | null = null;
+    try {
+      account = await this.accountRepository.findOne({ email: normalized });
+    } catch (error) {
+      this.logger.warn(
+        `Failed to load notification preferences for ${normalized}: ${(error as Error).message}`,
+      );
+      return true;
+    }
+
+    if (!account) {
+      return true;
+    }
+
+    if (category === 'transaction') {
+      if (!account.transactionNotificationsEnabled) {
+        this.logger.debug(
+          `Skipping transaction email to ${normalized}: transaction notifications disabled`,
+        );
+        return false;
+      }
+      return true;
+    }
+
+    if (!account.emailNotificationsEnabled) {
+      this.logger.debug(
+        `Skipping system email to ${normalized}: email notifications disabled`,
+      );
+      return false;
+    }
+
+    return true;
   }
 }

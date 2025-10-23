@@ -3,6 +3,7 @@ import {
   Controller,
   HttpCode,
   HttpStatus,
+  Patch,
   Post,
   Req,
   UseGuards,
@@ -29,6 +30,8 @@ import { CompleteStripeVerificationCommand } from '../commands/complete-stripe-v
 import { ChangePasswordCommand } from '../commands/change-password.command';
 import { ForgotPasswordCommand } from '../commands/forgot-password.command';
 import { ResetPasswordCommand } from '../commands/reset-password.command';
+import { UpdateAvatarCommand } from '../commands/update-avatar.command';
+import { UpdateNotificationPreferencesCommand } from '../commands/update-notification-preferences.command';
 import type {
   LoginResult,
   ResendVerificationResult,
@@ -37,6 +40,8 @@ import type {
   ChangePasswordResult,
   ForgotPasswordResult,
   ResetPasswordResult,
+  UpdateAvatarResult,
+  UpdateNotificationPreferencesResult,
 } from '../contracts/auth-results';
 import {
   LoginSuccessResultDto,
@@ -48,6 +53,8 @@ import {
   ChangePasswordResultDto,
   ForgotPasswordResultDto,
   ResetPasswordResultDto,
+  UpdateAvatarResultDto,
+  UpdateNotificationPreferencesResultDto,
 } from '../contracts/auth-swagger.dto';
 import * as LoginDtoModule from '../dto/login.dto';
 import * as ResendVerificationDtoModule from '../dto/resend-verification.dto';
@@ -57,6 +64,8 @@ import * as CompleteStripeVerificationDtoModule from '../dto/complete-stripe-ver
 import * as ChangePasswordDtoModule from '../dto/change-password.dto';
 import * as ForgotPasswordDtoModule from '../dto/forgot-password.dto';
 import * as ResetPasswordDtoModule from '../dto/reset-password.dto';
+import * as UpdateAvatarDtoModule from '../dto/update-avatar.dto';
+import * as UpdateNotificationPreferencesDtoModule from '../dto/update-notification-preferences.dto';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import type { AuthenticatedRequest } from '../guards/jwt-auth.guard';
 
@@ -83,6 +92,7 @@ export class AuthController {
         payload.email,
         payload.phoneNumber,
         payload.password,
+        payload.avatarUrl ?? null,
         {
           ipAddress: request.ip,
           userAgent: request.headers['user-agent'],
@@ -132,23 +142,16 @@ export class AuthController {
     @Body()
     payload: CompleteStripeVerificationDtoModule.CompleteStripeVerificationDto,
   ): Promise<CompleteStripeVerificationResult> {
-    const firstAttemptDate = payload.verificationFirstAttemptDate
-      ? new Date(payload.verificationFirstAttemptDate)
-      : null;
-    const lastAttemptDate = payload.verificationLastAttemptDate
-      ? new Date(payload.verificationLastAttemptDate)
-      : null;
-
     return this.commandBus.execute(
       new CompleteStripeVerificationCommand(
         payload.email,
         payload.firstName,
         payload.lastName,
         payload.stripeVerificationCompleted,
-        payload.verificationAttemptCount ?? null,
-        firstAttemptDate,
-        lastAttemptDate,
-        payload.verificationStatus ?? null,
+        payload.sessionId,
+        payload.stripeReference,
+        payload.verificationType,
+        payload.verificationStatus,
       ),
     );
   }
@@ -235,6 +238,49 @@ export class AuthController {
         request.user.accountId,
         payload.currentPassword,
         payload.newPassword,
+      ),
+    );
+  }
+
+  @Patch('profile/avatar')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('bearer')
+  @ApiOperation({ summary: 'Update the authenticated account avatar' })
+  @ApiOkResponse({
+    description: 'Avatar updated successfully.',
+    type: UpdateAvatarResultDto,
+  })
+  @ApiBadRequestResponse({ description: 'Invalid avatar URL supplied.' })
+  @ApiUnauthorizedResponse({ description: 'Authentication required.' })
+  async updateAvatar(
+    @Req() request: AuthenticatedRequest,
+    @Body() payload: UpdateAvatarDtoModule.UpdateAvatarDto,
+  ): Promise<UpdateAvatarResult> {
+    return this.commandBus.execute(
+      new UpdateAvatarCommand(request.user.accountId, payload.avatarUrl),
+    );
+  }
+
+  @Patch('profile/notifications')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('bearer')
+  @ApiOperation({ summary: 'Update email notification preferences' })
+  @ApiOkResponse({
+    description: 'Notification preferences updated.',
+    type: UpdateNotificationPreferencesResultDto,
+  })
+  @ApiBadRequestResponse({ description: 'No changes supplied or payload invalid.' })
+  @ApiUnauthorizedResponse({ description: 'Authentication required.' })
+  async updateNotificationPreferences(
+    @Req() request: AuthenticatedRequest,
+    @Body()
+    payload: UpdateNotificationPreferencesDtoModule.UpdateNotificationPreferencesDto,
+  ): Promise<UpdateNotificationPreferencesResult> {
+    return this.commandBus.execute(
+      new UpdateNotificationPreferencesCommand(
+        request.user.accountId,
+        payload.emailNotificationsEnabled,
+        payload.transactionNotificationsEnabled,
       ),
     );
   }

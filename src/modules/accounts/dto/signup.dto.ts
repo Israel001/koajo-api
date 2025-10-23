@@ -1,5 +1,14 @@
 import { Transform } from 'class-transformer';
-import { IsEmail, IsString, IsStrongPassword, Matches, MaxLength, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsOptional,
+  IsString,
+  IsStrongPassword,
+  IsUrl,
+  Matches,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 const E164_REGEX = /^\+[1-9]\d{7,14}$/;
@@ -44,4 +53,14 @@ export class SignupDto {
     minSymbols: 1,
   })
   password!: string;
+
+  @ApiProperty({
+    description: 'Optional avatar image URL.',
+    example: 'https://cdn.example.com/avatars/user.png',
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsUrl({ require_protocol: true, require_tld: false })
+  avatarUrl?: string | null;
 }

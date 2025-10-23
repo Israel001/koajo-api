@@ -7,6 +7,8 @@ import { ChangePasswordHandler } from './change-password.handler';
 import { ForgotPasswordHandler } from './forgot-password.handler';
 import { ResetPasswordHandler } from './reset-password.handler';
 import { ProcessAccountInactivityHandler } from './process-account-inactivity.handler';
+import { UpdateAvatarHandler } from './update-avatar.handler';
+import { UpdateNotificationPreferencesHandler } from './update-notification-preferences.handler';
 
 export const CommandHandlers = [
   RegisterAccountHandler,
@@ -18,6 +20,8 @@ export const CommandHandlers = [
   ResetPasswordHandler,
   LoginHandler,
   ProcessAccountInactivityHandler,
+  UpdateAvatarHandler,
+  UpdateNotificationPreferencesHandler,
 ];
 
 export { RegisterAccountHandler } from './register-account.handler';
@@ -29,3 +33,5 @@ export { ChangePasswordHandler } from './change-password.handler';
 export { ForgotPasswordHandler } from './forgot-password.handler';
 export { ResetPasswordHandler } from './reset-password.handler';
 export { ProcessAccountInactivityHandler } from './process-account-inactivity.handler';
+export { UpdateAvatarHandler } from './update-avatar.handler';
+export { UpdateNotificationPreferencesHandler } from './update-notification-preferences.handler';

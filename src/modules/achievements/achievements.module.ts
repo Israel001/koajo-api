@@ -11,6 +11,8 @@ import { GetAchievementsSummaryHandler } from './queries/handlers/get-achievemen
 import { AchievementsController } from './achievements.controller';
 import { JwtAuthGuard } from '../accounts/guards/jwt-auth.guard';
 import { PodMembershipEntity } from '../pods/entities/pod-membership.entity';
+import { PodEntity } from '../pods/entities/pod.entity';
+import { PodInviteEntity } from '../pods/entities/pod-invite.entity';
 
 @Module({
   imports: [
@@ -19,6 +21,8 @@ import { PodMembershipEntity } from '../pods/entities/pod-membership.entity';
       AccountAchievementEntity,
       AccountEntity,
       PodMembershipEntity,
+      PodEntity,
+      PodInviteEntity,
     ]),
     CqrsModule,
     JwtModule.registerAsync({

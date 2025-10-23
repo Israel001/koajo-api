@@ -131,6 +131,7 @@ export class LoginHandler
     const payload = {
       sub: account.id,
       email: account.email,
+      scope: 'user' as const,
     };
 
     const accessToken = await this.jwtService.signAsync(payload);

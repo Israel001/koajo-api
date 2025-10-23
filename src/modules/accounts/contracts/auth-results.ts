@@ -2,19 +2,34 @@ export interface SignupResult {
   accountId: string;
   email: string;
   phoneNumber: string;
+  avatarUrl: string | null;
   emailVerified: boolean;
   verification: {
     expiresAt: string;
   } | null;
 }
 
+export interface UpdateAvatarResult {
+  avatarUrl: string | null;
+}
+
+export interface UpdateNotificationPreferencesResult {
+  emailNotificationsEnabled: boolean;
+  transactionNotificationsEnabled: boolean;
+}
+
 export interface CompleteStripeVerificationResult {
   email: string;
   stripeVerificationCompleted: boolean;
-  verificationAttemptCount: number | null;
-  verificationFirstAttemptDate: string | null;
-  verificationLastAttemptDate: string | null;
-  verificationStatus: string | null;
+  latestAttempt: {
+    id: string;
+    sessionId: string;
+    stripeReference: string;
+    status: string;
+    type: string;
+    recordedAt: string;
+    completedAt: string | null;
+  };
   verification: {
     expiresAt: string;
     sentAt: string;

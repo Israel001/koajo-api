@@ -51,6 +51,7 @@ export class RegisterAccountHandler
         email,
         phoneNumber: phone,
         passwordHash,
+        avatarUrl: command.avatarUrl ?? null,
       },
       { partial: true },
     );
@@ -66,6 +67,7 @@ export class RegisterAccountHandler
       accountId: account.id,
       email: account.email,
       phoneNumber: account.phoneNumber,
+      avatarUrl: account.avatarUrl ?? null,
       emailVerified: Boolean(account.emailVerifiedAt),
       verification: null,
     };

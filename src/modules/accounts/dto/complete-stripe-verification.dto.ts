@@ -2,11 +2,8 @@ import { Transform } from 'class-transformer';
 import {
   IsBoolean,
   IsEmail,
-  IsInt,
-  IsISO8601,
   IsOptional,
   IsString,
-  Min,
   MaxLength,
   MinLength,
 } from 'class-validator';
@@ -69,44 +66,44 @@ export class CompleteStripeVerificationDto {
   stripeVerificationCompleted!: boolean;
 
   @ApiProperty({
-    description: 'Count of Stripe verification attempts recorded.',
-    example: 2,
-    required: false,
+    description: 'Stripe verification session identifier.',
+    example: 'sess_1234567890',
   })
-  @Transform(({ value }) => {
-    if (value === null || value === undefined || value === '') {
-      return undefined;
-    }
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? Math.trunc(parsed) : value;
-  })
-  @IsInt()
-  @Min(0)
-  @IsOptional()
-  verificationAttemptCount?: number;
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.trim() : value,
+  )
+  @IsString()
+  @MinLength(1)
+  @MaxLength(128)
+  sessionId!: string;
 
   @ApiProperty({
-    description: 'ISO timestamp of the first recorded Stripe verification attempt.',
-    example: '2024-05-01T09:30:00.000Z',
-    required: false,
+    description: 'Stripe reference identifier associated with this verification attempt.',
+    example: 'vs_1QB2m4Fo222Y9bAd3S',
   })
-  @IsISO8601({ strict: true })
-  @IsOptional()
-  verificationFirstAttemptDate?: string;
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.trim() : value,
+  )
+  @IsString()
+  @MinLength(1)
+  @MaxLength(128)
+  stripeReference!: string;
 
   @ApiProperty({
-    description: 'ISO timestamp of the most recent Stripe verification attempt.',
-    example: '2024-05-02T16:45:00.000Z',
-    required: false,
+    description: 'Type of verification performed (e.g. `document`, `biometric`).',
+    example: 'document',
   })
-  @IsISO8601({ strict: true })
-  @IsOptional()
-  verificationLastAttemptDate?: string;
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.trim().toLowerCase() : value,
+  )
+  @IsString()
+  @MinLength(1)
+  @MaxLength(64)
+  verificationType!: string;
 
   @ApiProperty({
     description: 'Current status string reported by Stripe (e.g. `pending`, `verified`).',
-    example: 'pending',
-    required: false,
+    example: 'verified',
     maxLength: 64,
   })
   @Transform(({ value }) =>
@@ -114,6 +111,5 @@ export class CompleteStripeVerificationDto {
   )
   @IsString()
   @MaxLength(64)
-  @IsOptional()
-  verificationStatus?: string;
+  verificationStatus!: string;
 }

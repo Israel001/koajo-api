@@ -9,6 +9,8 @@ import type {
   ChangePasswordResult,
   ForgotPasswordResult,
   ResetPasswordResult,
+  UpdateAvatarResult,
+  UpdateNotificationPreferencesResult,
 } from './auth-results';
 
 class VerificationExpiryDto {
@@ -40,6 +42,14 @@ export class SignupResultDto implements SignupResult {
   @ApiProperty({ description: 'Registered phone number in E.164 format.', example: '+2348012345678' })
   phoneNumber!: string;
 
+  @ApiProperty({
+    description: 'Avatar image URL if provided during signup.',
+    example: 'https://cdn.example.com/avatars/user.png',
+    required: false,
+    nullable: true,
+  })
+  avatarUrl!: string | null;
+
   @ApiProperty({ description: 'Indicates whether the email is verified after signup.', example: false })
   emailVerified!: boolean;
 
@@ -50,6 +60,32 @@ export class SignupResultDto implements SignupResult {
     nullable: true,
   })
   verification!: VerificationExpiryDto | null;
+}
+
+class VerificationAttemptDto {
+  @ApiProperty({ description: 'Identifier for the verification record.', example: 'e3b0c442-...'})
+  id!: string;
+
+  @ApiProperty({ description: 'Stripe session identifier.', example: 'sess_1234567890' })
+  sessionId!: string;
+
+  @ApiProperty({
+    description: 'Stripe reference identifier associated with this verification attempt.',
+    example: 'vs_1QB2m4Fo222Y9bAd3S',
+  })
+  stripeReference!: string;
+
+  @ApiProperty({ description: 'Status reported by Stripe.', example: 'verified' })
+  status!: string;
+
+  @ApiProperty({ description: 'Verification type (e.g. document, biometric).', example: 'document' })
+  type!: string;
+
+  @ApiProperty({ description: 'ISO timestamp when this attempt was recorded.' })
+  recordedAt!: string;
+
+  @ApiProperty({ description: 'ISO timestamp when verification completed, if applicable.', nullable: true })
+  completedAt!: string | null;
 }
 
 export class CompleteStripeVerificationResultDto
@@ -65,32 +101,10 @@ export class CompleteStripeVerificationResultDto
   stripeVerificationCompleted!: boolean;
 
   @ApiProperty({
-    description: 'Total number of recorded Stripe verification attempts.',
-    example: 2,
-    nullable: true,
+    description: 'Details of the most recent verification attempt.',
+    type: () => VerificationAttemptDto,
   })
-  verificationAttemptCount!: number | null;
-
-  @ApiProperty({
-    description: 'ISO timestamp of the first Stripe verification attempt, if known.',
-    example: '2024-05-01T09:30:00.000Z',
-    nullable: true,
-  })
-  verificationFirstAttemptDate!: string | null;
-
-  @ApiProperty({
-    description: 'ISO timestamp of the latest Stripe verification attempt, if known.',
-    example: '2024-05-02T16:45:00.000Z',
-    nullable: true,
-  })
-  verificationLastAttemptDate!: string | null;
-
-  @ApiProperty({
-    description: 'Latest verification status reported by Stripe (e.g. `pending`).',
-    example: 'pending',
-    nullable: true,
-  })
-  verificationStatus!: string | null;
+  latestAttempt!: VerificationAttemptDto;
 
   @ApiProperty({
     description:
@@ -171,4 +185,26 @@ export class VerifyEmailResultDto {
 
   @ApiProperty({ description: 'Indicates whether the email is now verified.', example: true })
   verified!: boolean;
+}
+
+export class UpdateAvatarResultDto implements UpdateAvatarResult {
+  @ApiProperty({
+    description: 'Updated avatar URL. Null means the avatar has been cleared.',
+    example: 'https://cdn.example.com/avatars/user.png',
+    nullable: true,
+  })
+  avatarUrl!: string | null;
+}
+
+export class UpdateNotificationPreferencesResultDto
+  implements UpdateNotificationPreferencesResult
+{
+  @ApiProperty({ description: 'Indicates if general system emails are enabled.', example: true })
+  emailNotificationsEnabled!: boolean;
+
+  @ApiProperty({
+    description: 'Indicates if transaction-related emails are enabled.',
+    example: true,
+  })
+  transactionNotificationsEnabled!: boolean;
 }
