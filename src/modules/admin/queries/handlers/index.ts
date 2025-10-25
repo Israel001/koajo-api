@@ -5,6 +5,7 @@ import { ListAdminPodsHandler } from './list-admin-pods.handler';
 import { GetAdminPodHandler } from './get-admin-pod.handler';
 import { ListAdminUsersHandler } from './list-admin-users.handler';
 import { ListAdminAchievementsHandler } from './list-admin-achievements.handler';
+import { ListAdminPodPlansHandler } from './list-admin-pod-plans.handler';
 
 export const AdminQueryHandlers = [
   AdminDashboardHandler,
@@ -14,6 +15,7 @@ export const AdminQueryHandlers = [
   GetAdminPodHandler,
   ListAdminUsersHandler,
   ListAdminAchievementsHandler,
+  ListAdminPodPlansHandler,
 ];
 
 export {
@@ -24,4 +26,5 @@ export {
   GetAdminPodHandler,
   ListAdminUsersHandler,
   ListAdminAchievementsHandler,
+  ListAdminPodPlansHandler,
 };

@@ -19,6 +19,7 @@ import { PodsModule } from './modules/pods/pods.module';
 import { AchievementsModule } from './modules/achievements/achievements.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { FinanceModule } from './modules/finance/finance.module';
+import { AvatarsModule } from './modules/avatars/avatars.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { FinanceModule } from './modules/finance/finance.module';
     AccountsModule,
     PodsModule,
     FinanceModule,
+    AvatarsModule,
     AdminModule,
   ],
   controllers: [AppController],

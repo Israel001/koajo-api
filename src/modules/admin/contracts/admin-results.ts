@@ -75,6 +75,26 @@ export interface AdminPodsListResult {
   items: AdminPodSummary[];
 }
 
+export interface AdminPodPlanSummary {
+  id: string;
+  code: string;
+  amount: number;
+  lifecycleWeeks: number;
+  maxMembers: number;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+  totalPods: number;
+  podsWithMembers: number;
+  canEdit: boolean;
+  canDelete: boolean;
+}
+
+export interface AdminPodPlansListResult {
+  total: number;
+  items: AdminPodPlanSummary[];
+}
+
 export interface AdminAchievementDefinition {
   code: string;
   name: string;

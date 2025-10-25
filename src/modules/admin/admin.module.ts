@@ -8,6 +8,7 @@ import { AdminAuthController } from './controllers/admin-auth.controller';
 import { AdminUsersController } from './controllers/admin-users.controller';
 import { AdminAccountsController } from './controllers/admin-accounts.controller';
 import { AdminPodsController } from './controllers/admin-pods.controller';
+import { AdminPodPlansController } from './controllers/admin-pod-plans.controller';
 import { AdminCommandHandlers } from './commands/handlers';
 import { AdminQueryHandlers } from './queries/handlers';
 import { AdminJwtGuard } from './guards/admin-jwt.guard';
@@ -23,6 +24,7 @@ import { TransactionEntity } from '../finance/entities/transaction.entity';
 import { AccountVerificationAttemptEntity } from '../accounts/entities/account-verification-attempt.entity';
 import { AdminAchievementsController } from './controllers/admin-achievements.controller';
 import { AdminDashboardController } from './controllers/admin-dashboard.controller';
+import { AdminPodPlanService } from './services/admin-pod-plan.service';
 
 @Module({
   imports: [
@@ -60,9 +62,15 @@ import { AdminDashboardController } from './controllers/admin-dashboard.controll
     AdminUsersController,
     AdminAccountsController,
     AdminPodsController,
+    AdminPodPlansController,
     AdminAchievementsController,
     AdminDashboardController,
   ],
-  providers: [...AdminCommandHandlers, ...AdminQueryHandlers, AdminJwtGuard],
+  providers: [
+    ...AdminCommandHandlers,
+    ...AdminQueryHandlers,
+    AdminJwtGuard,
+    AdminPodPlanService,
+  ],
 })
 export class AdminModule {}

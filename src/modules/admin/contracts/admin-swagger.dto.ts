@@ -6,6 +6,8 @@ import type {
   AdminLoginResult,
   AdminUserDto,
   CreateAdminUserResult,
+  AdminPodPlanSummary,
+  AdminPodPlansListResult,
   IncomeAnalysis,
   KycAttemptSummary,
   KycSummary,
@@ -124,6 +126,55 @@ export class PodContributionSummaryDto implements PodContributionSummary {
 
   @ApiProperty({ description: 'Total contributions recorded for the plan.', example: '25000.00' })
   totalContributed!: string;
+}
+
+export class AdminPodPlanSummaryDto implements AdminPodPlanSummary {
+  @ApiProperty({ description: 'Pod plan identifier.' })
+  id!: string;
+
+  @ApiProperty({ description: 'Unique plan code.', example: 'STARTER-12' })
+  code!: string;
+
+  @ApiProperty({ description: 'Contribution amount per cycle.', example: 50000 })
+  amount!: number;
+
+  @ApiProperty({ description: 'Lifecycle length in weeks.', example: 12 })
+  lifecycleWeeks!: number;
+
+  @ApiProperty({ description: 'Maximum members allowed in the plan.', example: 10 })
+  maxMembers!: number;
+
+  @ApiProperty({ description: 'Whether the plan is currently active.' })
+  active!: boolean;
+
+  @ApiProperty({ description: 'ISO timestamp when the plan was created.' })
+  createdAt!: string;
+
+  @ApiProperty({ description: 'ISO timestamp when the plan was last updated.' })
+  updatedAt!: string;
+
+  @ApiProperty({ description: 'Number of pods currently referencing this plan.', example: 4 })
+  totalPods!: number;
+
+  @ApiProperty({ description: 'Number of pods that have at least one real member.', example: 2 })
+  podsWithMembers!: number;
+
+  @ApiProperty({ description: 'Indicates if the plan can be edited.', example: true })
+  canEdit!: boolean;
+
+  @ApiProperty({ description: 'Indicates if the plan can be deleted.', example: false })
+  canDelete!: boolean;
+}
+
+export class AdminPodPlansListResultDto implements AdminPodPlansListResult {
+  @ApiProperty({ description: 'Total number of matching pod plans.', example: 8 })
+  total!: number;
+
+  @ApiProperty({
+    description: 'List of pod plans.',
+    type: [AdminPodPlanSummaryDto],
+  })
+  items!: AdminPodPlanSummaryDto[];
 }
 
 export class KycAttemptSummaryDto implements KycAttemptSummary {

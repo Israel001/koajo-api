@@ -3,6 +3,7 @@ import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { AdminUsersController } from './admin-users.controller';
 import { CreateAdminUserCommand } from '../commands/create-admin-user.command';
 import type { AdminAuthenticatedRequest } from '../guards/admin-jwt.guard';
+import { AdminJwtGuard } from '../guards/admin-jwt.guard';
 import { AdminRole } from '../admin-role.enum';
 
 describe('AdminUsersController', () => {
@@ -31,7 +32,10 @@ describe('AdminUsersController', () => {
           useValue: queryBus,
         },
       ],
-    }).compile();
+    })
+      .overrideGuard(AdminJwtGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
 
     controller = module.get<AdminUsersController>(AdminUsersController);
   });
