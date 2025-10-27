@@ -9,6 +9,10 @@ import { ResetPasswordHandler } from './reset-password.handler';
 import { ProcessAccountInactivityHandler } from './process-account-inactivity.handler';
 import { UpdateAvatarHandler } from './update-avatar.handler';
 import { UpdateNotificationPreferencesHandler } from './update-notification-preferences.handler';
+import { RecordIdentityVerificationHandler } from './record-identity-verification.handler';
+import { UpdateUserProfileHandler } from './update-user-profile.handler';
+import { UpsertStripeCustomerHandler } from './upsert-stripe-customer.handler';
+import { UpsertStripeBankAccountHandler } from './upsert-stripe-bank-account.handler';
 
 export const CommandHandlers = [
   RegisterAccountHandler,
@@ -22,6 +26,10 @@ export const CommandHandlers = [
   ProcessAccountInactivityHandler,
   UpdateAvatarHandler,
   UpdateNotificationPreferencesHandler,
+  RecordIdentityVerificationHandler,
+  UpdateUserProfileHandler,
+  UpsertStripeCustomerHandler,
+  UpsertStripeBankAccountHandler,
 ];
 
 export { RegisterAccountHandler } from './register-account.handler';
@@ -35,3 +43,7 @@ export { ResetPasswordHandler } from './reset-password.handler';
 export { ProcessAccountInactivityHandler } from './process-account-inactivity.handler';
 export { UpdateAvatarHandler } from './update-avatar.handler';
 export { UpdateNotificationPreferencesHandler } from './update-notification-preferences.handler';
+export { RecordIdentityVerificationHandler } from './record-identity-verification.handler';
+export { UpdateUserProfileHandler } from './update-user-profile.handler';
+export { UpsertStripeCustomerHandler } from './upsert-stripe-customer.handler';
+export { UpsertStripeBankAccountHandler } from './upsert-stripe-bank-account.handler';

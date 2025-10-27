@@ -90,4 +90,54 @@ export interface CurrentUserResult {
   last_login_at: string | null;
   created_at: string;
   updated_at: string;
+  identity_verification: {
+    id: string | null;
+    result_id: string | null;
+    status?: string | null;
+    type?: string | null;
+    session_id?: string | null;
+    completed_at?: string | null;
+    recorded_at?: string | null;
+  } | null;
+  customer: {
+    id: string;
+    user_id: string;
+    ssn_last4: string | null;
+    address: Record<string, unknown> | null;
+  } | null;
+  bank_account: {
+    id: string;
+    customer_id: string | null;
+  } | null;
+}
+
+export interface RecordIdentityVerificationResult {
+  id: string;
+  identity_id: string | null;
+  session_id: string;
+  result_id: string | null;
+  status: string;
+  type: string;
+  completed_at: string | null;
+  recorded_at: string;
+}
+
+export interface UpdateUserProfileResult {
+  user: CurrentUserResult;
+  verification: {
+    expiresAt: string;
+    sentAt: string;
+  } | null;
+}
+
+export interface UpsertStripeCustomerResult {
+  id: string;
+  user_id: string;
+  ssn_last4: string | null;
+  address: Record<string, unknown> | null;
+}
+
+export interface UpsertStripeBankAccountResult {
+  id: string;
+  customer_id: string | null;
 }

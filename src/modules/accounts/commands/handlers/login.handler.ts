@@ -143,6 +143,10 @@ export class LoginHandler
       expiresAt: expiresAt.toISOString(),
     };
 
+    account.lastLoginAt = now;
+    const em = this.accountRepository.getEntityManager();
+    await em.persistAndFlush(account);
+
     return response;
   }
 }

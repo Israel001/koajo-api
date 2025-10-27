@@ -15,6 +15,10 @@ import { ForgotPasswordCommand } from '../commands/forgot-password.command';
 import { ResetPasswordCommand } from '../commands/reset-password.command';
 import { UpdateAvatarCommand } from '../commands/update-avatar.command';
 import { UpdateNotificationPreferencesCommand } from '../commands/update-notification-preferences.command';
+import { RecordIdentityVerificationCommand } from '../commands/record-identity-verification.command';
+import { UpdateUserProfileCommand } from '../commands/update-user-profile.command';
+import { UpsertStripeCustomerCommand } from '../commands/upsert-stripe-customer.command';
+import { UpsertStripeBankAccountCommand } from '../commands/upsert-stripe-bank-account.command';
 import { SignupDto } from '../dto/signup.dto';
 import { VerifyEmailDto } from '../dto/verify-email.dto';
 import { ResendVerificationDto } from '../dto/resend-verification.dto';
@@ -36,18 +40,23 @@ import type {
   UpdateNotificationPreferencesResult,
 } from '../contracts/auth-results';
 import { AccountEntity } from '../entities/account.entity';
+import { AccountVerificationAttemptEntity } from '../entities/account-verification-attempt.entity';
 import type { AuthenticatedRequest } from '../guards/jwt-auth.guard';
 
 describe('AuthController', () => {
   let controller: AuthController;
   let commandBus: { execute: jest.Mock };
   let accountRepository: { findOne: jest.Mock };
+  let verificationAttemptRepository: { findOne: jest.Mock };
 
   beforeEach(async () => {
     commandBus = {
       execute: jest.fn(),
     };
     accountRepository = {
+      findOne: jest.fn(),
+    } as any;
+    verificationAttemptRepository = {
       findOne: jest.fn(),
     } as any;
     const mockGuard = {
@@ -64,6 +73,10 @@ describe('AuthController', () => {
         {
           provide: getRepositoryToken(AccountEntity),
           useValue: accountRepository,
+        },
+        {
+          provide: getRepositoryToken(AccountVerificationAttemptEntity),
+          useValue: verificationAttemptRepository,
         },
         {
           provide: JwtAuthGuard,
@@ -398,11 +411,172 @@ describe('AuthController', () => {
     });
   });
 
+  describe('recordIdentityVerification', () => {
+    it('delegates to RecordIdentityVerificationCommand', async () => {
+      const dto = {
+        identityId: 'iv_123',
+        sessionId: 'sess_123',
+        resultId: 'res_456',
+        status: 'verified',
+        type: 'document',
+      };
+
+      const expected: RecordIdentityVerificationResult = {
+        id: 'attempt-1',
+        identity_id: dto.identityId,
+        session_id: dto.sessionId,
+        result_id: dto.resultId,
+        status: dto.status,
+        type: dto.type,
+        completed_at: new Date().toISOString(),
+        recorded_at: new Date().toISOString(),
+      };
+
+      commandBus.execute.mockResolvedValue(expected);
+
+      const request = {
+        user: { accountId: 'account-1' },
+      } as AuthenticatedRequest;
+
+      await expect(
+        controller.recordIdentityVerification(request, dto as any),
+      ).resolves.toEqual(expected);
+
+      expect(commandBus.execute).toHaveBeenCalledWith(
+        expect.any(RecordIdentityVerificationCommand),
+      );
+      const command = commandBus.execute.mock.calls[0][0] as RecordIdentityVerificationCommand;
+      expect(command.accountId).toBe('account-1');
+      expect(command.identityId).toBe(dto.identityId);
+      expect(command.resultId).toBe(dto.resultId);
+    });
+  });
+
+  describe('updateUser', () => {
+    it('delegates to UpdateUserProfileCommand', async () => {
+      const dto = {
+        firstName: 'Jane',
+        lastName: 'Doe',
+        dateOfBirth: '1990-05-10',
+        phone: '+2348012345678',
+      };
+
+      const expected: UpdateUserProfileResult = {
+        user: {
+          id: 'account-1',
+          email: 'user@example.com',
+          first_name: 'Jane',
+          last_name: 'Doe',
+          phone: '+2348012345678',
+          email_verified: false,
+          agreed_to_terms: true,
+          date_of_birth: '1990-05-10',
+          avatar_id: null,
+          is_active: true,
+          last_login_at: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          identity_verification: null,
+          customer: null,
+          bank_account: null,
+        },
+        verification: null,
+      };
+
+      commandBus.execute.mockResolvedValue(expected);
+
+      const request = {
+        user: { accountId: 'account-1' },
+      } as AuthenticatedRequest;
+
+      await expect(controller.updateUser(request, dto as any)).resolves.toEqual(
+        expected,
+      );
+
+      expect(commandBus.execute).toHaveBeenCalledWith(
+        expect.any(UpdateUserProfileCommand),
+      );
+      const command = commandBus.execute.mock.calls[0][0] as UpdateUserProfileCommand;
+      expect(command.accountId).toBe('account-1');
+      expect(command.firstName).toBe(dto.firstName);
+      expect(command.dateOfBirth).toBe(dto.dateOfBirth);
+    });
+  });
+
+  describe('linkStripeCustomer', () => {
+    it('delegates to UpsertStripeCustomerCommand', async () => {
+      const dto = {
+        customerId: 'cus_123',
+        userId: 'account-1',
+        ssnLast4: '1234',
+        address: { line1: '123 Road' },
+      };
+
+      const expected: UpsertStripeCustomerResult = {
+        id: dto.customerId,
+        user_id: dto.userId!,
+        ssn_last4: dto.ssnLast4!,
+        address: dto.address!,
+      };
+
+      commandBus.execute.mockResolvedValue(expected);
+
+      const request = {
+        user: { accountId: 'account-1' },
+      } as AuthenticatedRequest;
+
+      await expect(
+        controller.linkStripeCustomer(request, dto as any),
+      ).resolves.toEqual(expected);
+
+      expect(commandBus.execute).toHaveBeenCalledWith(
+        expect.any(UpsertStripeCustomerCommand),
+      );
+      const command = commandBus.execute.mock.calls[0][0] as UpsertStripeCustomerCommand;
+      expect(command.accountId).toBe('account-1');
+      expect(command.stripeCustomerId).toBe(dto.customerId);
+    });
+  });
+
+  describe('linkStripeBankAccount', () => {
+    it('delegates to UpsertStripeBankAccountCommand', async () => {
+      const dto = {
+        bankAccountId: 'ba_123',
+        customerId: 'cus_123',
+      };
+
+      const expected: UpsertStripeBankAccountResult = {
+        id: dto.bankAccountId,
+        customer_id: dto.customerId,
+      };
+
+      commandBus.execute.mockResolvedValue(expected);
+
+      const request = {
+        user: { accountId: 'account-1' },
+      } as AuthenticatedRequest;
+
+      await expect(
+        controller.linkStripeBankAccount(request, dto as any),
+      ).resolves.toEqual(expected);
+
+      expect(commandBus.execute).toHaveBeenCalledWith(
+        expect.any(UpsertStripeBankAccountCommand),
+      );
+      const command = commandBus.execute.mock.calls[0][0] as UpsertStripeBankAccountCommand;
+      expect(command.accountId).toBe('account-1');
+      expect(command.bankAccountId).toBe(dto.bankAccountId);
+    });
+  });
+
   describe('me', () => {
     it('returns the authenticated user details with defaults', async () => {
       const createdAt = new Date('2025-01-01T00:00:00.000Z');
       const updatedAt = new Date('2025-01-02T00:00:00.000Z');
       const emailVerifiedAt = new Date('2025-01-01T12:00:00.000Z');
+      const dateOfBirth = new Date('1990-05-10T00:00:00.000Z');
+      const completedAt = new Date('2025-01-01T13:00:00.000Z');
+      const recordedAt = new Date('2025-01-01T12:30:00.000Z');
 
       accountRepository.findOne.mockResolvedValue({
         id: 'account-1',
@@ -414,6 +588,26 @@ describe('AuthController', () => {
         isActive: true,
         createdAt,
         updatedAt,
+        agreedToTerms: true,
+        dateOfBirth,
+        lastLoginAt: null,
+        stripeIdentityId: 'iv_123',
+        stripeIdentityResultId: 'res_456',
+        stripeCustomerId: 'cus_123',
+        stripeCustomerSsnLast4: '1234',
+        stripeCustomerAddress: { line1: '123 Road' },
+        stripeBankAccountId: 'ba_123',
+        stripeBankAccountCustomerId: 'cus_123',
+      });
+
+      verificationAttemptRepository.findOne.mockResolvedValue({
+        providerReference: 'iv_123',
+        resultId: 'res_456',
+        status: 'verified',
+        type: 'document',
+        sessionId: 'sess_123',
+        completedAt,
+        createdAt: recordedAt,
       });
 
       const request = {
@@ -431,18 +625,38 @@ describe('AuthController', () => {
         last_name: 'Doe',
         phone: '+2348012345678',
         email_verified: true,
-        agreed_to_terms: false,
-        date_of_birth: null,
+        agreed_to_terms: true,
+        date_of_birth: '1990-05-10',
         avatar_id: null,
         is_active: true,
         last_login_at: null,
         created_at: createdAt.toISOString(),
         updated_at: updatedAt.toISOString(),
+        identity_verification: {
+          id: 'iv_123',
+          result_id: 'res_456',
+          status: 'verified',
+          type: 'document',
+          session_id: 'sess_123',
+          completed_at: completedAt.toISOString(),
+          recorded_at: recordedAt.toISOString(),
+        },
+        customer: {
+          id: 'cus_123',
+          user_id: 'account-1',
+          ssn_last4: '1234',
+          address: { line1: '123 Road' },
+        },
+        bank_account: {
+          id: 'ba_123',
+          customer_id: 'cus_123',
+        },
       });
 
       expect(accountRepository.findOne).toHaveBeenCalledWith({
         id: 'account-1',
       });
+      expect(verificationAttemptRepository.findOne).toHaveBeenCalled();
     });
 
     it('throws NotFoundException when account is missing', async () => {

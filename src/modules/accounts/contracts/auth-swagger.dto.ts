@@ -12,6 +12,10 @@ import type {
   UpdateAvatarResult,
   UpdateNotificationPreferencesResult,
   CurrentUserResult,
+  RecordIdentityVerificationResult,
+  UpdateUserProfileResult,
+  UpsertStripeCustomerResult,
+  UpsertStripeBankAccountResult,
 } from './auth-results';
 
 class VerificationExpiryDto {
@@ -278,4 +282,99 @@ export class CurrentUserResultDto implements CurrentUserResult {
     description: 'Timestamp when the account was last updated.',
   })
   updated_at!: string;
+
+  @ApiProperty({
+    description: 'Details about the latest identity verification attempt.',
+    nullable: true,
+    type: () => IdentityVerificationDto,
+  })
+  identity_verification!: IdentityVerificationDto | null;
+
+  @ApiProperty({
+    description: 'Stripe customer details linked to the account.',
+    nullable: true,
+    type: () => StripeCustomerDto,
+  })
+  customer!: StripeCustomerDto | null;
+
+  @ApiProperty({
+    description: 'Stripe bank account linked to the account.',
+    nullable: true,
+    type: () => StripeBankAccountDto,
+  })
+  bank_account!: StripeBankAccountDto | null;
 }
+
+class IdentityVerificationDto
+  implements RecordIdentityVerificationResult
+{
+  @ApiProperty({ description: 'Identifier of the verification attempt.' })
+  id!: string;
+
+  @ApiProperty({ description: 'Stripe identity verification identifier.', nullable: true })
+  identity_id!: string | null;
+
+  @ApiProperty({ description: 'Stripe session identifier.' })
+  session_id!: string;
+
+  @ApiProperty({ description: 'Identifier of the verification result.', nullable: true })
+  result_id!: string | null;
+
+  @ApiProperty({ description: 'Status returned by Stripe.' })
+  status!: string;
+
+  @ApiProperty({ description: 'Type of the verification performed.' })
+  type!: string;
+
+  @ApiProperty({ description: 'ISO timestamp when the attempt completed.', nullable: true })
+  completed_at!: string | null;
+
+  @ApiProperty({ description: 'ISO timestamp when the attempt was recorded.' })
+  recorded_at!: string;
+}
+
+class StripeCustomerDto implements UpsertStripeCustomerResult {
+  @ApiProperty({ description: 'Stripe customer identifier.' })
+  id!: string;
+
+  @ApiProperty({ description: 'Internal account identifier linked to the customer.' })
+  user_id!: string;
+
+  @ApiProperty({ description: 'Last four digits of the customer SSN.', nullable: true })
+  ssn_last4!: string | null;
+
+  @ApiProperty({ description: 'Customer address information.', nullable: true, type: Object })
+  address!: Record<string, unknown> | null;
+}
+
+class StripeBankAccountDto implements UpsertStripeBankAccountResult {
+  @ApiProperty({ description: 'Stripe bank account identifier.' })
+  id!: string;
+
+  @ApiProperty({ description: 'Stripe customer identifier associated with the bank account.', nullable: true })
+  customer_id!: string | null;
+}
+
+export class RecordIdentityVerificationResultDto
+  extends IdentityVerificationDto
+  implements RecordIdentityVerificationResult {}
+
+export class UpdateUserProfileResultDto implements UpdateUserProfileResult {
+  @ApiProperty({ description: 'Updated user profile.' })
+  user!: CurrentUserResultDto;
+
+  @ApiProperty({
+    description: 'Details about the verification email that was issued, if any.',
+    nullable: true,
+    type: () => VerificationWindowDto,
+  })
+  verification!: VerificationWindowDto | null;
+}
+
+export class UpsertStripeCustomerResultDto
+  extends StripeCustomerDto
+  implements UpsertStripeCustomerResult {}
+
+export class UpsertStripeBankAccountResultDto
+  extends StripeBankAccountDto
+  implements UpsertStripeBankAccountResult {}

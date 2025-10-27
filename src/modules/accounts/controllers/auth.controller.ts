@@ -47,6 +47,10 @@ import type {
   UpdateAvatarResult,
   UpdateNotificationPreferencesResult,
   CurrentUserResult,
+  RecordIdentityVerificationResult,
+  UpdateUserProfileResult,
+  UpsertStripeCustomerResult,
+  UpsertStripeBankAccountResult,
 } from '../contracts/auth-results';
 import {
   LoginSuccessResultDto,
@@ -61,6 +65,10 @@ import {
   UpdateAvatarResultDto,
   UpdateNotificationPreferencesResultDto,
   CurrentUserResultDto,
+  RecordIdentityVerificationResultDto,
+  UpdateUserProfileResultDto,
+  UpsertStripeCustomerResultDto,
+  UpsertStripeBankAccountResultDto,
 } from '../contracts/auth-swagger.dto';
 import * as LoginDtoModule from '../dto/login.dto';
 import * as ResendVerificationDtoModule from '../dto/resend-verification.dto';
@@ -75,6 +83,15 @@ import * as UpdateNotificationPreferencesDtoModule from '../dto/update-notificat
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import type { AuthenticatedRequest } from '../guards/jwt-auth.guard';
 import { AccountEntity } from '../entities/account.entity';
+import { RecordIdentityVerificationCommand } from '../commands/record-identity-verification.command';
+import { UpdateUserProfileCommand } from '../commands/update-user-profile.command';
+import { UpsertStripeCustomerCommand } from '../commands/upsert-stripe-customer.command';
+import { UpsertStripeBankAccountCommand } from '../commands/upsert-stripe-bank-account.command';
+import { RecordIdentityVerificationDto } from '../dto/record-identity-verification.dto';
+import { UpdateUserProfileDto } from '../dto/update-user-profile.dto';
+import { UpsertStripeCustomerDto } from '../dto/upsert-stripe-customer.dto';
+import { UpsertStripeBankAccountDto } from '../dto/upsert-stripe-bank-account.dto';
+import { AccountVerificationAttemptEntity } from '../entities/account-verification-attempt.entity';
 
 @ApiTags('auth')
 @Controller({ path: 'auth', version: '1' })
@@ -83,6 +100,8 @@ export class AuthController {
     private readonly commandBus: CommandBus,
     @InjectRepository(AccountEntity)
     private readonly accountRepository: EntityRepository<AccountEntity>,
+    @InjectRepository(AccountVerificationAttemptEntity)
+    private readonly verificationAttemptRepository: EntityRepository<AccountVerificationAttemptEntity>,
   ) {}
 
   @Get('me')
@@ -105,6 +124,11 @@ export class AuthController {
       throw new NotFoundException('Account not found.');
     }
 
+    const latestAttempt = await this.verificationAttemptRepository.findOne(
+      { account },
+      { orderBy: { createdAt: 'DESC' } },
+    );
+
     return {
       id: account.id,
       email: account.email,
@@ -112,14 +136,155 @@ export class AuthController {
       last_name: account.lastName ?? null,
       phone: account.phoneNumber ?? null,
       email_verified: Boolean(account.emailVerifiedAt),
-      agreed_to_terms: false,
-      date_of_birth: null,
+      agreed_to_terms: account.agreedToTerms,
+      date_of_birth: account.dateOfBirth
+        ? account.dateOfBirth.toISOString().slice(0, 10)
+        : null,
       avatar_id: null,
       is_active: account.isActive,
-      last_login_at: null,
+      last_login_at: account.lastLoginAt
+        ? account.lastLoginAt.toISOString()
+        : null,
       created_at: account.createdAt.toISOString(),
       updated_at: account.updatedAt.toISOString(),
+      identity_verification:
+        account.stripeIdentityId ||
+        account.stripeIdentityResultId ||
+        latestAttempt
+          ? {
+              id:
+                account.stripeIdentityId ??
+                latestAttempt?.providerReference ??
+                null,
+              result_id:
+                account.stripeIdentityResultId ?? latestAttempt?.resultId ?? null,
+              status: latestAttempt?.status ?? null,
+              type: latestAttempt?.type ?? null,
+              session_id: latestAttempt?.sessionId ?? null,
+              completed_at: latestAttempt?.completedAt
+                ? latestAttempt.completedAt.toISOString()
+                : null,
+              recorded_at: latestAttempt
+                ? latestAttempt.createdAt.toISOString()
+                : null,
+            }
+          : null,
+      customer: account.stripeCustomerId
+        ? {
+            id: account.stripeCustomerId,
+            user_id: account.id,
+            ssn_last4: account.stripeCustomerSsnLast4 ?? null,
+            address: account.stripeCustomerAddress ?? null,
+          }
+        : null,
+      bank_account: account.stripeBankAccountId
+        ? {
+            id: account.stripeBankAccountId,
+            customer_id:
+              account.stripeBankAccountCustomerId ??
+              account.stripeCustomerId ??
+              null,
+          }
+        : null,
     };
+  }
+
+  @Post('identity-verification')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('bearer')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Record Stripe identity verification details.' })
+  @ApiCreatedResponse({
+    description: 'Identity verification recorded.',
+    type: RecordIdentityVerificationResultDto,
+  })
+  @ApiUnauthorizedResponse({ description: 'Authentication required.' })
+  async recordIdentityVerification(
+    @Req() request: AuthenticatedRequest,
+    @Body() payload: RecordIdentityVerificationDto,
+  ): Promise<RecordIdentityVerificationResult> {
+    return this.commandBus.execute(
+      new RecordIdentityVerificationCommand(
+        request.user.accountId,
+        payload.identityId,
+        payload.sessionId,
+        payload.resultId,
+        payload.status,
+        payload.type,
+      ),
+    );
+  }
+
+  @Patch('user')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('bearer')
+  @ApiOperation({ summary: 'Update core user profile fields.' })
+  @ApiOkResponse({
+    description: 'User profile updated.',
+    type: UpdateUserProfileResultDto,
+  })
+  @ApiUnauthorizedResponse({ description: 'Authentication required.' })
+  async updateUser(
+    @Req() request: AuthenticatedRequest,
+    @Body() payload: UpdateUserProfileDto,
+  ): Promise<UpdateUserProfileResult> {
+    return this.commandBus.execute(
+      new UpdateUserProfileCommand(
+        request.user.accountId,
+        payload.firstName,
+        payload.lastName,
+        payload.dateOfBirth,
+        payload.phone,
+      ),
+    );
+  }
+
+  @Post('stripe/customer')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('bearer')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Link a Stripe customer to the authenticated account.' })
+  @ApiCreatedResponse({
+    description: 'Stripe customer stored.',
+    type: UpsertStripeCustomerResultDto,
+  })
+  @ApiUnauthorizedResponse({ description: 'Authentication required.' })
+  async linkStripeCustomer(
+    @Req() request: AuthenticatedRequest,
+    @Body() payload: UpsertStripeCustomerDto,
+  ): Promise<UpsertStripeCustomerResult> {
+    return this.commandBus.execute(
+      new UpsertStripeCustomerCommand(
+        request.user.accountId,
+        payload.customerId,
+        payload.userId ?? null,
+        payload.ssnLast4 ?? null,
+        payload.address ?? null,
+      ),
+    );
+  }
+
+  @Post('stripe/bank-account')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('bearer')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Link a Stripe bank account to the authenticated account.' })
+  @ApiCreatedResponse({
+    description: 'Stripe bank account stored.',
+    type: UpsertStripeBankAccountResultDto,
+  })
+  @ApiUnauthorizedResponse({ description: 'Authentication required.' })
+  async linkStripeBankAccount(
+    @Req() request: AuthenticatedRequest,
+    @Body() payload: UpsertStripeBankAccountDto,
+  ): Promise<UpsertStripeBankAccountResult> {
+    return this.commandBus.execute(
+      new UpsertStripeBankAccountCommand(
+        request.user.accountId,
+        payload.bankAccountId,
+        payload.customerId,
+      ),
+    );
   }
 
   @Post('signup')

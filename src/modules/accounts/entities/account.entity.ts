@@ -34,6 +34,12 @@ export class AccountEntity {
   @Property({ columnType: 'varchar(512)', nullable: true })
   avatarUrl?: string | null;
 
+  @Property({ columnType: 'date', nullable: true })
+  dateOfBirth?: Date | null;
+
+  @Property({ columnType: 'tinyint(1)', default: false })
+  agreedToTerms = false;
+
   @Property({ columnType: 'varchar(128)' })
   checksum!: string;
 
@@ -43,6 +49,27 @@ export class AccountEntity {
   @Property({ columnType: 'tinyint(1)', default: false })
   stripeVerificationCompleted = false;
 
+  @Property({ columnType: 'varchar(128)', nullable: true })
+  stripeIdentityId?: string | null;
+
+  @Property({ columnType: 'varchar(128)', nullable: true })
+  stripeIdentityResultId?: string | null;
+
+  @Property({ columnType: 'varchar(128)', nullable: true })
+  stripeCustomerId?: string | null;
+
+  @Property({ columnType: 'varchar(4)', nullable: true })
+  stripeCustomerSsnLast4?: string | null;
+
+  @Property({ type: 'json', nullable: true })
+  stripeCustomerAddress?: Record<string, unknown> | null;
+
+  @Property({ columnType: 'varchar(128)', nullable: true })
+  stripeBankAccountId?: string | null;
+
+  @Property({ columnType: 'varchar(128)', nullable: true })
+  stripeBankAccountCustomerId?: string | null;
+
   @Property({ columnType: 'tinyint(1)', default: true })
   isActive = true;
 
@@ -51,6 +78,9 @@ export class AccountEntity {
 
   @Property({ columnType: 'tinyint(1)', default: true })
   transactionNotificationsEnabled = true;
+
+  @Property({ columnType: 'datetime(6)', nullable: true })
+  lastLoginAt?: Date | null;
 
   @Property({ columnType: 'datetime(6)', nullable: true })
   lastPodJoinedAt?: Date | null;

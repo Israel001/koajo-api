@@ -28,7 +28,13 @@ export class AccountVerificationAttemptEntity {
   sessionId!: string;
 
   @Property({ columnType: 'varchar(128)', nullable: true })
+  providerReference?: string | null;
+
+  @Property({ columnType: 'varchar(128)', nullable: true })
   stripeReference?: string | null;
+
+  @Property({ columnType: 'varchar(128)', nullable: true })
+  resultId?: string | null;
 
   @Property({ columnType: 'varchar(64)' })
   status!: string;
