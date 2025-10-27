@@ -33,6 +33,8 @@ import {
 } from '../../pod.utils';
 import { PodGoalType } from '../../pod-goal.enum';
 import { AchievementService } from '../../../achievements/achievements.service';
+import { PodActivityService } from '../../services/pod-activity.service';
+import { PodActivityType } from '../../pod-activity-type.enum';
 
 @Injectable()
 @CommandHandler(AcceptCustomPodInviteCommand)
@@ -50,6 +52,7 @@ export class AcceptCustomPodInviteHandler
     private readonly accountRepository: EntityRepository<AccountEntity>,
     private readonly checksumService: ChecksumService,
     private readonly achievementService: AchievementService,
+    private readonly activityService: PodActivityService,
   ) {}
 
   async execute(
@@ -172,8 +175,10 @@ export class AcceptCustomPodInviteHandler
 
     const allAccepted = invites.every((item) => item.acceptedAt);
 
+    let activationDetails: { startDate: Date | null } | null = null;
+
     if (allAccepted && pod.cadence) {
-      this.finalizePod(pod, invites, now);
+      activationDetails = this.finalizePod(pod, invites, now);
     } else {
       pod.checksum = computeCustomPodChecksum(this.checksumService, pod);
     }
@@ -186,6 +191,44 @@ export class AcceptCustomPodInviteHandler
 
     em.persist(pod);
     await em.flush();
+
+    await this.activityService.recordActivity({
+      pod,
+      membership,
+      account,
+      type: PodActivityType.MEMBER_JOINED,
+      metadata: {
+        joinOrder: membership.joinOrder,
+        source: 'invite',
+      },
+    });
+
+    if (activationDetails) {
+      await this.activityService.recordActivity({
+        pod,
+        membership: null,
+        account: pod.creator ?? null,
+        type: PodActivityType.POD_ACTIVATED,
+        metadata: {
+          startDate: activationDetails.startDate
+            ? activationDetails.startDate.toISOString()
+            : null,
+          lockedAt: now.toISOString(),
+          cadence: pod.cadence,
+        },
+      });
+    }
+
+    await this.activityService.recordActivity({
+      pod,
+      membership,
+      account,
+      type: PodActivityType.INVITE_ACCEPTED,
+      metadata: {
+        email: invite.email,
+        inviteOrder: invite.inviteOrder,
+      },
+    });
 
     const createdMembership = (await this.membershipRepository.findOneOrFail(
       { pod, account },
@@ -201,7 +244,7 @@ export class AcceptCustomPodInviteHandler
     pod: PodEntity,
     invites: PodInviteEntity[],
     activationTime: Date,
-  ): void {
+  ): { startDate: Date | null } {
     const cadence = pod.cadence as CustomPodCadence;
     const withinWindow = isWithinContributionWindow(activationTime, cadence);
     const contributionStart = withinWindow
@@ -231,6 +274,8 @@ export class AcceptCustomPodInviteHandler
     });
 
     pod.checksum = computeCustomPodChecksum(this.checksumService, pod);
+
+    return { startDate: pod.startDate ?? null };
   }
 
   private determinePayoutOrder(

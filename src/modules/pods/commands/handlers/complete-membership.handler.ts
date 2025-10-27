@@ -9,6 +9,8 @@ import { ChecksumService } from '../../../../common/security/checksum.service';
 import { PodType } from '../../pod-type.enum';
 import { PodStatus } from '../../pod-status.enum';
 import { computeCustomPodChecksum } from '../../custom-pod-integrity.util';
+import { PodActivityService } from '../../services/pod-activity.service';
+import { PodActivityType } from '../../pod-activity-type.enum';
 
 @CommandHandler(CompleteMembershipCommand)
 export class CompleteMembershipHandler
@@ -19,6 +21,7 @@ export class CompleteMembershipHandler
     private readonly membershipRepository: EntityRepository<PodMembershipEntity>,
     private readonly achievementService: AchievementService,
     private readonly checksumService: ChecksumService,
+    private readonly activityService: PodActivityService,
   ) {}
 
   async execute(command: CompleteMembershipCommand): Promise<void> {
@@ -72,6 +75,17 @@ export class CompleteMembershipHandler
 
     await em.persistAndFlush([membership, membership.pod]);
 
+    await this.activityService.recordActivity({
+      pod: membership.pod,
+      membership,
+      account: membership.account,
+      type: PodActivityType.MEMBERSHIP_COMPLETED,
+      metadata: {
+        finalOrder: membership.finalOrder,
+        payoutDate: membership.payoutDate?.toISOString() ?? null,
+      },
+    });
+
     const completedPods = await this.membershipRepository.count({
       account: membership.account,
       paidOut: true,
@@ -82,6 +96,18 @@ export class CompleteMembershipHandler
       membership,
       completedPods,
     });
+
+    if (membership.pod.status === PodStatus.COMPLETED) {
+      await this.activityService.recordActivity({
+        pod: membership.pod,
+        membership: null,
+        account: membership.account,
+        type: PodActivityType.POD_COMPLETED,
+        metadata: {
+          completedAt: membership.pod.completedAt?.toISOString() ?? null,
+        },
+      });
+    }
   }
 
   private calculateTotalContributionTarget(

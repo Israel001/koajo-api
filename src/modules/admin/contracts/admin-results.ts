@@ -1,4 +1,5 @@
 import { AdminRole } from '../admin-role.enum';
+import type { PodActivitySummary } from '../../pods/contracts/pod-activity-summary';
 
 export interface AdminLoginResult {
   accessToken: string;
@@ -74,6 +75,8 @@ export interface AdminPodsListResult {
   total: number;
   items: AdminPodSummary[];
 }
+
+export interface AdminPodActivity extends PodActivitySummary {}
 
 export interface AdminPodPlanSummary {
   id: string;

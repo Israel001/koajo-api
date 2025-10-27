@@ -11,6 +11,7 @@ import type {
   ResetPasswordResult,
   UpdateAvatarResult,
   UpdateNotificationPreferencesResult,
+  CurrentUserResult,
 } from './auth-results';
 
 class VerificationExpiryDto {
@@ -207,4 +208,74 @@ export class UpdateNotificationPreferencesResultDto
     example: true,
   })
   transactionNotificationsEnabled!: boolean;
+}
+
+export class CurrentUserResultDto implements CurrentUserResult {
+  @ApiProperty({ description: 'Account identifier.' })
+  id!: string;
+
+  @ApiProperty({ description: 'Account email address.' })
+  email!: string;
+
+  @ApiProperty({
+    description: 'First name of the account holder, if available.',
+    nullable: true,
+  })
+  first_name!: string | null;
+
+  @ApiProperty({
+    description: 'Last name of the account holder, if available.',
+    nullable: true,
+  })
+  last_name!: string | null;
+
+  @ApiProperty({
+    description: 'Phone number associated with the account, if provided.',
+    nullable: true,
+  })
+  phone!: string | null;
+
+  @ApiProperty({
+    description: 'Indicates whether the email address has been verified.',
+  })
+  email_verified!: boolean;
+
+  @ApiProperty({
+    description: 'Indicates whether the user agreed to the terms of service.',
+  })
+  agreed_to_terms!: boolean;
+
+  @ApiProperty({
+    description: 'Date of birth for the account holder.',
+    nullable: true,
+    example: '1990-01-01',
+  })
+  date_of_birth!: string | null;
+
+  @ApiProperty({
+    description: 'Identifier of the selected avatar.',
+    nullable: true,
+  })
+  avatar_id!: string | null;
+
+  @ApiProperty({
+    description: 'Indicates whether the account is active.',
+  })
+  is_active!: boolean;
+
+  @ApiProperty({
+    description: 'Timestamp of the last login.',
+    nullable: true,
+  })
+  last_login_at!: string | null;
+
+  @ApiProperty({
+    description: 'Timestamp when the account was created.',
+  })
+  created_at!: string;
+
+  @ApiProperty({
+    description: 'Timestamp when the account was last updated.',
+  })
+  updated_at!: string;
 }

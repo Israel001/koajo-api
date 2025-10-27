@@ -6,6 +6,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Query,
   Post,
   Req,
   UseGuards,
@@ -39,6 +40,9 @@ import { CreateCustomPodCommand } from './commands/create-custom-pod.command';
 import { AcceptCustomPodInviteCommand } from './commands/accept-custom-pod-invite.command';
 import { ListAccountPodsQuery } from './queries/list-account-pods.query';
 import { PodType } from './pod-type.enum';
+import { ListPodActivitiesQuery } from './queries/list-pod-activities.query';
+import { PodActivityDto } from './dto/pod-activity.dto';
+import { PodActivityQueryDto } from './dto/pod-activity-query.dto';
 
 @ApiTags('pods')
 @UseGuards(JwtAuthGuard)
@@ -153,6 +157,20 @@ export class PodsController {
 
     return memberships.map((membership) =>
       this.toMembershipDto(membership, request.user.accountId),
+    );
+  }
+
+  @Get(':podId/activities')
+  @ApiOperation({ summary: 'List recent activities within a pod the user belongs to' })
+  @ApiOkResponse({ type: [PodActivityDto] })
+  async listActivities(
+    @Param('podId') podId: string,
+    @Req() request: AuthenticatedRequest,
+    @Query() query: PodActivityQueryDto,
+  ): Promise<PodActivityDto[]> {
+    const limit = query.limit ?? 50;
+    return this.queryBus.execute(
+      new ListPodActivitiesQuery(podId, request.user.accountId, limit),
     );
   }
 

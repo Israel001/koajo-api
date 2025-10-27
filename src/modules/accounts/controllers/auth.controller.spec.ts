@@ -1,6 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CommandBus } from '@nestjs/cqrs';
 import { JwtService } from '@nestjs/jwt';
+import { NotFoundException } from '@nestjs/common';
+import { getRepositoryToken } from '@mikro-orm/nestjs';
 import type { Request } from 'express';
 import { AuthController } from './auth.controller';
 import { RegisterAccountCommand } from '../commands/register-account.command';
@@ -33,15 +35,21 @@ import type {
   UpdateAvatarResult,
   UpdateNotificationPreferencesResult,
 } from '../contracts/auth-results';
+import { AccountEntity } from '../entities/account.entity';
+import type { AuthenticatedRequest } from '../guards/jwt-auth.guard';
 
 describe('AuthController', () => {
   let controller: AuthController;
   let commandBus: { execute: jest.Mock };
+  let accountRepository: { findOne: jest.Mock };
 
   beforeEach(async () => {
     commandBus = {
       execute: jest.fn(),
     };
+    accountRepository = {
+      findOne: jest.fn(),
+    } as any;
     const mockGuard = {
       canActivate: jest.fn(() => true),
     };
@@ -52,6 +60,10 @@ describe('AuthController', () => {
         {
           provide: CommandBus,
           useValue: commandBus,
+        },
+        {
+          provide: getRepositoryToken(AccountEntity),
+          useValue: accountRepository,
         },
         {
           provide: JwtAuthGuard,
@@ -383,6 +395,66 @@ describe('AuthController', () => {
       expect(command.transactionNotificationsEnabled).toEqual(
         dto.transactionNotificationsEnabled,
       );
+    });
+  });
+
+  describe('me', () => {
+    it('returns the authenticated user details with defaults', async () => {
+      const createdAt = new Date('2025-01-01T00:00:00.000Z');
+      const updatedAt = new Date('2025-01-02T00:00:00.000Z');
+      const emailVerifiedAt = new Date('2025-01-01T12:00:00.000Z');
+
+      accountRepository.findOne.mockResolvedValue({
+        id: 'account-1',
+        email: 'user@example.com',
+        firstName: 'Jane',
+        lastName: 'Doe',
+        phoneNumber: '+2348012345678',
+        emailVerifiedAt,
+        isActive: true,
+        createdAt,
+        updatedAt,
+      });
+
+      const request = {
+        user: {
+          accountId: 'account-1',
+        },
+      } as AuthenticatedRequest;
+
+      const result = await controller.me(request);
+
+      expect(result).toEqual({
+        id: 'account-1',
+        email: 'user@example.com',
+        first_name: 'Jane',
+        last_name: 'Doe',
+        phone: '+2348012345678',
+        email_verified: true,
+        agreed_to_terms: false,
+        date_of_birth: null,
+        avatar_id: null,
+        is_active: true,
+        last_login_at: null,
+        created_at: createdAt.toISOString(),
+        updated_at: updatedAt.toISOString(),
+      });
+
+      expect(accountRepository.findOne).toHaveBeenCalledWith({
+        id: 'account-1',
+      });
+    });
+
+    it('throws NotFoundException when account is missing', async () => {
+      accountRepository.findOne.mockResolvedValue(null);
+
+      const request = {
+        user: {
+          accountId: 'missing-account',
+        },
+      } as AuthenticatedRequest;
+
+      await expect(controller.me(request)).rejects.toBeInstanceOf(NotFoundException);
     });
   });
 

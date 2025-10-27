@@ -16,6 +16,8 @@ import {
   accountChecksumFields,
 } from '../../../accounts/domain/account.integrity';
 import { AchievementService } from '../../../achievements/achievements.service';
+import { PodActivityService } from '../../services/pod-activity.service';
+import { PodActivityType } from '../../pod-activity-type.enum';
 
 @CommandHandler(JoinPodCommand)
 export class JoinPodHandler
@@ -31,6 +33,7 @@ export class JoinPodHandler
     private readonly accountRepository: EntityRepository<AccountEntity>,
     private readonly checksumService: ChecksumService,
     private readonly achievementService: AchievementService,
+    private readonly activityService: PodActivityService,
   ) {}
 
   async execute(command: JoinPodCommand): Promise<MembershipWithPod> {
@@ -139,6 +142,17 @@ export class JoinPodHandler
       ...accountChecksumFields(account),
     );
     await em.persistAndFlush(membership);
+
+    await this.activityService.recordActivity({
+      pod,
+      membership,
+      account,
+      type: PodActivityType.MEMBER_JOINED,
+      metadata: {
+        joinOrder: membership.joinOrder,
+        goalType: membership.goalType,
+      },
+    });
 
     const membershipCount = await this.membershipRepository.count({
       account,

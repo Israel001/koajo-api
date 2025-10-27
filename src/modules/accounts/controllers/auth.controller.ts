@@ -3,12 +3,16 @@ import {
   Controller,
   HttpCode,
   HttpStatus,
+  Get,
+  NotFoundException,
   Patch,
   Post,
   Req,
   UseGuards,
 } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
+import { InjectRepository } from '@mikro-orm/nestjs';
+import { EntityRepository } from '@mikro-orm/mysql';
 import type { Request } from 'express';
 import {
   ApiBadRequestResponse,
@@ -42,6 +46,7 @@ import type {
   ResetPasswordResult,
   UpdateAvatarResult,
   UpdateNotificationPreferencesResult,
+  CurrentUserResult,
 } from '../contracts/auth-results';
 import {
   LoginSuccessResultDto,
@@ -55,6 +60,7 @@ import {
   ResetPasswordResultDto,
   UpdateAvatarResultDto,
   UpdateNotificationPreferencesResultDto,
+  CurrentUserResultDto,
 } from '../contracts/auth-swagger.dto';
 import * as LoginDtoModule from '../dto/login.dto';
 import * as ResendVerificationDtoModule from '../dto/resend-verification.dto';
@@ -68,11 +74,53 @@ import * as UpdateAvatarDtoModule from '../dto/update-avatar.dto';
 import * as UpdateNotificationPreferencesDtoModule from '../dto/update-notification-preferences.dto';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import type { AuthenticatedRequest } from '../guards/jwt-auth.guard';
+import { AccountEntity } from '../entities/account.entity';
 
 @ApiTags('auth')
 @Controller({ path: 'auth', version: '1' })
 export class AuthController {
-  constructor(private readonly commandBus: CommandBus) {}
+  constructor(
+    private readonly commandBus: CommandBus,
+    @InjectRepository(AccountEntity)
+    private readonly accountRepository: EntityRepository<AccountEntity>,
+  ) {}
+
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('bearer')
+  @ApiOperation({ summary: 'Retrieve the authenticated user profile.' })
+  @ApiOkResponse({
+    description: 'Authenticated user details.',
+    type: CurrentUserResultDto,
+  })
+  @ApiUnauthorizedResponse({ description: 'Authentication required.' })
+  async me(
+    @Req() request: AuthenticatedRequest,
+  ): Promise<CurrentUserResult> {
+    const account = await this.accountRepository.findOne({
+      id: request.user.accountId,
+    });
+
+    if (!account) {
+      throw new NotFoundException('Account not found.');
+    }
+
+    return {
+      id: account.id,
+      email: account.email,
+      first_name: account.firstName ?? null,
+      last_name: account.lastName ?? null,
+      phone: account.phoneNumber ?? null,
+      email_verified: Boolean(account.emailVerifiedAt),
+      agreed_to_terms: false,
+      date_of_birth: null,
+      avatar_id: null,
+      is_active: account.isActive,
+      last_login_at: null,
+      created_at: account.createdAt.toISOString(),
+      updated_at: account.updatedAt.toISOString(),
+    };
+  }
 
   @Post('signup')
   @ApiOperation({ summary: 'Register a new account' })

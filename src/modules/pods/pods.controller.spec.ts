@@ -13,6 +13,7 @@ import { CreateCustomPodCommand } from './commands/create-custom-pod.command';
 import { AcceptCustomPodInviteCommand } from './commands/accept-custom-pod-invite.command';
 import { CustomPodCadence } from './custom-pod-cadence.enum';
 import { PodType } from './pod-type.enum';
+import { ListPodActivitiesQuery } from './queries/list-pod-activities.query';
 
 describe('PodsController', () => {
   let controller: PodsController;
@@ -249,5 +250,19 @@ describe('PodsController', () => {
 
     const command = commandBus.execute.mock.calls.at(-1)![0] as AcceptCustomPodInviteCommand;
     expect(command.token).toEqual(dto.token);
+  });
+
+  it('lists activities for a pod the user belongs to', async () => {
+    queryBus.execute.mockResolvedValue([]);
+    const request = {
+      user: { accountId: 'account-1' },
+    } as AuthenticatedRequest;
+
+    const result = await controller.listActivities('pod-1', request, {
+      limit: 25,
+    } as any);
+
+    expect(Array.isArray(result)).toBe(true);
+    expect(queryBus.execute).toHaveBeenCalledWith(expect.any(ListPodActivitiesQuery));
   });
 });

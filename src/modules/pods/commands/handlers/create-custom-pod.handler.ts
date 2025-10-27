@@ -27,6 +27,8 @@ import {
   computeCustomInviteChecksum,
   computeCustomPodChecksum,
 } from '../../custom-pod-integrity.util';
+import { PodActivityService } from '../../services/pod-activity.service';
+import { PodActivityType } from '../../pod-activity-type.enum';
 
 @Injectable()
 @CommandHandler(CreateCustomPodCommand)
@@ -44,6 +46,7 @@ export class CreateCustomPodHandler
     private readonly accountRepository: EntityRepository<AccountEntity>,
     private readonly checksumService: ChecksumService,
     private readonly mailService: MailService,
+    private readonly activityService: PodActivityService,
   ) {}
 
   async execute(
@@ -165,6 +168,41 @@ export class CreateCustomPodHandler
     em.persist(creator);
     invites.forEach((invite) => em.persist(invite));
     await em.flush();
+
+    await this.activityService.recordActivity({
+      pod,
+      membership,
+      account: creator,
+      type: PodActivityType.POD_CREATED,
+      metadata: {
+        cadence,
+        amount,
+        expectedMemberCount: totalMembers,
+      },
+    });
+
+    await this.activityService.recordActivity({
+      pod,
+      membership,
+      account: creator,
+      type: PodActivityType.MEMBER_JOINED,
+      metadata: {
+        joinOrder: membership.joinOrder,
+        source: 'creator',
+      },
+    });
+
+    for (const invite of invites) {
+      await this.activityService.recordActivity({
+        pod,
+        account: creator,
+        type: PodActivityType.INVITE_SENT,
+        metadata: {
+          email: invite.email,
+          inviteOrder: invite.inviteOrder,
+        },
+      });
+    }
 
     await Promise.all(
       tokens.map(({ email, token }) =>

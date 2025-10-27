@@ -12,6 +12,8 @@ import { FinanceCommandHandlers } from './commands/handlers';
 import { PodMembershipEntity } from '../pods/entities/pod-membership.entity';
 import { PodEntity } from '../pods/entities/pod.entity';
 import { AccountEntity } from '../accounts/entities/account.entity';
+import { PodActivityEntity } from '../pods/entities/pod-activity.entity';
+import { PodActivityService } from '../pods/services/pod-activity.service';
 import { JwtAuthGuard } from '../accounts/guards/jwt-auth.guard';
 import { AchievementsModule } from '../achievements/achievements.module';
 
@@ -24,6 +26,7 @@ import { AchievementsModule } from '../achievements/achievements.module';
       PodMembershipEntity,
       PodEntity,
       AccountEntity,
+      PodActivityEntity,
     ]),
     CqrsModule,
     AchievementsModule,
@@ -43,6 +46,6 @@ import { AchievementsModule } from '../achievements/achievements.module';
     }),
   ],
   controllers: [PaymentsController, PayoutsController],
-  providers: [...FinanceCommandHandlers, JwtAuthGuard],
+  providers: [...FinanceCommandHandlers, JwtAuthGuard, PodActivityService],
 })
 export class FinanceModule {}

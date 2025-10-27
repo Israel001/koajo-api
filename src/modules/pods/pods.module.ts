@@ -16,6 +16,8 @@ import { PodQueryHandlers } from './queries/handlers';
 import { AchievementsModule } from '../achievements/achievements.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { PodInviteEntity } from './entities/pod-invite.entity';
+import { PodActivityEntity } from './entities/pod-activity.entity';
+import { PodActivityService } from './services/pod-activity.service';
 
 @Module({
   imports: [
@@ -25,6 +27,7 @@ import { PodInviteEntity } from './entities/pod-invite.entity';
       PodPlanEntity,
       PodInviteEntity,
       AccountEntity,
+      PodActivityEntity,
     ]),
     CqrsModule,
     AchievementsModule,
@@ -47,11 +50,12 @@ import { PodInviteEntity } from './entities/pod-invite.entity';
   controllers: [PodsController],
   providers: [
     PodDomainHelper,
+    PodActivityService,
     JwtAuthGuard,
     PodsScheduler,
     ...PodCommandHandlers,
     ...PodQueryHandlers,
   ],
-  exports: [PodDomainHelper],
+  exports: [PodDomainHelper, PodActivityService],
 })
 export class PodsModule {}

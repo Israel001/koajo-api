@@ -13,6 +13,8 @@ import { PodMembershipEntity } from '../../../pods/entities/pod-membership.entit
 import { TransactionType } from '../../transaction-type.enum';
 import { RecordPayoutResult } from '../../contracts/payment-results';
 import { CompleteMembershipCommand } from '../../../pods/commands/complete-membership.command';
+import { PodActivityService } from '../../../pods/services/pod-activity.service';
+import { PodActivityType } from '../../../pods/pod-activity-type.enum';
 
 @Injectable()
 @CommandHandler(RecordPayoutCommand)
@@ -27,6 +29,7 @@ export class RecordPayoutHandler
     @InjectRepository(PodMembershipEntity)
     private readonly membershipRepository: EntityRepository<PodMembershipEntity>,
     private readonly commandBus: CommandBus,
+    private readonly activityService: PodActivityService,
   ) {}
 
   async execute(
@@ -117,6 +120,21 @@ export class RecordPayoutHandler
     em.persist(transaction);
     em.persist(membership);
     await em.flush();
+
+    await this.activityService.recordActivity({
+      pod,
+      membership,
+      account,
+      type: PodActivityType.PAYOUT_RECORDED,
+      metadata: {
+        payoutId: payout.id,
+        amount: payout.amount,
+        fee: payout.fee,
+        currency,
+        status,
+        stripeReference,
+      },
+    });
 
     const successful = this.isSuccessfulStatus(status);
     let membershipCompleted = membership.paidOut;

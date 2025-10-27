@@ -16,6 +16,7 @@ import { AccountEntity } from '../accounts/entities/account.entity';
 import { PodEntity } from '../pods/entities/pod.entity';
 import { PodMembershipEntity } from '../pods/entities/pod-membership.entity';
 import { PodPlanEntity } from '../pods/entities/pod-plan.entity';
+import { PodActivityEntity } from '../pods/entities/pod-activity.entity';
 import { AchievementsModule } from '../achievements/achievements.module';
 import { AchievementEntity } from '../achievements/entities/achievement.entity';
 import { PaymentEntity } from '../finance/entities/payment.entity';
@@ -35,6 +36,7 @@ import { AdminPodPlanService } from './services/admin-pod-plan.service';
       PodEntity,
       PodMembershipEntity,
       PodPlanEntity,
+      PodActivityEntity,
       AchievementEntity,
       PaymentEntity,
       PayoutEntity,

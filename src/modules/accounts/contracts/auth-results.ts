@@ -75,3 +75,19 @@ export interface LoginVerificationRequiredResult {
 }
 
 export type LoginResult = LoginSuccessResult | LoginVerificationRequiredResult;
+
+export interface CurrentUserResult {
+  id: string;
+  email: string;
+  first_name: string | null;
+  last_name: string | null;
+  phone: string | null;
+  email_verified: boolean;
+  agreed_to_terms: boolean;
+  date_of_birth: string | null;
+  avatar_id: string | null;
+  is_active: boolean;
+  last_login_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
