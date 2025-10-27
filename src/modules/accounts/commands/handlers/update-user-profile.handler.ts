@@ -48,7 +48,11 @@ export class UpdateUserProfileHandler
     }
 
     if (command.phoneNumber !== undefined) {
-      account.phoneNumber = command.phoneNumber.trim();
+      if (command.phoneNumber === null) {
+        account.phoneNumber = account.phoneNumber;
+      } else {
+        account.phoneNumber = command.phoneNumber.trim();
+      }
     }
 
     if (command.dateOfBirth !== undefined) {
