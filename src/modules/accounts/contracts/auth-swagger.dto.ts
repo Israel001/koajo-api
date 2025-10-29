@@ -100,29 +100,6 @@ export class ResendVerificationResultDto implements ResendVerificationResult {
   verification!: VerificationWindowDto;
 }
 
-export class LoginSuccessResultDto implements LoginSuccessResult {
-  @ApiProperty({ description: 'Indicates whether verification is required.', example: false })
-  requiresVerification!: false;
-
-  @ApiProperty({ description: 'JWT access token granting API access.', example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' })
-  accessToken!: string;
-
-  @ApiProperty({ description: 'Token type to use in the Authorization header.', example: 'Bearer' })
-  tokenType!: 'Bearer';
-
-  @ApiProperty({
-    description: 'ISO date string indicating when the token expires.',
-    example: '2024-01-01T01:00:00.000Z',
-  })
-  expiresAt!: string;
-
-  @ApiProperty({
-    description: 'Authenticated user details.',
-    type: () => LoginUserResultDto,
-  })
-  user!: LoginUserResultDto;
-}
-
 export class LoginUserResultDto implements LoginUserResult {
   @ApiProperty({ description: 'Account identifier.' })
   id!: string;
@@ -159,6 +136,29 @@ export class LoginUserResultDto implements LoginUserResult {
 
   @ApiProperty({ description: 'Timestamp when the account was last updated.' })
   updated_at!: string;
+}
+
+export class LoginSuccessResultDto implements LoginSuccessResult {
+  @ApiProperty({ description: 'Indicates whether verification is required.', example: false })
+  requiresVerification!: false;
+
+  @ApiProperty({ description: 'JWT access token granting API access.', example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' })
+  accessToken!: string;
+
+  @ApiProperty({ description: 'Token type to use in the Authorization header.', example: 'Bearer' })
+  tokenType!: 'Bearer';
+
+  @ApiProperty({
+    description: 'ISO date string indicating when the token expires.',
+    example: '2024-01-01T01:00:00.000Z',
+  })
+  expiresAt!: string;
+
+  @ApiProperty({
+    description: 'Authenticated user details.',
+    type: () => LoginUserResultDto,
+  })
+  user!: LoginUserResultDto;
 }
 
 export class LoginVerificationRequiredResultDto implements LoginVerificationRequiredResult {
