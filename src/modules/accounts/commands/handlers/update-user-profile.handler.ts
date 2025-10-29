@@ -73,7 +73,7 @@ export class UpdateUserProfileHandler
 
     let verification: UpdateUserProfileResult['verification'] = null;
 
-    if (!account.emailVerifiedAt) {
+    if (!account.emailVerifiedAt && account.firstName) {
       const issuance = await this.emailVerificationService.issue(account, {
         bypassCooldown: true,
         reason: 'profile-update',
@@ -155,7 +155,6 @@ export class UpdateUserProfileHandler
 
     return {
       id: account.stripeCustomerId,
-      user_id: account.id,
       ssn_last4: account.stripeCustomerSsnLast4 ?? null,
       address: account.stripeCustomerAddress ?? null,
     };
@@ -170,6 +169,12 @@ export class UpdateUserProfileHandler
       id: account.stripeBankAccountId,
       customer_id:
         account.stripeBankAccountCustomerId ?? account.stripeCustomerId ?? null,
+      created_at: (
+        account.stripeBankAccountLinkedAt ?? account.createdAt
+      ).toISOString(),
+      updated_at: (
+        account.stripeBankAccountUpdatedAt ?? account.updatedAt
+      ).toISOString(),
     };
   }
 }

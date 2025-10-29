@@ -7,6 +7,7 @@ import {
   NotFoundException,
   Patch,
   Post,
+  Delete,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -30,7 +31,6 @@ import { LoginCommand } from '../commands/login.command';
 import { RegisterAccountCommand } from '../commands/register-account.command';
 import { ResendEmailVerificationCommand } from '../commands/resend-email-verification.command';
 import { VerifyEmailCommand } from '../commands/verify-email.command';
-import { CompleteStripeVerificationCommand } from '../commands/complete-stripe-verification.command';
 import { ChangePasswordCommand } from '../commands/change-password.command';
 import { ForgotPasswordCommand } from '../commands/forgot-password.command';
 import { ResetPasswordCommand } from '../commands/reset-password.command';
@@ -40,7 +40,6 @@ import type {
   LoginResult,
   ResendVerificationResult,
   SignupResult,
-  CompleteStripeVerificationResult,
   ChangePasswordResult,
   ForgotPasswordResult,
   ResetPasswordResult,
@@ -51,6 +50,7 @@ import type {
   UpdateUserProfileResult,
   UpsertStripeCustomerResult,
   UpsertStripeBankAccountResult,
+  DeleteAccountResult,
 } from '../contracts/auth-results';
 import {
   LoginSuccessResultDto,
@@ -58,7 +58,6 @@ import {
   ResendVerificationResultDto,
   SignupResultDto,
   VerifyEmailResultDto,
-  CompleteStripeVerificationResultDto,
   ChangePasswordResultDto,
   ForgotPasswordResultDto,
   ResetPasswordResultDto,
@@ -69,12 +68,12 @@ import {
   UpdateUserProfileResultDto,
   UpsertStripeCustomerResultDto,
   UpsertStripeBankAccountResultDto,
+  DeleteAccountResultDto,
 } from '../contracts/auth-swagger.dto';
 import * as LoginDtoModule from '../dto/login.dto';
 import * as ResendVerificationDtoModule from '../dto/resend-verification.dto';
 import * as SignupDtoModule from '../dto/signup.dto';
 import * as VerifyEmailDtoModule from '../dto/verify-email.dto';
-import * as CompleteStripeVerificationDtoModule from '../dto/complete-stripe-verification.dto';
 import * as ChangePasswordDtoModule from '../dto/change-password.dto';
 import * as ForgotPasswordDtoModule from '../dto/forgot-password.dto';
 import * as ResetPasswordDtoModule from '../dto/reset-password.dto';
@@ -92,6 +91,7 @@ import { UpdateUserProfileDto } from '../dto/update-user-profile.dto';
 import { UpsertStripeCustomerDto } from '../dto/upsert-stripe-customer.dto';
 import { UpsertStripeBankAccountDto } from '../dto/upsert-stripe-bank-account.dto';
 import { AccountVerificationAttemptEntity } from '../entities/account-verification-attempt.entity';
+import { DeleteAccountCommand } from '../commands/delete-account.command';
 
 @ApiTags('auth')
 @Controller({ path: 'auth', version: '1' })
@@ -172,7 +172,6 @@ export class AuthController {
       customer: account.stripeCustomerId
         ? {
             id: account.stripeCustomerId,
-            user_id: account.id,
             ssn_last4: account.stripeCustomerSsnLast4 ?? null,
             address: account.stripeCustomerAddress ?? null,
           }
@@ -184,6 +183,12 @@ export class AuthController {
               account.stripeBankAccountCustomerId ??
               account.stripeCustomerId ??
               null,
+            created_at: (
+              account.stripeBankAccountLinkedAt ?? account.createdAt
+            ).toISOString(),
+            updated_at: (
+              account.stripeBankAccountUpdatedAt ?? account.updatedAt
+            ).toISOString(),
           }
         : null,
     };
@@ -257,7 +262,6 @@ export class AuthController {
       new UpsertStripeCustomerCommand(
         request.user.accountId,
         payload.customerId,
-        payload.userId ?? null,
         payload.ssnLast4 ?? null,
         payload.address ?? null,
       ),
@@ -284,6 +288,23 @@ export class AuthController {
         payload.bankAccountId,
         payload.customerId,
       ),
+    );
+  }
+
+  @Delete('account')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('bearer')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Delete the authenticated account data.' })
+  @ApiOkResponse({
+    description: 'Account data removal acknowledged.',
+    type: DeleteAccountResultDto,
+  })
+  async deleteAccount(
+    @Req() request: AuthenticatedRequest,
+  ): Promise<DeleteAccountResult> {
+    return this.commandBus.execute(
+      new DeleteAccountCommand(request.user.accountId),
     );
   }
 
@@ -338,37 +359,6 @@ export class AuthController {
     };
   }
 
-  @Post('stripe-verification')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Record Stripe verification status and dispatch email verification if eligible' })
-  @ApiOkResponse({
-    description: 'Stripe verification status updated.',
-    type: CompleteStripeVerificationResultDto,
-  })
-  @ApiBadRequestResponse({
-    description: 'Validation failed for provided payload.',
-  })
-  @ApiNotFoundResponse({
-    description: 'Account not found for provided email.',
-  })
-  async completeStripeVerification(
-    @Body()
-    payload: CompleteStripeVerificationDtoModule.CompleteStripeVerificationDto,
-  ): Promise<CompleteStripeVerificationResult> {
-    return this.commandBus.execute(
-      new CompleteStripeVerificationCommand(
-        payload.email,
-        payload.firstName,
-        payload.lastName,
-        payload.stripeVerificationCompleted,
-        payload.sessionId,
-        payload.stripeReference,
-        payload.verificationType,
-        payload.verificationStatus,
-      ),
-    );
-  }
-
   @Post('resend-email')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Resend verification email' })
@@ -399,6 +389,21 @@ export class AuthController {
   ): Promise<ForgotPasswordResult> {
     return this.commandBus.execute(
       new ForgotPasswordCommand(payload.email),
+    );
+  }
+
+  @Post('forgot-password/resend')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Resend a password reset link' })
+  @ApiOkResponse({
+    description: 'Password reset email re-dispatched if account exists.',
+    type: ForgotPasswordResultDto,
+  })
+  async resendForgotPassword(
+    @Body() payload: ForgotPasswordDtoModule.ForgotPasswordDto,
+  ): Promise<ForgotPasswordResult> {
+    return this.commandBus.execute(
+      new ForgotPasswordCommand(payload.email, true),
     );
   }
 

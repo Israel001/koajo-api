@@ -136,14 +136,36 @@ export class LoginHandler
 
     const accessToken = await this.jwtService.signAsync(payload);
 
+    account.lastLoginAt = now;
+    account.updatedAt = now;
+
+    const user = {
+      id: account.id,
+      email: account.email,
+      first_name: account.firstName ?? null,
+      last_name: account.lastName ?? null,
+      phone: account.phoneNumber ?? null,
+      email_verified: Boolean(account.emailVerifiedAt),
+      date_of_birth: account.dateOfBirth
+        ? account.dateOfBirth.toISOString().slice(0, 10)
+        : null,
+      avatar_id: account.avatarUrl ?? null,
+      is_active: account.isActive,
+      last_login_at: account.lastLoginAt
+        ? account.lastLoginAt.toISOString()
+        : null,
+      created_at: account.createdAt.toISOString(),
+      updated_at: account.updatedAt.toISOString(),
+    };
+
     const response: LoginSuccessResult = {
       requiresVerification: false,
       accessToken,
       tokenType: 'Bearer',
       expiresAt: expiresAt.toISOString(),
+      user,
     };
 
-    account.lastLoginAt = now;
     const em = this.accountRepository.getEntityManager();
     await em.persistAndFlush(account);
 

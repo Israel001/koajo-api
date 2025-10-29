@@ -19,6 +19,12 @@ export const accountChecksumFields = (
   account.stripeIdentityResultId ?? '',
   account.stripeCustomerId ?? '',
   account.stripeBankAccountId ?? '',
+  account.stripeBankAccountLinkedAt
+    ? account.stripeBankAccountLinkedAt.getTime()
+    : 0,
+  account.stripeBankAccountUpdatedAt
+    ? account.stripeBankAccountUpdatedAt.getTime()
+    : 0,
   account.inactivityWarningSentAt ? account.inactivityWarningSentAt.getTime() : 0,
   account.inactivityClosureSentAt ? account.inactivityClosureSentAt.getTime() : 0,
   account.isActive ? 1 : 0,

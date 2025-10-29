@@ -1,5 +1,5 @@
 export interface SignupResult {
-  accountId: string;
+  id: string;
   email: string;
   phoneNumber: string;
   avatarUrl: string | null;
@@ -16,24 +16,6 @@ export interface UpdateAvatarResult {
 export interface UpdateNotificationPreferencesResult {
   emailNotificationsEnabled: boolean;
   transactionNotificationsEnabled: boolean;
-}
-
-export interface CompleteStripeVerificationResult {
-  email: string;
-  stripeVerificationCompleted: boolean;
-  latestAttempt: {
-    id: string;
-    sessionId: string;
-    stripeReference: string;
-    status: string;
-    type: string;
-    recordedAt: string;
-    completedAt: string | null;
-  };
-  verification: {
-    expiresAt: string;
-    sentAt: string;
-  } | null;
 }
 
 export interface ChangePasswordResult {
@@ -58,11 +40,27 @@ export interface ResendVerificationResult {
   };
 }
 
+export interface LoginUserResult {
+  id: string;
+  email: string;
+  first_name: string | null;
+  last_name: string | null;
+  phone: string | null;
+  email_verified: boolean;
+  date_of_birth: string | null;
+  avatar_id: string | null;
+  is_active: boolean;
+  last_login_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface LoginSuccessResult {
   requiresVerification: false;
   accessToken: string;
   tokenType: 'Bearer';
   expiresAt: string;
+  user: LoginUserResult;
 }
 
 export interface LoginVerificationRequiredResult {
@@ -101,13 +99,14 @@ export interface CurrentUserResult {
   } | null;
   customer: {
     id: string;
-    user_id: string;
     ssn_last4: string | null;
     address: Record<string, unknown> | null;
   } | null;
   bank_account: {
     id: string;
     customer_id: string | null;
+    created_at: string;
+    updated_at: string;
   } | null;
 }
 
@@ -132,7 +131,6 @@ export interface UpdateUserProfileResult {
 
 export interface UpsertStripeCustomerResult {
   id: string;
-  user_id: string;
   ssn_last4: string | null;
   address: Record<string, unknown> | null;
 }
@@ -140,4 +138,11 @@ export interface UpsertStripeCustomerResult {
 export interface UpsertStripeBankAccountResult {
   id: string;
   customer_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DeleteAccountResult {
+  success: boolean;
+  deleted_at: string;
 }

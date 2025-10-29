@@ -40,8 +40,13 @@ export class UpsertStripeBankAccountHandler
       );
     }
 
+    const now = new Date();
     account.stripeBankAccountId = command.bankAccountId.trim();
     account.stripeBankAccountCustomerId = command.customerId.trim();
+    if (!account.stripeBankAccountLinkedAt) {
+      account.stripeBankAccountLinkedAt = now;
+    }
+    account.stripeBankAccountUpdatedAt = now;
 
     const em = this.accountRepository.getEntityManager();
     await em.persistAndFlush(account);
@@ -49,6 +54,8 @@ export class UpsertStripeBankAccountHandler
     return {
       id: account.stripeBankAccountId,
       customer_id: account.stripeBankAccountCustomerId,
+      created_at: account.stripeBankAccountLinkedAt.toISOString(),
+      updated_at: account.stripeBankAccountUpdatedAt.toISOString(),
     };
   }
 }

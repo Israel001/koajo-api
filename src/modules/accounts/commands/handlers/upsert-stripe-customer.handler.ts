@@ -37,7 +37,6 @@ export class UpsertStripeCustomerHandler
 
     return {
       id: account.stripeCustomerId,
-      user_id: command.userId ?? account.id,
       ssn_last4: account.stripeCustomerSsnLast4 ?? null,
       address: account.stripeCustomerAddress ?? null,
     };

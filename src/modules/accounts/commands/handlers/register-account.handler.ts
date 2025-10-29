@@ -64,7 +64,7 @@ export class RegisterAccountHandler
     await this.accountRepository.getEntityManager().persistAndFlush(account);
 
     return {
-      accountId: account.id,
+      id: account.id,
       email: account.email,
       phoneNumber: account.phoneNumber,
       avatarUrl: account.avatarUrl ?? null,

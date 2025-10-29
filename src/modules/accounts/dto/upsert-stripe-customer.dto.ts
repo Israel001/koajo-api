@@ -9,12 +9,6 @@ export class UpsertStripeCustomerDto {
   @IsNotEmpty()
   customerId!: string;
 
-  @ApiProperty({ description: 'Application user identifier linked to the customer.', required: false })
-  @Expose({ name: 'user_id' })
-  @IsOptional()
-  @IsString()
-  userId?: string;
-
   @ApiProperty({ description: 'Last four digits of SSN.', required: false })
   @Expose({ name: 'ssn_last4' })
   @IsOptional()

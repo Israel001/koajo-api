@@ -120,44 +120,6 @@
         ]
       }
     },
-    "/v1/auth/stripe-verification": {
-      "post": {
-        "operationId": "AuthController_completeStripeVerification_v1",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CompleteStripeVerificationDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Stripe verification status updated.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CompleteStripeVerificationResultDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation failed for provided payload."
-          },
-          "404": {
-            "description": "Account not found for provided email."
-          }
-        },
-        "summary": "Record Stripe verification status and dispatch email verification if eligible",
-        "tags": [
-          "auth"
-        ]
-      }
-    },
     "/v1/auth/resend-email": {
       "post": {
         "operationId": "AuthController_resendEmail_v1",
@@ -220,6 +182,38 @@
           }
         },
         "summary": "Request a password reset link",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/auth/forgot-password/resend": {
+      "post": {
+        "operationId": "AuthController_resendForgotPassword_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset email re-dispatched if account exists.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForgotPasswordResultDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Resend a password reset link",
         "tags": [
           "auth"
         ]
@@ -1239,7 +1233,7 @@
       "SignupResultDto": {
         "type": "object",
         "properties": {
-          "accountId": {
+          "id": {
             "type": "string",
             "description": "Unique identifier for the registered account.",
             "example": "9a4c1d15-3bfe-4f3f-8428-9c2ac5d43052"
@@ -1276,7 +1270,7 @@
           }
         },
         "required": [
-          "accountId",
+          "id",
           "email",
           "phoneNumber",
           "emailVerified"

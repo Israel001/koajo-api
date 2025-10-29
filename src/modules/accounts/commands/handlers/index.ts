@@ -2,7 +2,6 @@ import { LoginHandler } from './login.handler';
 import { RegisterAccountHandler } from './register-account.handler';
 import { ResendEmailVerificationHandler } from './resend-email-verification.handler';
 import { VerifyEmailHandler } from './verify-email.handler';
-import { CompleteStripeVerificationHandler } from './complete-stripe-verification.handler';
 import { ChangePasswordHandler } from './change-password.handler';
 import { ForgotPasswordHandler } from './forgot-password.handler';
 import { ResetPasswordHandler } from './reset-password.handler';
@@ -13,6 +12,7 @@ import { RecordIdentityVerificationHandler } from './record-identity-verificatio
 import { UpdateUserProfileHandler } from './update-user-profile.handler';
 import { UpsertStripeCustomerHandler } from './upsert-stripe-customer.handler';
 import { UpsertStripeBankAccountHandler } from './upsert-stripe-bank-account.handler';
+import { DeleteAccountHandler } from './delete-account.handler';
 
 export const CommandHandlers = [
   RegisterAccountHandler,
@@ -20,7 +20,6 @@ export const CommandHandlers = [
   ResendEmailVerificationHandler,
   ChangePasswordHandler,
   ForgotPasswordHandler,
-  CompleteStripeVerificationHandler,
   ResetPasswordHandler,
   LoginHandler,
   ProcessAccountInactivityHandler,
@@ -30,13 +29,13 @@ export const CommandHandlers = [
   UpdateUserProfileHandler,
   UpsertStripeCustomerHandler,
   UpsertStripeBankAccountHandler,
+  DeleteAccountHandler,
 ];
 
 export { RegisterAccountHandler } from './register-account.handler';
 export { VerifyEmailHandler } from './verify-email.handler';
 export { ResendEmailVerificationHandler } from './resend-email-verification.handler';
 export { LoginHandler } from './login.handler';
-export { CompleteStripeVerificationHandler } from './complete-stripe-verification.handler';
 export { ChangePasswordHandler } from './change-password.handler';
 export { ForgotPasswordHandler } from './forgot-password.handler';
 export { ResetPasswordHandler } from './reset-password.handler';
@@ -47,3 +46,4 @@ export { RecordIdentityVerificationHandler } from './record-identity-verificatio
 export { UpdateUserProfileHandler } from './update-user-profile.handler';
 export { UpsertStripeCustomerHandler } from './upsert-stripe-customer.handler';
 export { UpsertStripeBankAccountHandler } from './upsert-stripe-bank-account.handler';
+export { DeleteAccountHandler } from './delete-account.handler';

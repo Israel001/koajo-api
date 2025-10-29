@@ -9,7 +9,6 @@ import { RegisterAccountCommand } from '../commands/register-account.command';
 import { VerifyEmailCommand } from '../commands/verify-email.command';
 import { ResendEmailVerificationCommand } from '../commands/resend-email-verification.command';
 import { LoginCommand } from '../commands/login.command';
-import { CompleteStripeVerificationCommand } from '../commands/complete-stripe-verification.command';
 import { ChangePasswordCommand } from '../commands/change-password.command';
 import { ForgotPasswordCommand } from '../commands/forgot-password.command';
 import { ResetPasswordCommand } from '../commands/reset-password.command';
@@ -19,11 +18,11 @@ import { RecordIdentityVerificationCommand } from '../commands/record-identity-v
 import { UpdateUserProfileCommand } from '../commands/update-user-profile.command';
 import { UpsertStripeCustomerCommand } from '../commands/upsert-stripe-customer.command';
 import { UpsertStripeBankAccountCommand } from '../commands/upsert-stripe-bank-account.command';
+import { DeleteAccountCommand } from '../commands/delete-account.command';
 import { SignupDto } from '../dto/signup.dto';
 import { VerifyEmailDto } from '../dto/verify-email.dto';
 import { ResendVerificationDto } from '../dto/resend-verification.dto';
 import { LoginDto } from '../dto/login.dto';
-import { CompleteStripeVerificationDto } from '../dto/complete-stripe-verification.dto';
 import { ChangePasswordDto } from '../dto/change-password.dto';
 import { ForgotPasswordDto } from '../dto/forgot-password.dto';
 import { ResetPasswordDto } from '../dto/reset-password.dto';
@@ -32,12 +31,12 @@ import type {
   LoginResult,
   ResendVerificationResult,
   SignupResult,
-  CompleteStripeVerificationResult,
   ChangePasswordResult,
   ForgotPasswordResult,
   ResetPasswordResult,
   UpdateAvatarResult,
   UpdateNotificationPreferencesResult,
+  DeleteAccountResult,
 } from '../contracts/auth-results';
 import { AccountEntity } from '../entities/account.entity';
 import { AccountVerificationAttemptEntity } from '../entities/account-verification-attempt.entity';
@@ -110,7 +109,7 @@ describe('AuthController', () => {
       } as unknown as Request;
 
       const expected: SignupResult = {
-        accountId: 'account-123',
+        id: 'account-123',
         email: dto.email,
         phoneNumber: dto.phoneNumber,
         avatarUrl: dto.avatarUrl,
@@ -164,62 +163,6 @@ describe('AuthController', () => {
     });
   });
 
-  describe('completeStripeVerification', () => {
-    it('executes CompleteStripeVerificationCommand and returns the result', async () => {
-      const dto: CompleteStripeVerificationDto = {
-        email: 'user@example.com',
-        firstName: 'Jane',
-        lastName: 'Doe',
-        stripeVerificationCompleted: true,
-        sessionId: 'sess_123',
-        stripeReference: 'vs_123',
-        verificationType: 'document',
-        verificationStatus: 'verified',
-      };
-
-      const expected: CompleteStripeVerificationResult = {
-        email: dto.email,
-        stripeVerificationCompleted: true,
-        latestAttempt: {
-          id: 'attempt-1',
-          sessionId: dto.sessionId,
-          stripeReference: dto.stripeReference,
-          status: dto.verificationStatus,
-          type: dto.verificationType,
-          recordedAt: new Date().toISOString(),
-          completedAt: new Date().toISOString(),
-        },
-        verification: {
-          expiresAt: new Date().toISOString(),
-          sentAt: new Date().toISOString(),
-        },
-      };
-
-      commandBus.execute.mockResolvedValue(expected);
-
-      await expect(controller.completeStripeVerification(dto)).resolves.toEqual(
-        expected,
-      );
-
-      expect(commandBus.execute).toHaveBeenCalledWith(
-        expect.any(CompleteStripeVerificationCommand),
-      );
-
-      const command =
-        commandBus.execute.mock.calls[0][0] as CompleteStripeVerificationCommand;
-      expect(command.email).toEqual(dto.email);
-      expect(command.firstName).toEqual(dto.firstName);
-      expect(command.lastName).toEqual(dto.lastName);
-      expect(command.stripeVerificationCompleted).toEqual(
-        dto.stripeVerificationCompleted,
-      );
-      expect(command.sessionId).toEqual(dto.sessionId);
-      expect(command.stripeReference).toEqual(dto.stripeReference);
-      expect(command.verificationType).toEqual(dto.verificationType);
-      expect(command.verificationStatus).toEqual(dto.verificationStatus);
-    });
-  });
-
   describe('resendEmail', () => {
     it('executes ResendEmailVerificationCommand and returns the result', async () => {
       const dto: ResendVerificationDto = {
@@ -269,6 +212,35 @@ describe('AuthController', () => {
       const command =
         commandBus.execute.mock.calls[0][0] as ForgotPasswordCommand;
       expect(command.email).toEqual(dto.email);
+      expect(command.isResend).toBe(false);
+    });
+  });
+
+  describe('resendForgotPassword', () => {
+    it('delegates to ForgotPasswordCommand with resend flag', async () => {
+      const dto: ForgotPasswordDto = {
+        email: 'user@example.com',
+      };
+
+      const expected: ForgotPasswordResult = {
+        email: dto.email,
+        requested: true,
+      };
+
+      commandBus.execute.mockResolvedValue(expected);
+
+      await expect(controller.resendForgotPassword(dto)).resolves.toEqual(
+        expected,
+      );
+
+      expect(commandBus.execute).toHaveBeenCalledWith(
+        expect.any(ForgotPasswordCommand),
+      );
+
+      const command =
+        commandBus.execute.mock.calls[0][0] as ForgotPasswordCommand;
+      expect(command.email).toEqual(dto.email);
+      expect(command.isResend).toBe(true);
     });
   });
 
@@ -507,14 +479,12 @@ describe('AuthController', () => {
     it('delegates to UpsertStripeCustomerCommand', async () => {
       const dto = {
         customerId: 'cus_123',
-        userId: 'account-1',
         ssnLast4: '1234',
         address: { line1: '123 Road' },
       };
 
       const expected: UpsertStripeCustomerResult = {
         id: dto.customerId,
-        user_id: dto.userId!,
         ssn_last4: dto.ssnLast4!,
         address: dto.address!,
       };
@@ -535,6 +505,8 @@ describe('AuthController', () => {
       const command = commandBus.execute.mock.calls[0][0] as UpsertStripeCustomerCommand;
       expect(command.accountId).toBe('account-1');
       expect(command.stripeCustomerId).toBe(dto.customerId);
+      expect(command.ssnLast4).toBe(dto.ssnLast4);
+      expect(command.address).toEqual(dto.address);
     });
   });
 
@@ -548,6 +520,8 @@ describe('AuthController', () => {
       const expected: UpsertStripeBankAccountResult = {
         id: dto.bankAccountId,
         customer_id: dto.customerId,
+        created_at: new Date('2025-01-01T00:00:00.000Z').toISOString(),
+        updated_at: new Date('2025-01-01T00:05:00.000Z').toISOString(),
       };
 
       commandBus.execute.mockResolvedValue(expected);
@@ -569,6 +543,31 @@ describe('AuthController', () => {
     });
   });
 
+  describe('deleteAccount', () => {
+    it('delegates to DeleteAccountCommand', async () => {
+      const expected: DeleteAccountResult = {
+        success: true,
+        deleted_at: new Date().toISOString(),
+      };
+
+      commandBus.execute.mockResolvedValue(expected);
+
+      const request = {
+        user: { accountId: 'account-1' },
+      } as AuthenticatedRequest;
+
+      await expect(controller.deleteAccount(request)).resolves.toEqual(
+        expected,
+      );
+
+      expect(commandBus.execute).toHaveBeenCalledWith(
+        expect.any(DeleteAccountCommand),
+      );
+      const command = commandBus.execute.mock.calls[0][0] as DeleteAccountCommand;
+      expect(command.accountId).toBe('account-1');
+    });
+  });
+
   describe('me', () => {
     it('returns the authenticated user details with defaults', async () => {
       const createdAt = new Date('2025-01-01T00:00:00.000Z');
@@ -577,6 +576,8 @@ describe('AuthController', () => {
       const dateOfBirth = new Date('1990-05-10T00:00:00.000Z');
       const completedAt = new Date('2025-01-01T13:00:00.000Z');
       const recordedAt = new Date('2025-01-01T12:30:00.000Z');
+      const bankLinkedAt = new Date('2025-01-01T02:00:00.000Z');
+      const bankUpdatedAt = new Date('2025-01-01T03:00:00.000Z');
 
       accountRepository.findOne.mockResolvedValue({
         id: 'account-1',
@@ -598,6 +599,8 @@ describe('AuthController', () => {
         stripeCustomerAddress: { line1: '123 Road' },
         stripeBankAccountId: 'ba_123',
         stripeBankAccountCustomerId: 'cus_123',
+        stripeBankAccountLinkedAt: bankLinkedAt,
+        stripeBankAccountUpdatedAt: bankUpdatedAt,
       });
 
       verificationAttemptRepository.findOne.mockResolvedValue({
@@ -643,13 +646,14 @@ describe('AuthController', () => {
         },
         customer: {
           id: 'cus_123',
-          user_id: 'account-1',
           ssn_last4: '1234',
           address: { line1: '123 Road' },
         },
         bank_account: {
           id: 'ba_123',
           customer_id: 'cus_123',
+          created_at: bankLinkedAt.toISOString(),
+          updated_at: bankUpdatedAt.toISOString(),
         },
       });
 
@@ -690,6 +694,20 @@ describe('AuthController', () => {
         accessToken: 'token',
         tokenType: 'Bearer',
         expiresAt: new Date().toISOString(),
+        user: {
+          id: 'account-1',
+          email: dto.email,
+          first_name: 'Jane',
+          last_name: 'Doe',
+          phone: '+2348012345678',
+          email_verified: true,
+          date_of_birth: '1990-05-10',
+          avatar_id: null,
+          is_active: true,
+          last_login_at: new Date().toISOString(),
+          created_at: new Date('2025-01-01T00:00:00.000Z').toISOString(),
+          updated_at: new Date('2025-01-01T00:00:00.000Z').toISOString(),
+        },
       };
 
       commandBus.execute.mockResolvedValue(expected);

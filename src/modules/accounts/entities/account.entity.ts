@@ -70,6 +70,12 @@ export class AccountEntity {
   @Property({ columnType: 'varchar(128)', nullable: true })
   stripeBankAccountCustomerId?: string | null;
 
+  @Property({ columnType: 'datetime(6)', nullable: true })
+  stripeBankAccountLinkedAt?: Date | null;
+
+  @Property({ columnType: 'datetime(6)', nullable: true })
+  stripeBankAccountUpdatedAt?: Date | null;
+
   @Property({ columnType: 'tinyint(1)', default: true })
   isActive = true;
 

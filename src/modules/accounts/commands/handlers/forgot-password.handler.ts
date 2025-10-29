@@ -24,9 +24,12 @@ export class ForgotPasswordHandler
     const email = command.email.trim().toLowerCase();
     const account = await this.accountRepository.findOne({ email });
 
-    if (account && account.stripeVerificationCompleted) {
+    if (account) {
+      const reason = command.isResend
+        ? 'forgot-password-resend'
+        : 'forgot-password';
       await this.passwordResetService.issue(account, {
-        reason: 'forgot-password',
+        reason,
       });
     }
 
