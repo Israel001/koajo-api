@@ -17,6 +17,8 @@ const makeRequest = (): AdminAuthenticatedRequest =>
       email: 'admin@example.com',
       role: AdminRole.SUPER_ADMIN,
       isSuperAdmin: true,
+      permissions: ['*'],
+      requiresPasswordChange: false,
     },
   } as unknown as AdminAuthenticatedRequest);
 

@@ -1,23 +1,66 @@
 import { AdminRole } from '../admin-role.enum';
 import type { PodActivitySummary } from '../../pods/contracts/pod-activity-summary';
 
+export interface AdminPermissionSummary {
+  id: string;
+  code: string;
+  name: string | null;
+  description: string | null;
+}
+
+export interface AdminRoleSummary {
+  id: string;
+  name: string;
+  description: string | null;
+  permissions: AdminPermissionSummary[];
+}
+
+export interface AdminUserDto {
+  id: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  phoneNumber: string | null;
+  isActive: boolean;
+  requiresPasswordChange: boolean;
+  createdAt: string;
+  updatedAt: string;
+  invitedAt: string | null;
+  invitedById: string | null;
+  lastLoginAt: string | null;
+  roles: AdminRoleSummary[];
+  explicitPermissions: AdminPermissionSummary[];
+  deniedPermissions: AdminPermissionSummary[];
+  effectivePermissions: string[];
+}
+
+export interface CreateAdminUserResult extends AdminUserDto {
+  temporaryPassword?: string;
+}
+
 export interface AdminLoginResult {
   accessToken: string;
   tokenType: 'Bearer';
   expiresAt: string;
   role: AdminRole;
   isSuperAdmin: boolean;
+  permissions: string[];
+  requiresPasswordChange: boolean;
 }
 
-export interface AdminUserDto {
-  id: string;
+export interface AdminChangePasswordResult {
+  success: boolean;
+}
+
+export interface AdminForgotPasswordResult {
   email: string;
-  role: AdminRole;
-  createdAt: string;
-  lastLoginAt: string | null;
+  requested: boolean;
 }
 
-export interface CreateAdminUserResult extends AdminUserDto {}
+export interface AdminResetPasswordResult {
+  email: string;
+  reset: boolean;
+}
 
 export interface AdminAccountListItem {
   id: string;

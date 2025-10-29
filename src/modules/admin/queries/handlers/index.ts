@@ -7,6 +7,9 @@ import { ListAdminUsersHandler } from './list-admin-users.handler';
 import { ListAdminAchievementsHandler } from './list-admin-achievements.handler';
 import { ListAdminPodPlansHandler } from './list-admin-pod-plans.handler';
 import { ListAdminPodActivitiesHandler } from './list-admin-pod-activities.handler';
+import { ListAdminRolesHandler } from './list-admin-roles.handler';
+import { ListAdminPermissionsHandler } from './list-admin-permissions.handler';
+import { GetAdminUserHandler } from './get-admin-user.handler';
 
 export const AdminQueryHandlers = [
   AdminDashboardHandler,
@@ -18,6 +21,9 @@ export const AdminQueryHandlers = [
   ListAdminAchievementsHandler,
   ListAdminPodPlansHandler,
   ListAdminPodActivitiesHandler,
+  ListAdminRolesHandler,
+  ListAdminPermissionsHandler,
+  GetAdminUserHandler,
 ];
 
 export {
@@ -30,4 +36,7 @@ export {
   ListAdminAchievementsHandler,
   ListAdminPodPlansHandler,
   ListAdminPodActivitiesHandler,
+  ListAdminRolesHandler,
+  ListAdminPermissionsHandler,
+  GetAdminUserHandler,
 };

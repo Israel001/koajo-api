@@ -275,6 +275,73 @@ export class MailService {
     }
   }
 
+  async sendAdminInvite(
+    email: string,
+    options: {
+      password: string;
+      templateCode?: string;
+      from?: string;
+      variables?: Record<string, string | number>;
+    },
+  ): Promise<void> {
+    const from = options.from ?? this.defaultFrom;
+    const template = options.templateCode ?? 'admin_invite';
+    const replacements = {
+      password: options.password,
+      ...(options.variables ?? {}),
+    };
+
+    let htmlBody: string;
+    try {
+      htmlBody = await this.notificationTemplateService.render(
+        template,
+        replacements,
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Falling back to default admin invite template: ${(error as Error).message}`,
+      );
+      const firstname =
+        typeof options.variables?.firstname === 'string'
+          ? options.variables.firstname
+          : 'there';
+      htmlBody = `
+        <p>Hello ${firstname},</p>
+        <p>You have been invited to the Koajo admin platform.</p>
+        <p>Your temporary password is: <strong>${options.password}</strong></p>
+        <p>Please sign in and change your password immediately.</p>
+      `;
+    }
+
+    let textBody: string | undefined;
+    try {
+      textBody = htmlBody.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    } catch {
+      textBody = undefined;
+    }
+
+    try {
+      const info = await this.transporter.sendMail({
+        to: email,
+        from,
+        subject: 'Koajo admin invitation',
+        html: htmlBody,
+        text: textBody,
+      });
+
+      this.logger.log(
+        `Admin invite email queued for ${email} (id=${info.messageId})`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to send admin invite email to ${email}: ${
+          (error as Error).message
+        }`,
+      );
+      throw error;
+    }
+  }
+
   async sendCustomPodInvitation(options: {
     email: string;
     inviterName: string;

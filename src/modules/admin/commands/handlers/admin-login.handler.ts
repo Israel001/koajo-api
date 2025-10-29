@@ -11,6 +11,7 @@ import { AdminLoginCommand } from '../admin-login.command';
 import { AdminRole } from '../../admin-role.enum';
 import type { AdminLoginResult } from '../../contracts/admin-results';
 import type { AdminConfig } from '../../../../config/admin.config';
+import { AdminAccessService } from '../../services/admin-access.service';
 
 @Injectable()
 @CommandHandler(AdminLoginCommand)
@@ -22,6 +23,7 @@ export class AdminLoginHandler
     private readonly adminRepository: EntityRepository<AdminUserEntity>,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly accessService: AdminAccessService,
   ) {}
 
   async execute(command: AdminLoginCommand): Promise<AdminLoginResult> {
@@ -34,7 +36,16 @@ export class AdminLoginHandler
       throw new UnauthorizedException('Admin configuration is unavailable.');
     }
 
-    const adminUser = await this.adminRepository.findOne({ email });
+    const adminUser = await this.adminRepository.findOne(
+      { email },
+      {
+        populate: [
+          'roles.permissions',
+          'directPermissions',
+          'permissionOverrides.permission',
+        ],
+      },
+    );
 
     const now = new Date();
     const jwtConfig = this.configService.get('auth.jwt', { infer: true })!;
@@ -58,6 +69,30 @@ export class AdminLoginHandler
 
       adminUser.lastLoginAt = now;
       await this.adminRepository.getEntityManager().flush();
+
+      const access = this.accessService.computeEffectivePermissions(adminUser);
+
+      const expiresAt = new Date(now.getTime() + jwtConfig.accessTtlSeconds * 1000);
+
+      const payload = {
+        sub: `admin:${adminUser.id}`,
+        email,
+        role,
+        scope: 'admin' as const,
+        super: false,
+      };
+
+      const accessToken = await this.jwtService.signAsync(payload);
+
+      return {
+        accessToken,
+        tokenType: 'Bearer',
+        expiresAt: expiresAt.toISOString(),
+        role,
+        isSuperAdmin,
+        permissions: access.effective,
+        requiresPasswordChange: adminUser.requiresPasswordChange,
+      };
     } else if (email === adminConfig.superAdmin.email) {
       const configuredHash = adminConfig.superAdmin.passwordHash;
       const configuredPassword = adminConfig.superAdmin.password;
@@ -106,6 +141,8 @@ export class AdminLoginHandler
       expiresAt: expiresAt.toISOString(),
       role,
       isSuperAdmin,
+      permissions: ['*'],
+      requiresPasswordChange: false,
     };
   }
 

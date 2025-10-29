@@ -17,6 +17,11 @@ import type {
   PodContributionSummary,
   PayoutAnalysis,
   TransactionSummary,
+  AdminRoleSummary,
+  AdminPermissionSummary,
+  AdminChangePasswordResult,
+  AdminForgotPasswordResult,
+  AdminResetPasswordResult,
 } from './admin-results';
 
 export class AdminLoginResultDto implements AdminLoginResult {
@@ -37,6 +42,70 @@ export class AdminLoginResultDto implements AdminLoginResult {
     example: true,
   })
   isSuperAdmin!: boolean;
+
+  @ApiProperty({ description: 'Flattened list of granted permission codes.' })
+  permissions!: string[];
+
+  @ApiProperty({ description: 'Indicates if the admin must change their password after login.' })
+  requiresPasswordChange!: boolean;
+}
+
+export class AdminChangePasswordResultDto
+  implements AdminChangePasswordResult
+{
+  @ApiProperty({ description: 'Indicates that the password was updated successfully.' })
+  success!: boolean;
+}
+
+export class AdminForgotPasswordResultDto
+  implements AdminForgotPasswordResult
+{
+  @ApiProperty({ description: 'Admin email address associated with the reset request.' })
+  email!: string;
+
+  @ApiProperty({ description: 'Indicates that the reset flow was initiated.' })
+  requested!: boolean;
+}
+
+export class AdminResetPasswordResultDto
+  implements AdminResetPasswordResult
+{
+  @ApiProperty({ description: 'Admin email address for which the password was reset.' })
+  email!: string;
+
+  @ApiProperty({ description: 'Indicates that the password reset was successful.' })
+  reset!: boolean;
+}
+
+export class AdminPermissionSummaryDto implements AdminPermissionSummary {
+  @ApiProperty({ description: 'Permission identifier.' })
+  id!: string;
+
+  @ApiProperty({ description: 'Permission code.', example: 'admin.manage_users' })
+  code!: string;
+
+  @ApiProperty({ description: 'Human-friendly permission name.', nullable: true })
+  name!: string | null;
+
+  @ApiProperty({ description: 'Describes what the permission allows.', nullable: true })
+  description!: string | null;
+}
+
+export class AdminRoleSummaryDto implements AdminRoleSummary {
+  @ApiProperty({ description: 'Role identifier.' })
+  id!: string;
+
+  @ApiProperty({ description: 'Role name.' })
+  name!: string;
+
+  @ApiProperty({ description: 'Role description.', nullable: true })
+  description!: string | null;
+
+  @ApiProperty({
+    description: 'Permissions associated with the role.',
+    type: [AdminPermissionSummaryDto],
+  })
+  permissions!: AdminPermissionSummaryDto[];
 }
 
 export class AdminUserDtoClass implements AdminUserDto {
@@ -46,22 +115,76 @@ export class AdminUserDtoClass implements AdminUserDto {
   @ApiProperty({ description: 'Admin email address.' })
   email!: string;
 
-  @ApiProperty({ enum: AdminRole, description: 'Role assigned to the admin.' })
-  role!: AdminRole;
+  @ApiProperty({ description: 'Admin first name.', nullable: true })
+  firstName!: string | null;
+
+  @ApiProperty({ description: 'Admin last name.', nullable: true })
+  lastName!: string | null;
+
+  @ApiProperty({ description: 'Admin phone number.', nullable: true })
+  phoneNumber!: string | null;
+
+  @ApiProperty({ description: 'Indicates whether the admin account is active.' })
+  isActive!: boolean;
+
+  @ApiProperty({
+    description: 'Indicates whether the admin must change their password on next login.',
+  })
+  requiresPasswordChange!: boolean;
 
   @ApiProperty({ description: 'ISO timestamp when the admin was created.' })
   createdAt!: string;
+
+  @ApiProperty({ description: 'ISO timestamp when the admin record was last updated.' })
+  updatedAt!: string;
+
+  @ApiProperty({ description: 'ISO timestamp when the admin was invited.', nullable: true })
+  invitedAt!: string | null;
+
+  @ApiProperty({
+    description: 'Identifier of the admin who invited this user.',
+    nullable: true,
+  })
+  invitedById!: string | null;
 
   @ApiProperty({
     description: 'ISO timestamp of the last login, if any.',
     nullable: true,
   })
   lastLoginAt!: string | null;
+
+  @ApiProperty({
+    description: 'Roles currently assigned to the admin.',
+    type: [AdminRoleSummaryDto],
+  })
+  roles!: AdminRoleSummaryDto[];
+
+  @ApiProperty({
+    description: 'Permissions explicitly added to the admin user.',
+    type: [AdminPermissionSummaryDto],
+  })
+  explicitPermissions!: AdminPermissionSummaryDto[];
+
+  @ApiProperty({
+    description: 'Permissions explicitly removed from the admin user.',
+    type: [AdminPermissionSummaryDto],
+  })
+  deniedPermissions!: AdminPermissionSummaryDto[];
+
+  @ApiProperty({ description: 'Flattened list of effective permission codes granted to the admin.' })
+  effectivePermissions!: string[];
 }
 
 export class CreateAdminUserResultDto
   extends AdminUserDtoClass
-  implements CreateAdminUserResult {}
+  implements CreateAdminUserResult
+{
+  @ApiProperty({
+    description: 'Temporary password issued to the admin user, if system-generated.',
+    nullable: true,
+  })
+  temporaryPassword?: string;
+}
 
 export class MetricWithChangeNumberDto
   implements MetricWithChange<number>

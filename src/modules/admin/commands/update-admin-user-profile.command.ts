@@ -1,20 +1,16 @@
-export class CreateAdminUserCommand {
+export class UpdateAdminUserProfileCommand {
   constructor(
     public readonly requester: {
       adminId: string | null;
       isSuperAdmin: boolean;
     },
+    public readonly targetAdminId: string,
     public readonly payload: {
-      email: string;
       firstName?: string | null;
       lastName?: string | null;
+      email?: string | null;
       phoneNumber?: string | null;
-      roleIds: string[];
-      allowPermissions?: string[];
-      denyPermissions?: string[];
-      password?: string;
-      generatePassword: boolean;
-      inviteTemplateCode?: string;
+      isActive?: boolean | null;
     },
   ) {}
 }
