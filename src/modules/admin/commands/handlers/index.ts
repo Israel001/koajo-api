@@ -5,7 +5,6 @@ import { UpdateAdminPodPlanHandler } from './update-admin-pod-plan.handler';
 import { DeleteAdminPodPlanHandler } from './delete-admin-pod-plan.handler';
 import { CreateAdminRoleHandler } from './create-admin-role.handler';
 import { SetAdminRolePermissionsHandler } from './set-admin-role-permissions.handler';
-import { CreateAdminPermissionHandler } from './create-admin-permission.handler';
 import { UpdateAdminUserProfileHandler } from './update-admin-user-profile.handler';
 import { DeleteAdminUserHandler } from './delete-admin-user.handler';
 import { SetAdminUserRolesHandler } from './set-admin-user-roles.handler';
@@ -22,7 +21,6 @@ export const AdminCommandHandlers = [
   DeleteAdminPodPlanHandler,
   CreateAdminRoleHandler,
   SetAdminRolePermissionsHandler,
-  CreateAdminPermissionHandler,
   UpdateAdminUserProfileHandler,
   DeleteAdminUserHandler,
   SetAdminUserRolesHandler,
@@ -39,7 +37,6 @@ export { UpdateAdminPodPlanHandler } from './update-admin-pod-plan.handler';
 export { DeleteAdminPodPlanHandler } from './delete-admin-pod-plan.handler';
 export { CreateAdminRoleHandler } from './create-admin-role.handler';
 export { SetAdminRolePermissionsHandler } from './set-admin-role-permissions.handler';
-export { CreateAdminPermissionHandler } from './create-admin-permission.handler';
 export { UpdateAdminUserProfileHandler } from './update-admin-user-profile.handler';
 export { DeleteAdminUserHandler } from './delete-admin-user.handler';
 export { SetAdminUserRolesHandler } from './set-admin-user-roles.handler';

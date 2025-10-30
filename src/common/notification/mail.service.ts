@@ -38,6 +38,11 @@ export class MailService {
             pass: mailConfig.pass,
           }
         : undefined,
+      logger: true,
+      debug: true,
+      connectionTimeout: 10_000,
+      greetingTimeout: 10_000,
+      socketTimeout: 20_000,
     });
 
     this.defaultFrom = mailConfig.defaultFrom;
