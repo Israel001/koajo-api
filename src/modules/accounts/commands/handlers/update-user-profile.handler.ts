@@ -116,6 +116,8 @@ export class UpdateUserProfileHandler
         : null,
       avatar_id: null,
       is_active: account.isActive,
+      emailNotificationsEnabled: account.emailNotificationsEnabled,
+      transactionNotificationsEnabled: account.transactionNotificationsEnabled,
       last_login_at: account.lastLoginAt
         ? account.lastLoginAt.toISOString()
         : null,

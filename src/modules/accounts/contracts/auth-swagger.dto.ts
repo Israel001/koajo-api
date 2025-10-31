@@ -128,6 +128,18 @@ export class LoginUserResultDto implements LoginUserResult {
   @ApiProperty({ description: 'Indicates if the account is active.' })
   is_active!: boolean;
 
+  @ApiProperty({
+    description: 'Indicates if general system emails are enabled.',
+    example: true,
+  })
+  emailNotificationsEnabled!: boolean;
+
+  @ApiProperty({
+    description: 'Indicates if transaction-related emails are enabled.',
+    example: true,
+  })
+  transactionNotificationsEnabled!: boolean;
+
   @ApiProperty({ description: 'Timestamp of the last login.', nullable: true })
   last_login_at!: string | null;
 
@@ -257,6 +269,16 @@ export class CurrentUserResultDto implements CurrentUserResult {
     description: 'Indicates whether the account is active.',
   })
   is_active!: boolean;
+
+  @ApiProperty({
+    description: 'Indicates if general system emails are enabled for the user.',
+  })
+  emailNotificationsEnabled!: boolean;
+
+  @ApiProperty({
+    description: 'Indicates if transaction-related emails are enabled for the user.',
+  })
+  transactionNotificationsEnabled!: boolean;
 
   @ApiProperty({
     description: 'Timestamp of the last login.',

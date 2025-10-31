@@ -354,6 +354,7 @@ export class MailService {
     token: string;
     cadence: string;
     amount: number;
+    podName?: string;
   }): Promise<void> {
     if (!(await this.shouldSendEmail(options.email, 'system'))) {
       return;
@@ -384,6 +385,7 @@ export class MailService {
       cadence: options.cadence,
       amount: options.amount,
       inviteLink,
+      podName: options.podName ?? 'Custom pod',
     };
 
     let htmlBody: string;
@@ -398,7 +400,7 @@ export class MailService {
       );
       htmlBody = `
         <p>Hello,</p>
-        <p>${options.inviterName} invited you to join a Koajo custom pod.</p>
+        <p>${options.inviterName} invited you to join the ${options.podName ?? 'Koajo custom pod'}.</p>
         <p>Cadence: <strong>${options.cadence}</strong></p>
         <p>Contribution amount: <strong>${options.amount}</strong></p>
         <p>Use the link below to accept:</p>

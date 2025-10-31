@@ -63,6 +63,37 @@
           "length": 255,
           "mappedType": "string"
         },
+        "avatar_url": {
+          "name": "avatar_url",
+          "type": "varchar(512)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 512,
+          "mappedType": "string"
+        },
+        "date_of_birth": {
+          "name": "date_of_birth",
+          "type": "date",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": null,
+          "mappedType": "date"
+        },
+        "agreed_to_terms": {
+          "name": "agreed_to_terms",
+          "type": "tinyint(1)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 1,
+          "default": "false",
+          "mappedType": "boolean"
+        },
         "checksum": {
           "name": "checksum",
           "type": "varchar(128)",
@@ -94,45 +125,95 @@
           "default": "false",
           "mappedType": "boolean"
         },
-        "stripe_verification_attempt_count": {
-          "name": "stripe_verification_attempt_count",
-          "type": "int unsigned",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "0",
-          "mappedType": "integer"
-        },
-        "stripe_verification_first_attempt_at": {
-          "name": "stripe_verification_first_attempt_at",
-          "type": "datetime(6)",
+        "stripe_identity_id": {
+          "name": "stripe_identity_id",
+          "type": "varchar(128)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": true,
-          "length": 6,
-          "mappedType": "datetime"
-        },
-        "stripe_verification_last_attempt_at": {
-          "name": "stripe_verification_last_attempt_at",
-          "type": "datetime(6)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "length": 6,
-          "mappedType": "datetime"
-        },
-        "stripe_verification_status": {
-          "name": "stripe_verification_status",
-          "type": "varchar(64)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "length": 64,
+          "length": 128,
           "mappedType": "string"
+        },
+        "stripe_identity_result_id": {
+          "name": "stripe_identity_result_id",
+          "type": "varchar(128)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 128,
+          "mappedType": "string"
+        },
+        "stripe_customer_id": {
+          "name": "stripe_customer_id",
+          "type": "varchar(128)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 128,
+          "mappedType": "string"
+        },
+        "stripe_customer_ssn_last4": {
+          "name": "stripe_customer_ssn_last4",
+          "type": "varchar(4)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 4,
+          "mappedType": "string"
+        },
+        "stripe_customer_address": {
+          "name": "stripe_customer_address",
+          "type": "json",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": null,
+          "mappedType": "json"
+        },
+        "stripe_bank_account_id": {
+          "name": "stripe_bank_account_id",
+          "type": "varchar(128)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 128,
+          "mappedType": "string"
+        },
+        "stripe_bank_account_customer_id": {
+          "name": "stripe_bank_account_customer_id",
+          "type": "varchar(128)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 128,
+          "mappedType": "string"
+        },
+        "stripe_bank_account_linked_at": {
+          "name": "stripe_bank_account_linked_at",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 6,
+          "mappedType": "datetime"
+        },
+        "stripe_bank_account_updated_at": {
+          "name": "stripe_bank_account_updated_at",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 6,
+          "mappedType": "datetime"
         },
         "is_active": {
           "name": "is_active",
@@ -144,6 +225,38 @@
           "length": 1,
           "default": "true",
           "mappedType": "boolean"
+        },
+        "email_notifications_enabled": {
+          "name": "email_notifications_enabled",
+          "type": "tinyint(1)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 1,
+          "default": "true",
+          "mappedType": "boolean"
+        },
+        "transaction_notifications_enabled": {
+          "name": "transaction_notifications_enabled",
+          "type": "tinyint(1)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 1,
+          "default": "true",
+          "mappedType": "boolean"
+        },
+        "last_login_at": {
+          "name": "last_login_at",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 6,
+          "mappedType": "datetime"
         },
         "last_pod_joined_at": {
           "name": "last_pod_joined_at",
@@ -157,6 +270,26 @@
         },
         "deactivated_at": {
           "name": "deactivated_at",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 6,
+          "mappedType": "datetime"
+        },
+        "inactivity_warning_sent_at": {
+          "name": "inactivity_warning_sent_at",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 6,
+          "mappedType": "datetime"
+        },
+        "inactivity_closure_sent_at": {
+          "name": "inactivity_closure_sent_at",
           "type": "datetime(6)",
           "unsigned": false,
           "autoincrement": false,
@@ -233,7 +366,15 @@
       ],
       "checks": [],
       "foreignKeys": {},
-      "nativeEnums": {}
+      "nativeEnums": {
+        "admin_permission_override_type": {
+          "name": "admin_permission_override_type",
+          "items": [
+            "allow",
+            "deny"
+          ]
+        }
+      }
     },
     {
       "columns": {
@@ -360,7 +501,15 @@
           "updateRule": "cascade"
         }
       },
-      "nativeEnums": {}
+      "nativeEnums": {
+        "admin_permission_override_type": {
+          "name": "admin_permission_override_type",
+          "items": [
+            "allow",
+            "deny"
+          ]
+        }
+      }
     },
     {
       "columns": {
@@ -487,7 +636,189 @@
           "updateRule": "cascade"
         }
       },
-      "nativeEnums": {}
+      "nativeEnums": {
+        "admin_permission_override_type": {
+          "name": "admin_permission_override_type",
+          "items": [
+            "allow",
+            "deny"
+          ]
+        }
+      }
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 36,
+          "mappedType": "character"
+        },
+        "account_id": {
+          "name": "account_id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 36,
+          "mappedType": "character"
+        },
+        "provider": {
+          "name": "provider",
+          "type": "varchar(64)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 64,
+          "mappedType": "string"
+        },
+        "type": {
+          "name": "type",
+          "type": "varchar(64)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 64,
+          "mappedType": "string"
+        },
+        "session_id": {
+          "name": "session_id",
+          "type": "varchar(128)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 128,
+          "mappedType": "string"
+        },
+        "provider_reference": {
+          "name": "provider_reference",
+          "type": "varchar(128)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 128,
+          "mappedType": "string"
+        },
+        "stripe_reference": {
+          "name": "stripe_reference",
+          "type": "varchar(128)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 128,
+          "mappedType": "string"
+        },
+        "result_id": {
+          "name": "result_id",
+          "type": "varchar(128)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 128,
+          "mappedType": "string"
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(64)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 64,
+          "mappedType": "string"
+        },
+        "completed_at": {
+          "name": "completed_at",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 6,
+          "mappedType": "datetime"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "default": "current_timestamp(6)",
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "default": "current_timestamp(6)",
+          "mappedType": "datetime"
+        }
+      },
+      "name": "account_verification_attempts",
+      "indexes": [
+        {
+          "columnNames": [
+            "account_id"
+          ],
+          "composite": false,
+          "keyName": "account_verification_attempts_account_id_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "keyName": "PRIMARY",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "account_verification_attempts_account_id_foreign": {
+          "constraintName": "account_verification_attempts_account_id_foreign",
+          "columnNames": [
+            "account_id"
+          ],
+          "localTableName": "account_verification_attempts",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "accounts",
+          "deleteRule": "cascade",
+          "updateRule": "cascade"
+        }
+      },
+      "nativeEnums": {
+        "admin_permission_override_type": {
+          "name": "admin_permission_override_type",
+          "items": [
+            "allow",
+            "deny"
+          ]
+        }
+      }
     },
     {
       "columns": {
@@ -579,7 +910,15 @@
       ],
       "checks": [],
       "foreignKeys": {},
-      "nativeEnums": {}
+      "nativeEnums": {
+        "admin_permission_override_type": {
+          "name": "admin_permission_override_type",
+          "items": [
+            "allow",
+            "deny"
+          ]
+        }
+      }
     },
     {
       "columns": {
@@ -698,7 +1037,1055 @@
           "updateRule": "cascade"
         }
       },
-      "nativeEnums": {}
+      "nativeEnums": {
+        "admin_permission_override_type": {
+          "name": "admin_permission_override_type",
+          "items": [
+            "allow",
+            "deny"
+          ]
+        }
+      }
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 36,
+          "mappedType": "character"
+        },
+        "code": {
+          "name": "code",
+          "type": "varchar(128)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 128,
+          "mappedType": "string"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 255,
+          "mappedType": "string"
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": null,
+          "mappedType": "text"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "default": "current_timestamp(6)",
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "default": "current_timestamp(6)",
+          "mappedType": "datetime"
+        }
+      },
+      "name": "admin_permissions",
+      "indexes": [
+        {
+          "keyName": "admin_permissions_code_unique",
+          "columnNames": [
+            "code"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": false,
+          "unique": true
+        },
+        {
+          "keyName": "PRIMARY",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {},
+      "nativeEnums": {
+        "admin_permission_override_type": {
+          "name": "admin_permission_override_type",
+          "items": [
+            "allow",
+            "deny"
+          ]
+        }
+      }
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 36,
+          "mappedType": "character"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(64)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 64,
+          "mappedType": "string"
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": null,
+          "mappedType": "text"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "default": "current_timestamp(6)",
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "default": "current_timestamp(6)",
+          "mappedType": "datetime"
+        }
+      },
+      "name": "admin_roles",
+      "indexes": [
+        {
+          "keyName": "admin_roles_name_unique",
+          "columnNames": [
+            "name"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": false,
+          "unique": true
+        },
+        {
+          "keyName": "PRIMARY",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {},
+      "nativeEnums": {
+        "admin_permission_override_type": {
+          "name": "admin_permission_override_type",
+          "items": [
+            "allow",
+            "deny"
+          ]
+        }
+      }
+    },
+    {
+      "columns": {
+        "admin_role_id": {
+          "name": "admin_role_id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 36,
+          "mappedType": "character"
+        },
+        "admin_permission_id": {
+          "name": "admin_permission_id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 36,
+          "mappedType": "character"
+        }
+      },
+      "name": "admin_role_permissions",
+      "indexes": [
+        {
+          "columnNames": [
+            "admin_role_id"
+          ],
+          "composite": false,
+          "keyName": "admin_role_permissions_admin_role_id_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "admin_permission_id"
+          ],
+          "composite": false,
+          "keyName": "admin_role_permissions_admin_permission_id_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "keyName": "PRIMARY",
+          "columnNames": [
+            "admin_role_id",
+            "admin_permission_id"
+          ],
+          "composite": true,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "admin_role_permissions_admin_role_id_foreign": {
+          "constraintName": "admin_role_permissions_admin_role_id_foreign",
+          "columnNames": [
+            "admin_role_id"
+          ],
+          "localTableName": "admin_role_permissions",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "admin_roles",
+          "deleteRule": "cascade",
+          "updateRule": "cascade"
+        },
+        "admin_role_permissions_admin_permission_id_foreign": {
+          "constraintName": "admin_role_permissions_admin_permission_id_foreign",
+          "columnNames": [
+            "admin_permission_id"
+          ],
+          "localTableName": "admin_role_permissions",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "admin_permissions",
+          "deleteRule": "cascade",
+          "updateRule": "cascade"
+        }
+      },
+      "nativeEnums": {
+        "admin_permission_override_type": {
+          "name": "admin_permission_override_type",
+          "items": [
+            "allow",
+            "deny"
+          ]
+        }
+      }
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 36,
+          "mappedType": "character"
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(320)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 320,
+          "mappedType": "string"
+        },
+        "password_hash": {
+          "name": "password_hash",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 255,
+          "mappedType": "string"
+        },
+        "role": {
+          "name": "role",
+          "type": "varchar(32)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 32,
+          "default": "'admin'",
+          "mappedType": "string"
+        },
+        "first_name": {
+          "name": "first_name",
+          "type": "varchar(60)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 60,
+          "mappedType": "string"
+        },
+        "last_name": {
+          "name": "last_name",
+          "type": "varchar(60)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 60,
+          "mappedType": "string"
+        },
+        "phone_number": {
+          "name": "phone_number",
+          "type": "varchar(32)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 32,
+          "mappedType": "string"
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "tinyint(1)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 1,
+          "default": "true",
+          "mappedType": "boolean"
+        },
+        "requires_password_change": {
+          "name": "requires_password_change",
+          "type": "tinyint(1)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 1,
+          "default": "false",
+          "mappedType": "boolean"
+        },
+        "invited_at": {
+          "name": "invited_at",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 6,
+          "mappedType": "datetime"
+        },
+        "invited_by_id": {
+          "name": "invited_by_id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 36,
+          "mappedType": "character"
+        },
+        "password_changed_at": {
+          "name": "password_changed_at",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 6,
+          "mappedType": "datetime"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "default": "current_timestamp(6)",
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "default": "current_timestamp(6)",
+          "mappedType": "datetime"
+        },
+        "last_login_at": {
+          "name": "last_login_at",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 6,
+          "mappedType": "datetime"
+        }
+      },
+      "name": "admin_users",
+      "indexes": [
+        {
+          "keyName": "admin_users_email_unique",
+          "columnNames": [
+            "email"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": false,
+          "unique": true
+        },
+        {
+          "keyName": "PRIMARY",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {},
+      "nativeEnums": {
+        "admin_permission_override_type": {
+          "name": "admin_permission_override_type",
+          "items": [
+            "allow",
+            "deny"
+          ]
+        }
+      }
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 36,
+          "mappedType": "character"
+        },
+        "admin_id": {
+          "name": "admin_id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 36,
+          "mappedType": "character"
+        },
+        "token_digest": {
+          "name": "token_digest",
+          "type": "varchar(128)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 128,
+          "mappedType": "string"
+        },
+        "failed_attempts": {
+          "name": "failed_attempts",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": null,
+          "default": "0",
+          "mappedType": "integer"
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "mappedType": "datetime"
+        },
+        "consumed_at": {
+          "name": "consumed_at",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 6,
+          "mappedType": "datetime"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "default": "current_timestamp(6)",
+          "mappedType": "datetime"
+        }
+      },
+      "name": "admin_password_resets",
+      "indexes": [
+        {
+          "columnNames": [
+            "admin_id"
+          ],
+          "composite": false,
+          "keyName": "admin_password_resets_admin_id_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "keyName": "admin_password_resets_admin_id_created_at_index",
+          "columnNames": [
+            "admin_id",
+            "created_at"
+          ],
+          "composite": true,
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "keyName": "PRIMARY",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "admin_password_resets_admin_id_foreign": {
+          "constraintName": "admin_password_resets_admin_id_foreign",
+          "columnNames": [
+            "admin_id"
+          ],
+          "localTableName": "admin_password_resets",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "admin_users",
+          "deleteRule": "cascade",
+          "updateRule": "cascade"
+        }
+      },
+      "nativeEnums": {
+        "admin_permission_override_type": {
+          "name": "admin_permission_override_type",
+          "items": [
+            "allow",
+            "deny"
+          ]
+        }
+      }
+    },
+    {
+      "columns": {
+        "admin_user_id": {
+          "name": "admin_user_id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 36,
+          "mappedType": "character"
+        },
+        "admin_role_id": {
+          "name": "admin_role_id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 36,
+          "mappedType": "character"
+        }
+      },
+      "name": "admin_user_roles",
+      "indexes": [
+        {
+          "columnNames": [
+            "admin_user_id"
+          ],
+          "composite": false,
+          "keyName": "admin_user_roles_admin_user_id_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "admin_role_id"
+          ],
+          "composite": false,
+          "keyName": "admin_user_roles_admin_role_id_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "keyName": "PRIMARY",
+          "columnNames": [
+            "admin_user_id",
+            "admin_role_id"
+          ],
+          "composite": true,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "admin_user_roles_admin_user_id_foreign": {
+          "constraintName": "admin_user_roles_admin_user_id_foreign",
+          "columnNames": [
+            "admin_user_id"
+          ],
+          "localTableName": "admin_user_roles",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "admin_users",
+          "deleteRule": "cascade",
+          "updateRule": "cascade"
+        },
+        "admin_user_roles_admin_role_id_foreign": {
+          "constraintName": "admin_user_roles_admin_role_id_foreign",
+          "columnNames": [
+            "admin_role_id"
+          ],
+          "localTableName": "admin_user_roles",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "admin_roles",
+          "deleteRule": "cascade",
+          "updateRule": "cascade"
+        }
+      },
+      "nativeEnums": {
+        "admin_permission_override_type": {
+          "name": "admin_permission_override_type",
+          "items": [
+            "allow",
+            "deny"
+          ]
+        }
+      }
+    },
+    {
+      "columns": {
+        "admin_user_id": {
+          "name": "admin_user_id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 36,
+          "mappedType": "character"
+        },
+        "admin_permission_id": {
+          "name": "admin_permission_id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 36,
+          "mappedType": "character"
+        }
+      },
+      "name": "admin_user_permissions",
+      "indexes": [
+        {
+          "columnNames": [
+            "admin_user_id"
+          ],
+          "composite": false,
+          "keyName": "admin_user_permissions_admin_user_id_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "admin_permission_id"
+          ],
+          "composite": false,
+          "keyName": "admin_user_permissions_admin_permission_id_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "keyName": "PRIMARY",
+          "columnNames": [
+            "admin_user_id",
+            "admin_permission_id"
+          ],
+          "composite": true,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "admin_user_permissions_admin_user_id_foreign": {
+          "constraintName": "admin_user_permissions_admin_user_id_foreign",
+          "columnNames": [
+            "admin_user_id"
+          ],
+          "localTableName": "admin_user_permissions",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "admin_users",
+          "deleteRule": "cascade",
+          "updateRule": "cascade"
+        },
+        "admin_user_permissions_admin_permission_id_foreign": {
+          "constraintName": "admin_user_permissions_admin_permission_id_foreign",
+          "columnNames": [
+            "admin_permission_id"
+          ],
+          "localTableName": "admin_user_permissions",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "admin_permissions",
+          "deleteRule": "cascade",
+          "updateRule": "cascade"
+        }
+      },
+      "nativeEnums": {
+        "admin_permission_override_type": {
+          "name": "admin_permission_override_type",
+          "items": [
+            "allow",
+            "deny"
+          ]
+        }
+      }
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 36,
+          "mappedType": "character"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 36,
+          "mappedType": "character"
+        },
+        "permission_id": {
+          "name": "permission_id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 36,
+          "mappedType": "character"
+        },
+        "type": {
+          "name": "type",
+          "type": "varchar(16)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "nativeEnumName": "admin_permission_override_type",
+          "length": 16,
+          "default": "'allow'",
+          "enumItems": [
+            "allow",
+            "deny"
+          ],
+          "mappedType": "enum"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "default": "current_timestamp(6)",
+          "mappedType": "datetime"
+        }
+      },
+      "name": "admin_user_permission_overrides",
+      "indexes": [
+        {
+          "columnNames": [
+            "user_id"
+          ],
+          "composite": false,
+          "keyName": "admin_user_permission_overrides_user_id_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "permission_id"
+          ],
+          "composite": false,
+          "keyName": "admin_user_permission_overrides_permission_id_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "keyName": "admin_user_permission_overrides_user_id_permission_id_unique",
+          "columnNames": [
+            "user_id",
+            "permission_id"
+          ],
+          "composite": true,
+          "constraint": true,
+          "primary": false,
+          "unique": true
+        },
+        {
+          "keyName": "PRIMARY",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "admin_user_permission_overrides_user_id_foreign": {
+          "constraintName": "admin_user_permission_overrides_user_id_foreign",
+          "columnNames": [
+            "user_id"
+          ],
+          "localTableName": "admin_user_permission_overrides",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "admin_users",
+          "deleteRule": "cascade",
+          "updateRule": "cascade"
+        },
+        "admin_user_permission_overrides_permission_id_foreign": {
+          "constraintName": "admin_user_permission_overrides_permission_id_foreign",
+          "columnNames": [
+            "permission_id"
+          ],
+          "localTableName": "admin_user_permission_overrides",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "admin_permissions",
+          "deleteRule": "cascade",
+          "updateRule": "cascade"
+        }
+      },
+      "nativeEnums": {
+        "admin_permission_override_type": {
+          "name": "admin_permission_override_type",
+          "items": [
+            "allow",
+            "deny"
+          ]
+        }
+      }
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(64)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 64,
+          "mappedType": "string"
+        },
+        "alt_text": {
+          "name": "alt_text",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 255,
+          "mappedType": "string"
+        },
+        "is_default": {
+          "name": "is_default",
+          "type": "tinyint(1)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 1,
+          "default": "false",
+          "mappedType": "boolean"
+        },
+        "gender": {
+          "name": "gender",
+          "type": "varchar(16)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 16,
+          "mappedType": "string"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "default": "current_timestamp(6)",
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "default": "current_timestamp(6)",
+          "mappedType": "datetime"
+        }
+      },
+      "name": "avatars",
+      "indexes": [
+        {
+          "keyName": "PRIMARY",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {},
+      "nativeEnums": {
+        "admin_permission_override_type": {
+          "name": "admin_permission_override_type",
+          "items": [
+            "allow",
+            "deny"
+          ]
+        }
+      }
     },
     {
       "columns": {
@@ -738,7 +2125,15 @@
       ],
       "checks": [],
       "foreignKeys": {},
-      "nativeEnums": {}
+      "nativeEnums": {
+        "admin_permission_override_type": {
+          "name": "admin_permission_override_type",
+          "items": [
+            "allow",
+            "deny"
+          ]
+        }
+      }
     },
     {
       "columns": {
@@ -761,6 +2156,40 @@
           "nullable": false,
           "length": 32,
           "mappedType": "string"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(120)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 120,
+          "mappedType": "string"
+        },
+        "type": {
+          "name": "type",
+          "type": "enum('system','custom')",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "'system'",
+          "enumItems": [
+            "system",
+            "custom"
+          ],
+          "mappedType": "enum"
+        },
+        "creator_id": {
+          "name": "creator_id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 36,
+          "mappedType": "character"
         },
         "amount": {
           "name": "amount",
@@ -794,13 +2223,14 @@
         },
         "status": {
           "name": "status",
-          "type": "enum('open','grace','active','completed')",
+          "type": "enum('pending','open','grace','active','completed')",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
           "default": "'open'",
           "enumItems": [
+            "pending",
             "open",
             "grace",
             "active",
@@ -808,13 +2238,47 @@
           ],
           "mappedType": "enum"
         },
+        "cadence": {
+          "name": "cadence",
+          "type": "enum('bi-weekly','monthly')",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "enumItems": [
+            "bi-weekly",
+            "monthly"
+          ],
+          "mappedType": "enum"
+        },
+        "randomize_payout_order": {
+          "name": "randomize_payout_order",
+          "type": "tinyint(1)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 1,
+          "default": "false",
+          "mappedType": "boolean"
+        },
+        "expected_member_count": {
+          "name": "expected_member_count",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": null,
+          "mappedType": "integer"
+        },
         "scheduled_start_date": {
           "name": "scheduled_start_date",
           "type": "datetime(6)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
+          "nullable": true,
           "length": 6,
           "mappedType": "datetime"
         },
@@ -869,8 +2333,38 @@
           "default": "0",
           "mappedType": "integer"
         },
+        "next_contribution_date": {
+          "name": "next_contribution_date",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 6,
+          "mappedType": "datetime"
+        },
+        "next_payout_date": {
+          "name": "next_payout_date",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 6,
+          "mappedType": "datetime"
+        },
         "checksum": {
           "name": "checksum",
+          "type": "varchar(128)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 128,
+          "mappedType": "string"
+        },
+        "invite_checksum": {
+          "name": "invite_checksum",
           "type": "varchar(128)",
           "unsigned": false,
           "autoincrement": false,
@@ -905,6 +2399,16 @@
       "name": "pods",
       "indexes": [
         {
+          "columnNames": [
+            "creator_id"
+          ],
+          "composite": false,
+          "keyName": "pods_creator_id_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
           "keyName": "PRIMARY",
           "columnNames": [
             "id"
@@ -916,8 +2420,219 @@
         }
       ],
       "checks": [],
-      "foreignKeys": {},
-      "nativeEnums": {}
+      "foreignKeys": {
+        "pods_creator_id_foreign": {
+          "constraintName": "pods_creator_id_foreign",
+          "columnNames": [
+            "creator_id"
+          ],
+          "localTableName": "pods",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "accounts",
+          "deleteRule": "set null",
+          "updateRule": "cascade"
+        }
+      },
+      "nativeEnums": {
+        "admin_permission_override_type": {
+          "name": "admin_permission_override_type",
+          "items": [
+            "allow",
+            "deny"
+          ]
+        }
+      }
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 36,
+          "mappedType": "character"
+        },
+        "pod_id": {
+          "name": "pod_id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 36,
+          "mappedType": "character"
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(320)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 320,
+          "mappedType": "string"
+        },
+        "invite_order": {
+          "name": "invite_order",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": null,
+          "default": "0",
+          "mappedType": "integer"
+        },
+        "token_digest": {
+          "name": "token_digest",
+          "type": "varchar(128)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 128,
+          "mappedType": "string"
+        },
+        "invited_at": {
+          "name": "invited_at",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "default": "current_timestamp(6)",
+          "mappedType": "datetime"
+        },
+        "accepted_at": {
+          "name": "accepted_at",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 6,
+          "mappedType": "datetime"
+        },
+        "account_id": {
+          "name": "account_id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 36,
+          "mappedType": "character"
+        },
+        "checksum": {
+          "name": "checksum",
+          "type": "varchar(128)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 128,
+          "mappedType": "string"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "default": "current_timestamp(6)",
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "default": "current_timestamp(6)",
+          "mappedType": "datetime"
+        }
+      },
+      "name": "pod_invites",
+      "indexes": [
+        {
+          "columnNames": [
+            "pod_id"
+          ],
+          "composite": false,
+          "keyName": "pod_invites_pod_id_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "account_id"
+          ],
+          "composite": false,
+          "keyName": "pod_invites_account_id_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "keyName": "PRIMARY",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "pod_invites_pod_id_foreign": {
+          "constraintName": "pod_invites_pod_id_foreign",
+          "columnNames": [
+            "pod_id"
+          ],
+          "localTableName": "pod_invites",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "pods",
+          "deleteRule": "cascade",
+          "updateRule": "cascade"
+        },
+        "pod_invites_account_id_foreign": {
+          "constraintName": "pod_invites_account_id_foreign",
+          "columnNames": [
+            "account_id"
+          ],
+          "localTableName": "pod_invites",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "accounts",
+          "deleteRule": "set null",
+          "updateRule": "cascade"
+        }
+      },
+      "nativeEnums": {
+        "admin_permission_override_type": {
+          "name": "admin_permission_override_type",
+          "items": [
+            "allow",
+            "deny"
+          ]
+        }
+      }
     },
     {
       "columns": {
@@ -1154,7 +2869,643 @@
           "updateRule": "cascade"
         }
       },
-      "nativeEnums": {}
+      "nativeEnums": {
+        "admin_permission_override_type": {
+          "name": "admin_permission_override_type",
+          "items": [
+            "allow",
+            "deny"
+          ]
+        }
+      }
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 36,
+          "mappedType": "character"
+        },
+        "pod_id": {
+          "name": "pod_id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 36,
+          "mappedType": "character"
+        },
+        "membership_id": {
+          "name": "membership_id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 36,
+          "mappedType": "character"
+        },
+        "account_id": {
+          "name": "account_id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 36,
+          "mappedType": "character"
+        },
+        "type": {
+          "name": "type",
+          "type": "enum('pod_created','pod_activated','member_joined','invite_sent','invite_accepted','contribution_recorded','payout_recorded','membership_completed','pod_completed')",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "enumItems": [
+            "pod_created",
+            "pod_activated",
+            "member_joined",
+            "invite_sent",
+            "invite_accepted",
+            "contribution_recorded",
+            "payout_recorded",
+            "membership_completed",
+            "pod_completed"
+          ],
+          "mappedType": "enum"
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "json",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": null,
+          "mappedType": "json"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "default": "current_timestamp(6)",
+          "mappedType": "datetime"
+        }
+      },
+      "name": "pod_activities",
+      "indexes": [
+        {
+          "columnNames": [
+            "pod_id"
+          ],
+          "composite": false,
+          "keyName": "pod_activities_pod_id_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "membership_id"
+          ],
+          "composite": false,
+          "keyName": "pod_activities_membership_id_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "account_id"
+          ],
+          "composite": false,
+          "keyName": "pod_activities_account_id_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "keyName": "PRIMARY",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "pod_activities_pod_id_foreign": {
+          "constraintName": "pod_activities_pod_id_foreign",
+          "columnNames": [
+            "pod_id"
+          ],
+          "localTableName": "pod_activities",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "pods",
+          "deleteRule": "cascade",
+          "updateRule": "cascade"
+        },
+        "pod_activities_membership_id_foreign": {
+          "constraintName": "pod_activities_membership_id_foreign",
+          "columnNames": [
+            "membership_id"
+          ],
+          "localTableName": "pod_activities",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "pod_memberships",
+          "deleteRule": "set null",
+          "updateRule": "cascade"
+        },
+        "pod_activities_account_id_foreign": {
+          "constraintName": "pod_activities_account_id_foreign",
+          "columnNames": [
+            "account_id"
+          ],
+          "localTableName": "pod_activities",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "accounts",
+          "deleteRule": "set null",
+          "updateRule": "cascade"
+        }
+      },
+      "nativeEnums": {
+        "admin_permission_override_type": {
+          "name": "admin_permission_override_type",
+          "items": [
+            "allow",
+            "deny"
+          ]
+        }
+      }
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 36,
+          "mappedType": "character"
+        },
+        "account_id": {
+          "name": "account_id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 36,
+          "mappedType": "character"
+        },
+        "pod_id": {
+          "name": "pod_id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 36,
+          "mappedType": "character"
+        },
+        "membership_id": {
+          "name": "membership_id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 36,
+          "mappedType": "character"
+        },
+        "stripe_reference": {
+          "name": "stripe_reference",
+          "type": "varchar(128)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 128,
+          "mappedType": "string"
+        },
+        "amount": {
+          "name": "amount",
+          "type": "decimal(15,2)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "precision": 15,
+          "scale": 2,
+          "mappedType": "decimal"
+        },
+        "fee": {
+          "name": "fee",
+          "type": "decimal(15,2)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "precision": 15,
+          "scale": 2,
+          "mappedType": "decimal"
+        },
+        "currency": {
+          "name": "currency",
+          "type": "varchar(16)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 16,
+          "mappedType": "string"
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(64)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 64,
+          "mappedType": "string"
+        },
+        "description": {
+          "name": "description",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 255,
+          "mappedType": "string"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "default": "current_timestamp(6)",
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "default": "current_timestamp(6)",
+          "mappedType": "datetime"
+        }
+      },
+      "name": "payouts",
+      "indexes": [
+        {
+          "columnNames": [
+            "account_id"
+          ],
+          "composite": false,
+          "keyName": "payouts_account_id_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "pod_id"
+          ],
+          "composite": false,
+          "keyName": "payouts_pod_id_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "membership_id"
+          ],
+          "composite": false,
+          "keyName": "payouts_membership_id_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "stripe_reference"
+          ],
+          "composite": false,
+          "keyName": "payouts_stripe_reference_unique",
+          "constraint": true,
+          "primary": false,
+          "unique": true
+        },
+        {
+          "keyName": "PRIMARY",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "payouts_account_id_foreign": {
+          "constraintName": "payouts_account_id_foreign",
+          "columnNames": [
+            "account_id"
+          ],
+          "localTableName": "payouts",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "accounts",
+          "updateRule": "cascade"
+        },
+        "payouts_pod_id_foreign": {
+          "constraintName": "payouts_pod_id_foreign",
+          "columnNames": [
+            "pod_id"
+          ],
+          "localTableName": "payouts",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "pods",
+          "updateRule": "cascade"
+        },
+        "payouts_membership_id_foreign": {
+          "constraintName": "payouts_membership_id_foreign",
+          "columnNames": [
+            "membership_id"
+          ],
+          "localTableName": "payouts",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "pod_memberships",
+          "deleteRule": "cascade",
+          "updateRule": "cascade"
+        }
+      },
+      "nativeEnums": {
+        "admin_permission_override_type": {
+          "name": "admin_permission_override_type",
+          "items": [
+            "allow",
+            "deny"
+          ]
+        }
+      }
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 36,
+          "mappedType": "character"
+        },
+        "account_id": {
+          "name": "account_id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 36,
+          "mappedType": "character"
+        },
+        "pod_id": {
+          "name": "pod_id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 36,
+          "mappedType": "character"
+        },
+        "membership_id": {
+          "name": "membership_id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 36,
+          "mappedType": "character"
+        },
+        "stripe_reference": {
+          "name": "stripe_reference",
+          "type": "varchar(128)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 128,
+          "mappedType": "string"
+        },
+        "amount": {
+          "name": "amount",
+          "type": "decimal(15,2)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "precision": 15,
+          "scale": 2,
+          "mappedType": "decimal"
+        },
+        "currency": {
+          "name": "currency",
+          "type": "varchar(16)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 16,
+          "mappedType": "string"
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(64)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 64,
+          "mappedType": "string"
+        },
+        "description": {
+          "name": "description",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 255,
+          "mappedType": "string"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "default": "current_timestamp(6)",
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "default": "current_timestamp(6)",
+          "mappedType": "datetime"
+        }
+      },
+      "name": "payments",
+      "indexes": [
+        {
+          "columnNames": [
+            "account_id"
+          ],
+          "composite": false,
+          "keyName": "payments_account_id_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "pod_id"
+          ],
+          "composite": false,
+          "keyName": "payments_pod_id_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "membership_id"
+          ],
+          "composite": false,
+          "keyName": "payments_membership_id_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "stripe_reference"
+          ],
+          "composite": false,
+          "keyName": "payments_stripe_reference_unique",
+          "constraint": true,
+          "primary": false,
+          "unique": true
+        },
+        {
+          "keyName": "PRIMARY",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "payments_account_id_foreign": {
+          "constraintName": "payments_account_id_foreign",
+          "columnNames": [
+            "account_id"
+          ],
+          "localTableName": "payments",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "accounts",
+          "updateRule": "cascade"
+        },
+        "payments_pod_id_foreign": {
+          "constraintName": "payments_pod_id_foreign",
+          "columnNames": [
+            "pod_id"
+          ],
+          "localTableName": "payments",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "pods",
+          "updateRule": "cascade"
+        },
+        "payments_membership_id_foreign": {
+          "constraintName": "payments_membership_id_foreign",
+          "columnNames": [
+            "membership_id"
+          ],
+          "localTableName": "payments",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "pod_memberships",
+          "deleteRule": "cascade",
+          "updateRule": "cascade"
+        }
+      },
+      "nativeEnums": {
+        "admin_permission_override_type": {
+          "name": "admin_permission_override_type",
+          "items": [
+            "allow",
+            "deny"
+          ]
+        }
+      }
     },
     {
       "columns": {
@@ -1267,8 +3618,313 @@
       ],
       "checks": [],
       "foreignKeys": {},
-      "nativeEnums": {}
+      "nativeEnums": {
+        "admin_permission_override_type": {
+          "name": "admin_permission_override_type",
+          "items": [
+            "allow",
+            "deny"
+          ]
+        }
+      }
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 36,
+          "mappedType": "character"
+        },
+        "account_id": {
+          "name": "account_id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 36,
+          "mappedType": "character"
+        },
+        "pod_id": {
+          "name": "pod_id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 36,
+          "mappedType": "character"
+        },
+        "membership_id": {
+          "name": "membership_id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 36,
+          "mappedType": "character"
+        },
+        "payment_id": {
+          "name": "payment_id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 36,
+          "mappedType": "character"
+        },
+        "payout_id": {
+          "name": "payout_id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 36,
+          "mappedType": "character"
+        },
+        "type": {
+          "name": "type",
+          "type": "enum('payment','payout')",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "'payment'",
+          "enumItems": [
+            "payment",
+            "payout"
+          ],
+          "mappedType": "enum"
+        },
+        "stripe_reference": {
+          "name": "stripe_reference",
+          "type": "varchar(128)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 128,
+          "mappedType": "string"
+        },
+        "amount": {
+          "name": "amount",
+          "type": "decimal(15,2)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "precision": 15,
+          "scale": 2,
+          "mappedType": "decimal"
+        },
+        "currency": {
+          "name": "currency",
+          "type": "varchar(16)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 16,
+          "mappedType": "string"
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(64)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 64,
+          "mappedType": "string"
+        },
+        "description": {
+          "name": "description",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 255,
+          "mappedType": "string"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "default": "current_timestamp(6)",
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "default": "current_timestamp(6)",
+          "mappedType": "datetime"
+        }
+      },
+      "name": "transactions",
+      "indexes": [
+        {
+          "columnNames": [
+            "account_id"
+          ],
+          "composite": false,
+          "keyName": "transactions_account_id_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "pod_id"
+          ],
+          "composite": false,
+          "keyName": "transactions_pod_id_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "membership_id"
+          ],
+          "composite": false,
+          "keyName": "transactions_membership_id_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "payment_id"
+          ],
+          "composite": false,
+          "keyName": "transactions_payment_id_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "payout_id"
+          ],
+          "composite": false,
+          "keyName": "transactions_payout_id_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "keyName": "PRIMARY",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "transactions_account_id_foreign": {
+          "constraintName": "transactions_account_id_foreign",
+          "columnNames": [
+            "account_id"
+          ],
+          "localTableName": "transactions",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "accounts",
+          "updateRule": "cascade"
+        },
+        "transactions_pod_id_foreign": {
+          "constraintName": "transactions_pod_id_foreign",
+          "columnNames": [
+            "pod_id"
+          ],
+          "localTableName": "transactions",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "pods",
+          "updateRule": "cascade"
+        },
+        "transactions_membership_id_foreign": {
+          "constraintName": "transactions_membership_id_foreign",
+          "columnNames": [
+            "membership_id"
+          ],
+          "localTableName": "transactions",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "pod_memberships",
+          "deleteRule": "cascade",
+          "updateRule": "cascade"
+        },
+        "transactions_payment_id_foreign": {
+          "constraintName": "transactions_payment_id_foreign",
+          "columnNames": [
+            "payment_id"
+          ],
+          "localTableName": "transactions",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "payments",
+          "deleteRule": "set null",
+          "updateRule": "cascade"
+        },
+        "transactions_payout_id_foreign": {
+          "constraintName": "transactions_payout_id_foreign",
+          "columnNames": [
+            "payout_id"
+          ],
+          "localTableName": "transactions",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "payouts",
+          "deleteRule": "set null",
+          "updateRule": "cascade"
+        }
+      },
+      "nativeEnums": {
+        "admin_permission_override_type": {
+          "name": "admin_permission_override_type",
+          "items": [
+            "allow",
+            "deny"
+          ]
+        }
+      }
     }
   ],
-  "nativeEnums": {}
+  "nativeEnums": {
+    "admin_permission_override_type": {
+      "name": "admin_permission_override_type",
+      "items": [
+        "allow",
+        "deny"
+      ]
+    }
+  }
 }

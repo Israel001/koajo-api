@@ -3,6 +3,7 @@ import { PodActivityType } from '../pod-activity-type.enum';
 import type {
   PodActivityActorSummary,
   PodActivitySummary,
+  PodActivitiesListResult,
 } from '../contracts/pod-activity-summary';
 
 class PodActivityActorDto implements PodActivityActorSummary {
@@ -53,4 +54,17 @@ export class PodActivityDto implements PodActivitySummary {
     nullable: true,
   })
   actor!: PodActivityActorSummary | null;
+}
+
+export class PodActivityListResultDto implements PodActivitiesListResult {
+  @ApiProperty({
+    description: 'Total number of activities that match the query.',
+  })
+  total!: number;
+
+  @ApiProperty({
+    description: 'Activities for the requested page.',
+    type: [PodActivityDto],
+  })
+  items!: PodActivityDto[];
 }

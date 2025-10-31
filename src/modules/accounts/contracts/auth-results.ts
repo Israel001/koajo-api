@@ -50,6 +50,8 @@ export interface LoginUserResult {
   date_of_birth: string | null;
   avatar_id: string | null;
   is_active: boolean;
+  emailNotificationsEnabled: boolean;
+  transactionNotificationsEnabled: boolean;
   last_login_at: string | null;
   created_at: string;
   updated_at: string;
@@ -85,6 +87,8 @@ export interface CurrentUserResult {
   date_of_birth: string | null;
   avatar_id: string | null;
   is_active: boolean;
+  emailNotificationsEnabled: boolean;
+  transactionNotificationsEnabled: boolean;
   last_login_at: string | null;
   created_at: string;
   updated_at: string;

@@ -12,6 +12,9 @@ export class PodMembershipDto {
   @ApiProperty({ description: 'Pod plan code.', example: '100-12' })
   planCode!: string;
 
+  @ApiProperty({ description: 'Friendly name for the pod.', nullable: true })
+  name!: string | null;
+
   @ApiProperty({ description: 'Contribution amount per cycle.', example: 100 })
   amount!: number;
 

@@ -79,6 +79,8 @@ export class AcceptCustomPodInviteHandler
       throw new NotFoundException('Invitation not found or already used.');
     }
 
+    const now = new Date();
+
     const pod = invite.pod;
     if (pod.type !== PodType.CUSTOM) {
       throw new BadRequestException('Invitation does not belong to a custom pod.');
@@ -126,8 +128,6 @@ export class AcceptCustomPodInviteHandler
     if (currentCount >= expected) {
       throw new BadRequestException('Pod is already at maximum capacity.');
     }
-
-    const now = new Date();
 
     const membership = this.membershipRepository.create(
       {

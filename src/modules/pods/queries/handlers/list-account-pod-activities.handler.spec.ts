@@ -1,48 +1,53 @@
-import { NotFoundException } from '@nestjs/common';
-import { ListPodActivitiesHandler } from './list-pod-activities.handler';
-import { ListPodActivitiesQuery } from '../list-pod-activities.query';
+import { ListAccountPodActivitiesHandler } from './list-account-pod-activities.handler';
+import { ListAccountPodActivitiesQuery } from '../list-account-pod-activities.query';
 import { PodActivityType } from '../../pod-activity-type.enum';
 
-describe('ListPodActivitiesHandler', () => {
-  let handler: ListPodActivitiesHandler;
-  let membershipRepository: { findOne: jest.Mock };
+describe('ListAccountPodActivitiesHandler', () => {
+  let handler: ListAccountPodActivitiesHandler;
+  let membershipRepository: { find: jest.Mock };
   let activityRepository: { findAndCount: jest.Mock };
 
   beforeEach(() => {
     membershipRepository = {
-      findOne: jest.fn(),
+      find: jest.fn(),
     } as any;
 
     activityRepository = {
       findAndCount: jest.fn(),
     } as any;
 
-    handler = new ListPodActivitiesHandler(
+    handler = new ListAccountPodActivitiesHandler(
       membershipRepository as any,
       activityRepository as any,
     );
   });
 
-  it('throws when membership does not exist for the account', async () => {
-    membershipRepository.findOne.mockResolvedValue(null);
+  it('returns empty result when the account has no pod memberships', async () => {
+    membershipRepository.find.mockResolvedValue([]);
 
-    await expect(
-      handler.execute(new ListPodActivitiesQuery('pod-1', 'account-1', 20)),
-    ).rejects.toBeInstanceOf(NotFoundException);
-    expect(membershipRepository.findOne).toHaveBeenCalled();
+    const result = await handler.execute(
+      new ListAccountPodActivitiesQuery('account-1', 25, 0),
+    );
+
+    expect(result).toEqual({ total: 0, items: [] });
+    expect(activityRepository.findAndCount).not.toHaveBeenCalled();
   });
 
-  it('returns mapped activities for the pod', async () => {
-    membershipRepository.findOne.mockResolvedValue({ id: 'membership-1' });
+  it('returns mapped activities across all pods', async () => {
+    membershipRepository.find.mockResolvedValue([
+      { pod: { id: 'pod-1' } },
+      { pod: { id: 'pod-2' } },
+    ]);
+
     activityRepository.findAndCount.mockResolvedValue([
       [
         {
           id: 'activity-1',
           type: PodActivityType.MEMBER_JOINED,
-          metadata: { joinOrder: 1 },
+          metadata: null,
           createdAt: new Date('2025-01-01T00:00:00.000Z'),
           account: {
-            id: 'account-1',
+            id: 'account-2',
             email: 'member@example.com',
             firstName: 'Jane',
             lastName: 'Doe',
@@ -51,7 +56,7 @@ describe('ListPodActivitiesHandler', () => {
         {
           id: 'activity-2',
           type: PodActivityType.CONTRIBUTION_RECORDED,
-          metadata: null,
+          metadata: { amount: '100.00' },
           createdAt: new Date('2025-01-02T00:00:00.000Z'),
           account: null,
         },
@@ -60,7 +65,7 @@ describe('ListPodActivitiesHandler', () => {
     ]);
 
     const result = await handler.execute(
-      new ListPodActivitiesQuery('pod-1', 'account-1', 20),
+      new ListAccountPodActivitiesQuery('account-1', 25, 10),
     );
 
     expect(result.total).toBe(2);
@@ -69,15 +74,12 @@ describe('ListPodActivitiesHandler', () => {
       id: 'activity-1',
       type: PodActivityType.MEMBER_JOINED,
       actor: {
-        accountId: 'account-1',
+        accountId: 'account-2',
         email: 'member@example.com',
-        firstName: 'Jane',
-        lastName: 'Doe',
       },
     });
-    expect(result.items[1].actor).toBeNull();
     expect(activityRepository.findAndCount).toHaveBeenCalledWith(
-      { pod: 'pod-1' },
+      { pod: { id: { $in: ['pod-1', 'pod-2'] } } },
       expect.objectContaining({
         limit: expect.any(Number),
         offset: expect.any(Number),

@@ -14,3 +14,8 @@ export interface PodActivitySummary {
   createdAt: string;
   actor: PodActivityActorSummary | null;
 }
+
+export interface PodActivitiesListResult {
+  total: number;
+  items: PodActivitySummary[];
+}

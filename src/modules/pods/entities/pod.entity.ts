@@ -22,6 +22,9 @@ export class PodEntity {
   @Property({ columnType: 'varchar(32)' })
   planCode!: string;
 
+  @Property({ columnType: 'varchar(120)', nullable: true })
+  name?: string | null;
+
   @Enum(() => PodType)
   type: PodType = PodType.SYSTEM;
 

@@ -52,7 +52,14 @@ export class CreateCustomPodHandler
   async execute(
     command: CreateCustomPodCommand,
   ): Promise<MembershipWithPod> {
-    const { creatorAccountId, inviteEmails, cadence, amount, randomizePositions } =
+    const {
+      creatorAccountId,
+      inviteEmails,
+      cadence,
+      amount,
+      randomizePositions,
+      name,
+    } =
       command;
 
     const creator = await this.accountRepository.findOne({
@@ -76,12 +83,14 @@ export class CreateCustomPodHandler
       cadence === CustomPodCadence.BI_WEEKLY
         ? totalMembers * 2
         : totalMembers * 4;
+    const trimmedName = name.trim();
 
     const pod = this.podRepository.create(
       {
         type: PodType.CUSTOM,
         planCode: `custom-${cadence}`,
         creator,
+        name: trimmedName || null,
         amount,
         lifecycleWeeks,
         maxMembers: totalMembers,
@@ -215,6 +224,7 @@ export class CreateCustomPodHandler
           token,
           cadence,
           amount,
+          podName: trimmedName || undefined,
         }),
       ),
     );

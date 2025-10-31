@@ -7,11 +7,25 @@ import {
   IsEmail,
   IsEnum,
   IsInt,
+  IsString,
+  MaxLength,
   Min,
+  MinLength,
 } from 'class-validator';
 import { CustomPodCadence } from '../custom-pod-cadence.enum';
 
 export class CreateCustomPodDto {
+  @ApiProperty({
+    description: 'Friendly name for the custom pod displayed to members.',
+    example: 'October Savings Circle',
+    minLength: 3,
+    maxLength: 60,
+  })
+  @IsString()
+  @MinLength(3)
+  @MaxLength(60)
+  name!: string;
+
   @ApiProperty({
     description: 'Contribution amount each member must pay per cycle.',
     example: 500,

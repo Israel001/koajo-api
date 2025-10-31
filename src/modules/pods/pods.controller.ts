@@ -34,6 +34,7 @@ import { PodGoalType } from './pod-goal.enum';
 import { JoinPodDto } from './dto/join-pod.dto';
 import { ListPodPlansQuery } from './queries/list-pod-plans.query';
 import { ListOpenPodsQuery } from './queries/list-open-pods.query';
+import { ListOpenPodsForPlanQuery } from './queries/list-open-pods-for-plan.query';
 import { RefreshPodsCommand } from './commands/refresh-pods.command';
 import { JoinPodCommand } from './commands/join-pod.command';
 import { CreateCustomPodCommand } from './commands/create-custom-pod.command';
@@ -41,7 +42,8 @@ import { AcceptCustomPodInviteCommand } from './commands/accept-custom-pod-invit
 import { ListAccountPodsQuery } from './queries/list-account-pods.query';
 import { PodType } from './pod-type.enum';
 import { ListPodActivitiesQuery } from './queries/list-pod-activities.query';
-import { PodActivityDto } from './dto/pod-activity.dto';
+import { ListAccountPodActivitiesQuery } from './queries/list-account-pod-activities.query';
+import { PodActivityListResultDto } from './dto/pod-activity.dto';
 import { PodActivityQueryDto } from './dto/pod-activity-query.dto';
 
 @ApiTags('pods')
@@ -73,6 +75,18 @@ export class PodsController {
     return pods.map((pod) => this.toPodSummary(pod, null));
   }
 
+  @Get('plans/:planCode/open')
+  @ApiOperation({ summary: 'List open pods for a specific plan' })
+  @ApiOkResponse({ type: [PodMembershipDto] })
+  async listOpenPodsForPlan(
+    @Param('planCode') planCode: string,
+  ): Promise<PodMembershipDto[]> {
+    const pods = (await this.queryBus.execute(
+      new ListOpenPodsForPlanQuery(planCode),
+    )) as PodWithMembers[];
+    return pods.map((pod) => this.toPodSummary(pod, null));
+  }
+
   @Post('custom')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create a custom pod and invite members' })
@@ -85,6 +99,7 @@ export class PodsController {
     const membership = (await this.commandBus.execute(
       new CreateCustomPodCommand(
         request.user.accountId,
+        payload.name,
         payload.amount,
         payload.cadence,
         payload.randomizePositions,
@@ -160,17 +175,43 @@ export class PodsController {
     );
   }
 
+  @Get('activities')
+  @ApiOperation({
+    summary: 'List recent activities across all pods the user belongs to',
+  })
+  @ApiOkResponse({ type: PodActivityListResultDto })
+  async listAllActivities(
+    @Req() request: AuthenticatedRequest,
+    @Query() query: PodActivityQueryDto,
+  ): Promise<PodActivityListResultDto> {
+    const limit = query.limit ?? 50;
+    const offset = query.offset ?? 0;
+    return this.queryBus.execute(
+      new ListAccountPodActivitiesQuery(
+        request.user.accountId,
+        limit,
+        offset,
+      ),
+    );
+  }
+
   @Get(':podId/activities')
   @ApiOperation({ summary: 'List recent activities within a pod the user belongs to' })
-  @ApiOkResponse({ type: [PodActivityDto] })
+  @ApiOkResponse({ type: PodActivityListResultDto })
   async listActivities(
     @Param('podId') podId: string,
     @Req() request: AuthenticatedRequest,
     @Query() query: PodActivityQueryDto,
-  ): Promise<PodActivityDto[]> {
+  ): Promise<PodActivityListResultDto> {
     const limit = query.limit ?? 50;
+    const offset = query.offset ?? 0;
     return this.queryBus.execute(
-      new ListPodActivitiesQuery(podId, request.user.accountId, limit),
+      new ListPodActivitiesQuery(
+        podId,
+        request.user.accountId,
+        limit,
+        offset,
+      ),
     );
   }
 
@@ -182,6 +223,7 @@ export class PodsController {
     const dto = new PodMembershipDto();
     dto.podId = pod.id;
     dto.planCode = pod.planCode;
+    dto.name = pod.name ?? null;
     dto.amount = pod.amount;
     dto.lifecycleWeeks = pod.lifecycleWeeks;
     dto.maxMembers = pod.maxMembers;

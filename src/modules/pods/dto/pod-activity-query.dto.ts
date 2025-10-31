@@ -25,4 +25,15 @@ export class PodActivityQueryDto {
   @Min(1)
   @Max(100)
   limit?: number;
+
+  @ApiPropertyOptional({
+    description: 'Number of activities to skip before collecting the result set.',
+    default: 0,
+    minimum: 0,
+  })
+  @Transform(toInt)
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  offset?: number;
 }

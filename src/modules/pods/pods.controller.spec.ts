@@ -14,6 +14,8 @@ import { AcceptCustomPodInviteCommand } from './commands/accept-custom-pod-invit
 import { CustomPodCadence } from './custom-pod-cadence.enum';
 import { PodType } from './pod-type.enum';
 import { ListPodActivitiesQuery } from './queries/list-pod-activities.query';
+import { ListAccountPodActivitiesQuery } from './queries/list-account-pod-activities.query';
+import { ListOpenPodsForPlanQuery } from './queries/list-open-pods-for-plan.query';
 
 describe('PodsController', () => {
   let controller: PodsController;
@@ -63,6 +65,39 @@ describe('PodsController', () => {
 
     await expect(controller.getPlans()).resolves.toEqual(plans);
     expect(queryBus.execute).toHaveBeenCalledWith(expect.any(ListPodPlansQuery));
+  });
+
+  it('lists open pods for a plan', async () => {
+    const pods = [
+      {
+        id: 'pod-1',
+        planCode: '100-12',
+        amount: 100,
+        lifecycleWeeks: 12,
+        maxMembers: 6,
+        status: PodStatus.OPEN,
+        type: PodType.SYSTEM,
+        cadence: null,
+        randomizePayoutOrder: false,
+        expectedMemberCount: null,
+        scheduledStartDate: new Date(),
+        startDate: null,
+        graceEndsAt: null,
+        lockedAt: null,
+        memberships: {
+          getItems: () => [],
+        },
+      },
+    ] as any[];
+
+    queryBus.execute.mockResolvedValue(pods);
+
+    const result = await controller.listOpenPodsForPlan('100-12');
+    expect(result).toHaveLength(1);
+    expect(result[0].planCode).toBe('100-12');
+    expect(queryBus.execute).toHaveBeenCalledWith(
+      expect.any(ListOpenPodsForPlanQuery),
+    );
   });
 
   it('joins plan and returns membership summary', async () => {
@@ -135,6 +170,7 @@ describe('PodsController', () => {
       pod: {
         id: 'pod-custom-1',
         planCode: 'custom-bi-weekly',
+        name: 'October Circle',
         amount: 500,
         lifecycleWeeks: 12,
         maxMembers: 6,
@@ -167,6 +203,7 @@ describe('PodsController', () => {
     } as AuthenticatedRequest;
 
     const payload = {
+      name: 'October Circle',
       amount: 500,
       cadence: CustomPodCadence.BI_WEEKLY,
       randomizePositions: true,
@@ -188,6 +225,7 @@ describe('PodsController', () => {
     const command = commandBus.execute.mock.calls[0][0] as CreateCustomPodCommand;
     expect(command.cadence).toBe(payload.cadence);
     expect(command.inviteEmails).toEqual(payload.invitees);
+    expect(command.name).toBe(payload.name);
   });
 
   it('accepts a custom pod invite and returns membership summary', async () => {
@@ -252,17 +290,35 @@ describe('PodsController', () => {
     expect(command.token).toEqual(dto.token);
   });
 
+  it('lists activities across all pods for the authenticated user', async () => {
+    queryBus.execute.mockResolvedValue({ total: 0, items: [] });
+    const request = {
+      user: { accountId: 'account-1' },
+    } as AuthenticatedRequest;
+
+    const result = await controller.listAllActivities(request, {
+      limit: 20,
+      offset: 40,
+    } as any);
+
+    expect(result).toEqual({ total: 0, items: [] });
+    expect(queryBus.execute).toHaveBeenCalledWith(
+      expect.any(ListAccountPodActivitiesQuery),
+    );
+  });
+
   it('lists activities for a pod the user belongs to', async () => {
-    queryBus.execute.mockResolvedValue([]);
+    queryBus.execute.mockResolvedValue({ total: 0, items: [] });
     const request = {
       user: { accountId: 'account-1' },
     } as AuthenticatedRequest;
 
     const result = await controller.listActivities('pod-1', request, {
       limit: 25,
+      offset: 0,
     } as any);
 
-    expect(Array.isArray(result)).toBe(true);
+    expect(result).toEqual({ total: 0, items: [] });
     expect(queryBus.execute).toHaveBeenCalledWith(expect.any(ListPodActivitiesQuery));
   });
 });
