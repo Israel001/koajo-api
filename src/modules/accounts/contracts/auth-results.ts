@@ -40,29 +40,10 @@ export interface ResendVerificationResult {
   };
 }
 
-export interface LoginUserResult {
-  id: string;
-  email: string;
-  first_name: string | null;
-  last_name: string | null;
-  phone: string | null;
-  email_verified: boolean;
-  date_of_birth: string | null;
-  avatar_id: string | null;
-  is_active: boolean;
-  emailNotificationsEnabled: boolean;
-  transactionNotificationsEnabled: boolean;
-  last_login_at: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
 export interface LoginSuccessResult {
-  requiresVerification: false;
   accessToken: string;
-  tokenType: 'Bearer';
   expiresAt: string;
-  user: LoginUserResult;
+  user: CurrentUserResult;
 }
 
 export interface LoginVerificationRequiredResult {

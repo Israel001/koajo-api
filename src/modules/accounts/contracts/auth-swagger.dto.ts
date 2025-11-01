@@ -15,7 +15,6 @@ import type {
   UpdateUserProfileResult,
   UpsertStripeCustomerResult,
   UpsertStripeBankAccountResult,
-  LoginUserResult,
   DeleteAccountResult,
 } from './auth-results';
 
@@ -42,10 +41,16 @@ export class SignupResultDto implements SignupResult {
   })
   id!: string;
 
-  @ApiProperty({ description: 'Registered account email address.', example: 'user@example.com' })
+  @ApiProperty({
+    description: 'Registered account email address.',
+    example: 'user@example.com',
+  })
   email!: string;
 
-  @ApiProperty({ description: 'Registered phone number in E.164 format.', example: '+2348012345678' })
+  @ApiProperty({
+    description: 'Registered phone number in E.164 format.',
+    example: '+2348012345678',
+  })
   phoneNumber!: string;
 
   @ApiProperty({
@@ -56,7 +61,10 @@ export class SignupResultDto implements SignupResult {
   })
   avatarUrl!: string | null;
 
-  @ApiProperty({ description: 'Indicates whether the email is verified after signup.', example: false })
+  @ApiProperty({
+    description: 'Indicates whether the email is verified after signup.',
+    example: false,
+  })
   emailVerified!: boolean;
 
   @ApiProperty({
@@ -69,28 +77,46 @@ export class SignupResultDto implements SignupResult {
 }
 
 export class ChangePasswordResultDto implements ChangePasswordResult {
-  @ApiProperty({ description: 'Indicates that the password update was successful.', example: true })
+  @ApiProperty({
+    description: 'Indicates that the password update was successful.',
+    example: true,
+  })
   success!: boolean;
 }
 
 export class ForgotPasswordResultDto implements ForgotPasswordResult {
-  @ApiProperty({ description: 'Account email address.', example: 'user@example.com' })
+  @ApiProperty({
+    description: 'Account email address.',
+    example: 'user@example.com',
+  })
   email!: string;
 
-  @ApiProperty({ description: 'Indicates that the reset request was registered.', example: true })
+  @ApiProperty({
+    description: 'Indicates that the reset request was registered.',
+    example: true,
+  })
   requested!: boolean;
 }
 
 export class ResetPasswordResultDto implements ResetPasswordResult {
-  @ApiProperty({ description: 'Account email address.', example: 'user@example.com' })
+  @ApiProperty({
+    description: 'Account email address.',
+    example: 'user@example.com',
+  })
   email!: string;
 
-  @ApiProperty({ description: 'Indicates that the password was successfully reset.', example: true })
+  @ApiProperty({
+    description: 'Indicates that the password was successfully reset.',
+    example: true,
+  })
   reset!: boolean;
 }
 
 export class ResendVerificationResultDto implements ResendVerificationResult {
-  @ApiProperty({ description: 'Account email address.', example: 'user@example.com' })
+  @ApiProperty({
+    description: 'Account email address.',
+    example: 'user@example.com',
+  })
   email!: string;
 
   @ApiProperty({
@@ -100,84 +126,19 @@ export class ResendVerificationResultDto implements ResendVerificationResult {
   verification!: VerificationWindowDto;
 }
 
-export class LoginUserResultDto implements LoginUserResult {
-  @ApiProperty({ description: 'Account identifier.' })
-  id!: string;
-
-  @ApiProperty({ description: 'Account email address.' })
-  email!: string;
-
-  @ApiProperty({ description: 'First name of the account holder.', nullable: true })
-  first_name!: string | null;
-
-  @ApiProperty({ description: 'Last name of the account holder.', nullable: true })
-  last_name!: string | null;
-
-  @ApiProperty({ description: 'Primary phone number on file.', nullable: true })
-  phone!: string | null;
-
-  @ApiProperty({ description: 'Indicates if the email address is verified.' })
-  email_verified!: boolean;
-
-  @ApiProperty({ description: 'Date of birth in ISO format.', nullable: true, example: '1990-01-01' })
-  date_of_birth!: string | null;
-
-  @ApiProperty({ description: 'Avatar identifier or URL.', nullable: true })
-  avatar_id!: string | null;
-
-  @ApiProperty({ description: 'Indicates if the account is active.' })
-  is_active!: boolean;
-
+export class LoginVerificationRequiredResultDto
+  implements LoginVerificationRequiredResult
+{
   @ApiProperty({
-    description: 'Indicates if general system emails are enabled.',
+    description: 'Indicates that verification is required.',
     example: true,
   })
-  emailNotificationsEnabled!: boolean;
-
-  @ApiProperty({
-    description: 'Indicates if transaction-related emails are enabled.',
-    example: true,
-  })
-  transactionNotificationsEnabled!: boolean;
-
-  @ApiProperty({ description: 'Timestamp of the last login.', nullable: true })
-  last_login_at!: string | null;
-
-  @ApiProperty({ description: 'Timestamp when the account was created.' })
-  created_at!: string;
-
-  @ApiProperty({ description: 'Timestamp when the account was last updated.' })
-  updated_at!: string;
-}
-
-export class LoginSuccessResultDto implements LoginSuccessResult {
-  @ApiProperty({ description: 'Indicates whether verification is required.', example: false })
-  requiresVerification!: false;
-
-  @ApiProperty({ description: 'JWT access token granting API access.', example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' })
-  accessToken!: string;
-
-  @ApiProperty({ description: 'Token type to use in the Authorization header.', example: 'Bearer' })
-  tokenType!: 'Bearer';
-
-  @ApiProperty({
-    description: 'ISO date string indicating when the token expires.',
-    example: '2024-01-01T01:00:00.000Z',
-  })
-  expiresAt!: string;
-
-  @ApiProperty({
-    description: 'Authenticated user details.',
-    type: () => LoginUserResultDto,
-  })
-  user!: LoginUserResultDto;
-}
-
-export class LoginVerificationRequiredResultDto implements LoginVerificationRequiredResult {
-  @ApiProperty({ description: 'Indicates that verification is required.', example: true })
   requiresVerification!: true;
 
-  @ApiProperty({ description: 'Account email address.', example: 'user@example.com' })
+  @ApiProperty({
+    description: 'Account email address.',
+    example: 'user@example.com',
+  })
   email!: string;
 
   @ApiProperty({
@@ -188,10 +149,16 @@ export class LoginVerificationRequiredResultDto implements LoginVerificationRequ
 }
 
 export class VerifyEmailResultDto {
-  @ApiProperty({ description: 'Account email address.', example: 'user@example.com' })
+  @ApiProperty({
+    description: 'Account email address.',
+    example: 'user@example.com',
+  })
   email!: string;
 
-  @ApiProperty({ description: 'Indicates whether the email is now verified.', example: true })
+  @ApiProperty({
+    description: 'Indicates whether the email is now verified.',
+    example: true,
+  })
   verified!: boolean;
 }
 
@@ -207,7 +174,10 @@ export class UpdateAvatarResultDto implements UpdateAvatarResult {
 export class UpdateNotificationPreferencesResultDto
   implements UpdateNotificationPreferencesResult
 {
-  @ApiProperty({ description: 'Indicates if general system emails are enabled.', example: true })
+  @ApiProperty({
+    description: 'Indicates if general system emails are enabled.',
+    example: true,
+  })
   emailNotificationsEnabled!: boolean;
 
   @ApiProperty({
@@ -276,7 +246,8 @@ export class CurrentUserResultDto implements CurrentUserResult {
   emailNotificationsEnabled!: boolean;
 
   @ApiProperty({
-    description: 'Indicates if transaction-related emails are enabled for the user.',
+    description:
+      'Indicates if transaction-related emails are enabled for the user.',
   })
   transactionNotificationsEnabled!: boolean;
 
@@ -318,19 +289,43 @@ export class CurrentUserResultDto implements CurrentUserResult {
   bank_account!: StripeBankAccountDto | null;
 }
 
-class IdentityVerificationDto
-  implements RecordIdentityVerificationResult
-{
+export class LoginSuccessResultDto implements LoginSuccessResult {
+  @ApiProperty({
+    description: 'JWT access token granting API access.',
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+  })
+  accessToken!: string;
+
+  @ApiProperty({
+    description: 'ISO date string indicating when the token expires.',
+    example: '2024-01-01T01:00:00.000Z',
+  })
+  expiresAt!: string;
+
+  @ApiProperty({
+    description: 'Authenticated user details.',
+    type: () => CurrentUserResultDto,
+  })
+  user!: CurrentUserResultDto;
+}
+
+class IdentityVerificationDto implements RecordIdentityVerificationResult {
   @ApiProperty({ description: 'Identifier of the verification attempt.' })
   id!: string;
 
-  @ApiProperty({ description: 'Stripe identity verification identifier.', nullable: true })
+  @ApiProperty({
+    description: 'Stripe identity verification identifier.',
+    nullable: true,
+  })
   identity_id!: string | null;
 
   @ApiProperty({ description: 'Stripe session identifier.' })
   session_id!: string;
 
-  @ApiProperty({ description: 'Identifier of the verification result.', nullable: true })
+  @ApiProperty({
+    description: 'Identifier of the verification result.',
+    nullable: true,
+  })
   result_id!: string | null;
 
   @ApiProperty({ description: 'Status returned by Stripe.' })
@@ -339,7 +334,10 @@ class IdentityVerificationDto
   @ApiProperty({ description: 'Type of the verification performed.' })
   type!: string;
 
-  @ApiProperty({ description: 'ISO timestamp when the attempt completed.', nullable: true })
+  @ApiProperty({
+    description: 'ISO timestamp when the attempt completed.',
+    nullable: true,
+  })
   completed_at!: string | null;
 
   @ApiProperty({ description: 'ISO timestamp when the attempt was recorded.' })
@@ -350,10 +348,17 @@ class StripeCustomerDto implements UpsertStripeCustomerResult {
   @ApiProperty({ description: 'Stripe customer identifier.' })
   id!: string;
 
-  @ApiProperty({ description: 'Last four digits of the customer SSN.', nullable: true })
+  @ApiProperty({
+    description: 'Last four digits of the customer SSN.',
+    nullable: true,
+  })
   ssn_last4!: string | null;
 
-  @ApiProperty({ description: 'Customer address information.', nullable: true, type: Object })
+  @ApiProperty({
+    description: 'Customer address information.',
+    nullable: true,
+    type: Object,
+  })
   address!: Record<string, unknown> | null;
 }
 
@@ -361,13 +366,20 @@ class StripeBankAccountDto implements UpsertStripeBankAccountResult {
   @ApiProperty({ description: 'Stripe bank account identifier.' })
   id!: string;
 
-  @ApiProperty({ description: 'Stripe customer identifier associated with the bank account.', nullable: true })
+  @ApiProperty({
+    description: 'Stripe customer identifier associated with the bank account.',
+    nullable: true,
+  })
   customer_id!: string | null;
 
-  @ApiProperty({ description: 'Timestamp when the bank account link was created.' })
+  @ApiProperty({
+    description: 'Timestamp when the bank account link was created.',
+  })
   created_at!: string;
 
-  @ApiProperty({ description: 'Timestamp when the bank account link was last updated.' })
+  @ApiProperty({
+    description: 'Timestamp when the bank account link was last updated.',
+  })
   updated_at!: string;
 }
 
@@ -380,7 +392,8 @@ export class UpdateUserProfileResultDto implements UpdateUserProfileResult {
   user!: CurrentUserResultDto;
 
   @ApiProperty({
-    description: 'Details about the verification email that was issued, if any.',
+    description:
+      'Details about the verification email that was issued, if any.',
     nullable: true,
     type: () => VerificationWindowDto,
   })
@@ -396,9 +409,13 @@ export class UpsertStripeBankAccountResultDto
   implements UpsertStripeBankAccountResult {}
 
 export class DeleteAccountResultDto implements DeleteAccountResult {
-  @ApiProperty({ description: 'Indicates that the account data has been removed.' })
+  @ApiProperty({
+    description: 'Indicates that the account data has been removed.',
+  })
   success!: boolean;
 
-  @ApiProperty({ description: 'Timestamp when the deletion request was processed.' })
+  @ApiProperty({
+    description: 'Timestamp when the deletion request was processed.',
+  })
   deleted_at!: string;
 }

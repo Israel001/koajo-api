@@ -6,6 +6,7 @@ import { EntityRepository } from '@mikro-orm/mysql';
 import * as argon2 from 'argon2';
 import { ConfigService } from '@nestjs/config';
 import { AccountEntity } from '../../entities/account.entity';
+import { AccountVerificationAttemptEntity } from '../../entities/account-verification-attempt.entity';
 import { EmailVerificationService } from '../../services/email-verification.service';
 import {
   LoginResult,
@@ -28,6 +29,8 @@ export class LoginHandler
   constructor(
     @InjectRepository(AccountEntity)
     private readonly accountRepository: EntityRepository<AccountEntity>,
+    @InjectRepository(AccountVerificationAttemptEntity)
+    private readonly verificationAttemptRepository: EntityRepository<AccountVerificationAttemptEntity>,
     private readonly emailVerificationService: EmailVerificationService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
@@ -139,17 +142,23 @@ export class LoginHandler
     account.lastLoginAt = now;
     account.updatedAt = now;
 
-    const user = {
+    const latestAttempt = await this.verificationAttemptRepository.findOne(
+      { account },
+      { orderBy: { createdAt: 'DESC' } },
+    );
+
+    const user: LoginSuccessResult['user'] = {
       id: account.id,
       email: account.email,
       first_name: account.firstName ?? null,
       last_name: account.lastName ?? null,
       phone: account.phoneNumber ?? null,
       email_verified: Boolean(account.emailVerifiedAt),
+      agreed_to_terms: account.agreedToTerms,
       date_of_birth: account.dateOfBirth
         ? account.dateOfBirth.toISOString().slice(0, 10)
         : null,
-      avatar_id: account.avatarUrl ?? null,
+      avatar_id: null,
       is_active: account.isActive,
       emailNotificationsEnabled: account.emailNotificationsEnabled,
       transactionNotificationsEnabled: account.transactionNotificationsEnabled,
@@ -158,12 +167,54 @@ export class LoginHandler
         : null,
       created_at: account.createdAt.toISOString(),
       updated_at: account.updatedAt.toISOString(),
+      identity_verification:
+        account.stripeIdentityId ||
+        account.stripeIdentityResultId ||
+        latestAttempt
+          ? {
+              id:
+                account.stripeIdentityId ??
+                latestAttempt?.providerReference ??
+                null,
+              result_id:
+                account.stripeIdentityResultId ?? latestAttempt?.resultId ?? null,
+              status: latestAttempt?.status ?? null,
+              type: latestAttempt?.type ?? null,
+              session_id: latestAttempt?.sessionId ?? null,
+              completed_at: latestAttempt?.completedAt
+                ? latestAttempt.completedAt.toISOString()
+                : null,
+              recorded_at: latestAttempt
+                ? latestAttempt.createdAt.toISOString()
+                : null,
+            }
+          : null,
+      customer: account.stripeCustomerId
+        ? {
+            id: account.stripeCustomerId,
+            ssn_last4: account.stripeCustomerSsnLast4 ?? null,
+            address: account.stripeCustomerAddress ?? null,
+          }
+        : null,
+      bank_account: account.stripeBankAccountId
+        ? {
+            id: account.stripeBankAccountId,
+            customer_id:
+              account.stripeBankAccountCustomerId ??
+              account.stripeCustomerId ??
+              null,
+            created_at: (
+              account.stripeBankAccountLinkedAt ?? account.createdAt
+            ).toISOString(),
+            updated_at: (
+              account.stripeBankAccountUpdatedAt ?? account.updatedAt
+            ).toISOString(),
+          }
+        : null,
     };
 
     const response: LoginSuccessResult = {
-      requiresVerification: false,
       accessToken,
-      tokenType: 'Bearer',
       expiresAt: expiresAt.toISOString(),
       user,
     };

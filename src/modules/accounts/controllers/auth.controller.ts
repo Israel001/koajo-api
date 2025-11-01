@@ -16,12 +16,12 @@ import { InjectRepository } from '@mikro-orm/nestjs';
 import { EntityRepository } from '@mikro-orm/mysql';
 import type { Request } from 'express';
 import {
-  ApiBadRequestResponse,
   ApiBearerAuth,
   ApiCreatedResponse,
+  ApiExtraModels,
+  ApiBadRequestResponse,
   ApiOkResponse,
   ApiOperation,
-  ApiResponse,
   ApiTags,
   ApiUnauthorizedResponse,
   ApiNotFoundResponse,
@@ -506,16 +506,64 @@ export class AuthController {
   }
 
   @Post('login')
+  @ApiExtraModels(
+    LoginSuccessResultDto,
+    LoginVerificationRequiredResultDto,
+    CurrentUserResultDto,
+  )
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Authenticate an account' })
-  @ApiResponse({
-    status: 200,
+  @ApiOkResponse({
     description: 'Login result.',
-    schema: {
-      oneOf: [
-        { $ref: getSchemaPath(LoginSuccessResultDto) },
-        { $ref: getSchemaPath(LoginVerificationRequiredResultDto) },
-      ],
+    content: {
+      'application/json': {
+        schema: {
+          oneOf: [
+            { $ref: getSchemaPath(LoginSuccessResultDto) },
+            { $ref: getSchemaPath(LoginVerificationRequiredResultDto) },
+          ],
+        },
+        examples: {
+          success: {
+            summary: 'Authentication succeeded',
+            value: {
+              accessToken: 'token-example',
+              expiresAt: '2025-01-01T00:00:00.000Z',
+              user: {
+                id: 'account-id',
+                email: 'user@example.com',
+                first_name: 'Jane',
+                last_name: 'Doe',
+                phone: '+2348012345678',
+                email_verified: true,
+                agreed_to_terms: true,
+                date_of_birth: '1990-05-10',
+                avatar_id: null,
+                is_active: true,
+                emailNotificationsEnabled: true,
+                transactionNotificationsEnabled: true,
+                last_login_at: '2025-01-01T00:00:00.000Z',
+                created_at: '2024-12-31T00:00:00.000Z',
+                updated_at: '2025-01-01T00:00:00.000Z',
+                identity_verification: null,
+                customer: null,
+                bank_account: null,
+              },
+            },
+          },
+          verificationRequired: {
+            summary: 'Email verification required',
+            value: {
+              requiresVerification: true,
+              email: 'user@example.com',
+              verification: {
+                expiresAt: '2025-01-01T00:10:00.000Z',
+                sentAt: '2025-01-01T00:00:00.000Z',
+              },
+            },
+          },
+        },
+      },
     },
   })
   @ApiUnauthorizedResponse({

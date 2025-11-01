@@ -693,11 +693,11 @@ describe('AuthController', () => {
         },
       } as unknown as Request;
 
+      const nowIso = new Date().toISOString();
+
       const expected: LoginResult = {
-        requiresVerification: false,
         accessToken: 'token',
-        tokenType: 'Bearer',
-        expiresAt: new Date().toISOString(),
+        expiresAt: nowIso,
         user: {
           id: 'account-1',
           email: dto.email,
@@ -705,14 +705,20 @@ describe('AuthController', () => {
           last_name: 'Doe',
           phone: '+2348012345678',
           email_verified: true,
+          agreed_to_terms: true,
           date_of_birth: '1990-05-10',
           avatar_id: null,
           is_active: true,
-          last_login_at: new Date().toISOString(),
+          emailNotificationsEnabled: true,
+          transactionNotificationsEnabled: true,
+          last_login_at: nowIso,
           created_at: new Date('2025-01-01T00:00:00.000Z').toISOString(),
           updated_at: new Date('2025-01-01T00:00:00.000Z').toISOString(),
+          identity_verification: null,
+          customer: null,
+          bank_account: null,
         },
-      };
+      } as LoginResult;
 
       commandBus.execute.mockResolvedValue(expected);
 
