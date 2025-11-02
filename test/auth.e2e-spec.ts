@@ -240,30 +240,30 @@ describe('AuthController (e2e)', () => {
 
   it('POST /v1/auth/login returns access token when verified', async () => {
     const nowIso = new Date().toISOString();
-    const responseBody = {
-      accessToken: 'token',
-      expiresAt: nowIso,
-      user: {
-        id: 'account-1',
-        email: 'user@example.com',
-        first_name: 'Jane',
-        last_name: 'Doe',
-        phone: '+2348012345678',
-        email_verified: true,
-        agreed_to_terms: true,
-        date_of_birth: '1990-05-10',
-        avatar_id: null,
-        is_active: true,
-        emailNotificationsEnabled: true,
-        transactionNotificationsEnabled: true,
-        last_login_at: nowIso,
-        created_at: nowIso,
-        updated_at: nowIso,
-        identity_verification: null,
-        customer: null,
-        bank_account: null,
-      },
-    };
+  const responseBody = {
+     accessToken: 'token',
+     expiresAt: nowIso,
+     user: {
+       id: 'account-1',
+       email: 'user@example.com',
+        firstName: 'Jane',
+        lastName: 'Doe',
+       phone: '+2348012345678',
+        emailVerified: true,
+        agreedToTerms: true,
+        dateOfBirth: '1990-05-10',
+        avatarId: null,
+        isActive: true,
+       emailNotificationsEnabled: true,
+       transactionNotificationsEnabled: true,
+        lastLoginAt: nowIso,
+        createdAt: nowIso,
+        updatedAt: nowIso,
+        identityVerification: null,
+       customer: null,
+        bankAccount: null,
+     },
+   };
 
     commandBus.execute.mockImplementation(async (command: unknown) => {
       expect(command).toBeInstanceOf(LoginCommand);

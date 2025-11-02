@@ -40,10 +40,54 @@ export interface ResendVerificationResult {
   };
 }
 
+export interface LoginIdentityVerification {
+  id: string | null;
+  resultId: string | null;
+  status?: string | null;
+  type?: string | null;
+  sessionId?: string | null;
+  completedAt?: string | null;
+  recordedAt?: string | null;
+}
+
+export interface LoginCustomerSummary {
+  id: string;
+  ssnLast4: string | null;
+  address: Record<string, unknown> | null;
+}
+
+export interface LoginBankAccountSummary {
+  id: string;
+  customerId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LoginUserResult {
+  id: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  phone: string | null;
+  emailVerified: boolean;
+  agreedToTerms: boolean;
+  dateOfBirth: string | null;
+  avatarId: string | null;
+  isActive: boolean;
+  emailNotificationsEnabled: boolean;
+  transactionNotificationsEnabled: boolean;
+  lastLoginAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  identityVerification: LoginIdentityVerification | null;
+  customer: LoginCustomerSummary | null;
+  bankAccount: LoginBankAccountSummary | null;
+}
+
 export interface LoginSuccessResult {
   accessToken: string;
   expiresAt: string;
-  user: CurrentUserResult;
+  user: LoginUserResult;
 }
 
 export interface LoginVerificationRequiredResult {

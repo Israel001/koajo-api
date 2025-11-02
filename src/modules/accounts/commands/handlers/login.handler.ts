@@ -150,24 +150,24 @@ export class LoginHandler
     const user: LoginSuccessResult['user'] = {
       id: account.id,
       email: account.email,
-      first_name: account.firstName ?? null,
-      last_name: account.lastName ?? null,
+      firstName: account.firstName ?? null,
+      lastName: account.lastName ?? null,
       phone: account.phoneNumber ?? null,
-      email_verified: Boolean(account.emailVerifiedAt),
-      agreed_to_terms: account.agreedToTerms,
-      date_of_birth: account.dateOfBirth
+      emailVerified: Boolean(account.emailVerifiedAt),
+      agreedToTerms: account.agreedToTerms,
+      dateOfBirth: account.dateOfBirth
         ? account.dateOfBirth.toISOString().slice(0, 10)
         : null,
-      avatar_id: null,
-      is_active: account.isActive,
+      avatarId: null,
+      isActive: account.isActive,
       emailNotificationsEnabled: account.emailNotificationsEnabled,
       transactionNotificationsEnabled: account.transactionNotificationsEnabled,
-      last_login_at: account.lastLoginAt
+      lastLoginAt: account.lastLoginAt
         ? account.lastLoginAt.toISOString()
         : null,
-      created_at: account.createdAt.toISOString(),
-      updated_at: account.updatedAt.toISOString(),
-      identity_verification:
+      createdAt: account.createdAt.toISOString(),
+      updatedAt: account.updatedAt.toISOString(),
+      identityVerification:
         account.stripeIdentityId ||
         account.stripeIdentityResultId ||
         latestAttempt
@@ -176,15 +176,17 @@ export class LoginHandler
                 account.stripeIdentityId ??
                 latestAttempt?.providerReference ??
                 null,
-              result_id:
-                account.stripeIdentityResultId ?? latestAttempt?.resultId ?? null,
+              resultId:
+                account.stripeIdentityResultId ??
+                latestAttempt?.resultId ??
+                null,
               status: latestAttempt?.status ?? null,
               type: latestAttempt?.type ?? null,
-              session_id: latestAttempt?.sessionId ?? null,
-              completed_at: latestAttempt?.completedAt
+              sessionId: latestAttempt?.sessionId ?? null,
+              completedAt: latestAttempt?.completedAt
                 ? latestAttempt.completedAt.toISOString()
                 : null,
-              recorded_at: latestAttempt
+              recordedAt: latestAttempt
                 ? latestAttempt.createdAt.toISOString()
                 : null,
             }
@@ -192,21 +194,21 @@ export class LoginHandler
       customer: account.stripeCustomerId
         ? {
             id: account.stripeCustomerId,
-            ssn_last4: account.stripeCustomerSsnLast4 ?? null,
+            ssnLast4: account.stripeCustomerSsnLast4 ?? null,
             address: account.stripeCustomerAddress ?? null,
           }
         : null,
-      bank_account: account.stripeBankAccountId
+      bankAccount: account.stripeBankAccountId
         ? {
             id: account.stripeBankAccountId,
-            customer_id:
+            customerId:
               account.stripeBankAccountCustomerId ??
               account.stripeCustomerId ??
               null,
-            created_at: (
+            createdAt: (
               account.stripeBankAccountLinkedAt ?? account.createdAt
             ).toISOString(),
-            updated_at: (
+            updatedAt: (
               account.stripeBankAccountUpdatedAt ?? account.updatedAt
             ).toISOString(),
           }

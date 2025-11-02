@@ -16,6 +16,10 @@ import type {
   UpsertStripeCustomerResult,
   UpsertStripeBankAccountResult,
   DeleteAccountResult,
+  LoginUserResult,
+  LoginIdentityVerification,
+  LoginCustomerSummary,
+  LoginBankAccountSummary,
 } from './auth-results';
 
 class VerificationExpiryDto {
@@ -146,6 +150,167 @@ export class LoginVerificationRequiredResultDto
     type: () => VerificationWindowDto,
   })
   verification!: VerificationWindowDto;
+}
+
+class LoginIdentityVerificationDto implements LoginIdentityVerification {
+  @ApiProperty({ description: 'Identifier of the verification attempt.', nullable: true })
+  id!: string | null;
+
+  @ApiProperty({
+    description: 'Identifier of the verification result.',
+    nullable: true,
+  })
+  resultId!: string | null;
+
+  @ApiProperty({
+    description: 'Status returned by the identity provider.',
+    nullable: true,
+    required: false,
+  })
+  status?: string | null;
+
+  @ApiProperty({
+    description: 'Type of verification performed.',
+    nullable: true,
+    required: false,
+  })
+  type?: string | null;
+
+  @ApiProperty({
+    description: 'Stripe session identifier.',
+    nullable: true,
+    required: false,
+  })
+  sessionId?: string | null;
+
+  @ApiProperty({
+    description: 'ISO timestamp when the verification completed.',
+    nullable: true,
+    required: false,
+  })
+  completedAt?: string | null;
+
+  @ApiProperty({
+    description: 'ISO timestamp when the verification was recorded.',
+    nullable: true,
+    required: false,
+  })
+  recordedAt?: string | null;
+}
+
+class LoginCustomerSummaryDto implements LoginCustomerSummary {
+  @ApiProperty({ description: 'Stripe customer identifier.' })
+  id!: string;
+
+  @ApiProperty({
+    description: 'Masked SSN last 4 digits if available.',
+    nullable: true,
+  })
+  ssnLast4!: string | null;
+
+  @ApiProperty({
+    description: 'Customer address payload as received from Stripe.',
+    nullable: true,
+    type: Object,
+  })
+  address!: Record<string, unknown> | null;
+}
+
+class LoginBankAccountSummaryDto implements LoginBankAccountSummary {
+  @ApiProperty({ description: 'Stripe bank account identifier.' })
+  id!: string;
+
+  @ApiProperty({
+    description: 'Stripe customer identifier associated with the bank account.',
+    nullable: true,
+  })
+  customerId!: string | null;
+
+  @ApiProperty({ description: 'ISO timestamp when the bank account was created.' })
+  createdAt!: string;
+
+  @ApiProperty({ description: 'ISO timestamp when the bank account was updated.' })
+  updatedAt!: string;
+}
+
+export class LoginUserResultDto implements LoginUserResult {
+  @ApiProperty({ description: 'Account identifier.' })
+  id!: string;
+
+  @ApiProperty({ description: 'Account email address.' })
+  email!: string;
+
+  @ApiProperty({ description: 'First name of the account holder.', nullable: true })
+  firstName!: string | null;
+
+  @ApiProperty({ description: 'Last name of the account holder.', nullable: true })
+  lastName!: string | null;
+
+  @ApiProperty({ description: 'Primary phone number on file.', nullable: true })
+  phone!: string | null;
+
+  @ApiProperty({ description: 'Indicates if the email address is verified.' })
+  emailVerified!: boolean;
+
+  @ApiProperty({
+    description: 'Indicates if the user agreed to the terms of service.',
+  })
+  agreedToTerms!: boolean;
+
+  @ApiProperty({
+    description: 'Date of birth in ISO format.',
+    nullable: true,
+    example: '1990-01-01',
+  })
+  dateOfBirth!: string | null;
+
+  @ApiProperty({ description: 'Avatar identifier or URL.', nullable: true })
+  avatarId!: string | null;
+
+  @ApiProperty({ description: 'Indicates if the account is active.' })
+  isActive!: boolean;
+
+  @ApiProperty({
+    description: 'Indicates if general system emails are enabled.',
+    example: true,
+  })
+  emailNotificationsEnabled!: boolean;
+
+  @ApiProperty({
+    description: 'Indicates if transaction-related emails are enabled.',
+    example: true,
+  })
+  transactionNotificationsEnabled!: boolean;
+
+  @ApiProperty({ description: 'Timestamp of the last login.', nullable: true })
+  lastLoginAt!: string | null;
+
+  @ApiProperty({ description: 'Timestamp when the account was created.' })
+  createdAt!: string;
+
+  @ApiProperty({ description: 'Timestamp when the account was last updated.' })
+  updatedAt!: string;
+
+  @ApiProperty({
+    description: 'Details about the latest identity verification attempt.',
+    type: () => LoginIdentityVerificationDto,
+    nullable: true,
+  })
+  identityVerification!: LoginIdentityVerification | null;
+
+  @ApiProperty({
+    description: 'Stripe customer details linked to the account.',
+    type: () => LoginCustomerSummaryDto,
+    nullable: true,
+  })
+  customer!: LoginCustomerSummary | null;
+
+  @ApiProperty({
+    description: 'Stripe bank account linked to the account.',
+    type: () => LoginBankAccountSummaryDto,
+    nullable: true,
+  })
+  bankAccount!: LoginBankAccountSummary | null;
 }
 
 export class VerifyEmailResultDto {
@@ -304,9 +469,9 @@ export class LoginSuccessResultDto implements LoginSuccessResult {
 
   @ApiProperty({
     description: 'Authenticated user details.',
-    type: () => CurrentUserResultDto,
+    type: () => LoginUserResultDto,
   })
-  user!: CurrentUserResultDto;
+  user!: LoginUserResultDto;
 }
 
 class IdentityVerificationDto implements RecordIdentityVerificationResult {
