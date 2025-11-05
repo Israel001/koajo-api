@@ -36,6 +36,7 @@ import { AdminRolesController } from './controllers/admin-roles.controller';
 import { AdminPermissionsController } from './controllers/admin-permissions.controller';
 import { AdminPasswordResetService } from './services/admin-password-reset.service';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { AdminPermissionSyncService } from './services/admin-permission-sync.service';
 
 @Module({
   imports: [
@@ -93,6 +94,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
     AdminPodPlanService,
     AdminAccessService,
     AdminPasswordResetService,
+    AdminPermissionSyncService,
   ],
 })
 export class AdminModule {}

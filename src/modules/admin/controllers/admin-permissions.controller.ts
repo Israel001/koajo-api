@@ -9,7 +9,7 @@ import {
 } from '@nestjs/swagger';
 import { AdminJwtGuard } from '../guards/admin-jwt.guard';
 import { AdminPermissionsGuard, RequireAdminPermissions } from '../guards/admin-permissions.guard';
-import { ADMIN_PERMISSION_MANAGE_PERMISSIONS } from '../admin-permission.constants';
+import { ADMIN_PERMISSION_ASSIGN_ADMIN_ROLES } from '../admin-permission.constants';
 import { ListAdminPermissionsQuery } from '../queries/list-admin-permissions.query';
 import type { AdminPermissionSummary } from '../contracts/admin-results';
 import { AdminPermissionSummaryDto } from '../contracts/admin-swagger.dto';
@@ -25,7 +25,7 @@ export class AdminPermissionsController {
   @Get()
   @ApiOperation({ summary: 'List available admin permissions' })
   @ApiOkResponse({ type: [AdminPermissionSummaryDto], description: 'List of permissions.' })
-  @RequireAdminPermissions(ADMIN_PERMISSION_MANAGE_PERMISSIONS)
+  @RequireAdminPermissions(ADMIN_PERMISSION_ASSIGN_ADMIN_ROLES)
   async list(): Promise<AdminPermissionSummary[]> {
     return this.queryBus.execute(new ListAdminPermissionsQuery());
   }

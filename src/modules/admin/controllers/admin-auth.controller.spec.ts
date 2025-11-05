@@ -49,7 +49,7 @@ describe('AdminAuthController', () => {
       expiresAt: new Date().toISOString(),
       role: AdminRole.ADMIN,
       isSuperAdmin: false,
-      permissions: ['admin.manage_users'],
+      permissions: ['admin.users.view'],
       requiresPasswordChange: false,
     };
 
@@ -84,7 +84,7 @@ describe('AdminAuthController', () => {
         email: 'admin@example.com',
         role: AdminRole.ADMIN,
         isSuperAdmin: false,
-        permissions: ['admin.manage_users'],
+        permissions: ['admin.users.view'],
         requiresPasswordChange: false,
       },
     } as unknown as AdminAuthenticatedRequest;

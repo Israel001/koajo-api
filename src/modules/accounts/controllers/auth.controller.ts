@@ -54,7 +54,6 @@ import type {
 } from '../contracts/auth-results';
 import {
   LoginSuccessResultDto,
-  LoginVerificationRequiredResultDto,
   ResendVerificationResultDto,
   SignupResultDto,
   VerifyEmailResultDto,
@@ -114,9 +113,7 @@ export class AuthController {
     type: CurrentUserResultDto,
   })
   @ApiUnauthorizedResponse({ description: 'Authentication required.' })
-  async me(
-    @Req() request: AuthenticatedRequest,
-  ): Promise<CurrentUserResult> {
+  async me(@Req() request: AuthenticatedRequest): Promise<CurrentUserResult> {
     const account = await this.accountRepository.findOne({
       id: request.user.accountId,
     });
@@ -160,7 +157,9 @@ export class AuthController {
                 latestAttempt?.providerReference ??
                 null,
               result_id:
-                account.stripeIdentityResultId ?? latestAttempt?.resultId ?? null,
+                account.stripeIdentityResultId ??
+                latestAttempt?.resultId ??
+                null,
               status: latestAttempt?.status ?? null,
               type: latestAttempt?.type ?? null,
               session_id: latestAttempt?.sessionId ?? null,
@@ -251,7 +250,9 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('bearer')
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Link a Stripe customer to the authenticated account.' })
+  @ApiOperation({
+    summary: 'Link a Stripe customer to the authenticated account.',
+  })
   @ApiCreatedResponse({
     description: 'Stripe customer stored.',
     type: UpsertStripeCustomerResultDto,
@@ -275,7 +276,9 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('bearer')
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Link a Stripe bank account to the authenticated account.' })
+  @ApiOperation({
+    summary: 'Link a Stripe bank account to the authenticated account.',
+  })
   @ApiCreatedResponse({
     description: 'Stripe bank account stored.',
     type: UpsertStripeBankAccountResultDto,
@@ -348,7 +351,9 @@ export class AuthController {
   @ApiBadRequestResponse({
     description: 'Invalid or expired verification link.',
   })
-  async verifyEmail(@Body() payload: VerifyEmailDtoModule.VerifyEmailDto): Promise<{
+  async verifyEmail(
+    @Body() payload: VerifyEmailDtoModule.VerifyEmailDto,
+  ): Promise<{
     email: string;
     verified: boolean;
   }> {
@@ -390,9 +395,7 @@ export class AuthController {
   async forgotPassword(
     @Body() payload: ForgotPasswordDtoModule.ForgotPasswordDto,
   ): Promise<ForgotPasswordResult> {
-    return this.commandBus.execute(
-      new ForgotPasswordCommand(payload.email),
-    );
+    return this.commandBus.execute(new ForgotPasswordCommand(payload.email));
   }
 
   @Post('forgot-password/resend')
@@ -490,7 +493,9 @@ export class AuthController {
     description: 'Notification preferences updated.',
     type: UpdateNotificationPreferencesResultDto,
   })
-  @ApiBadRequestResponse({ description: 'No changes supplied or payload invalid.' })
+  @ApiBadRequestResponse({
+    description: 'No changes supplied or payload invalid.',
+  })
   @ApiUnauthorizedResponse({ description: 'Authentication required.' })
   async updateNotificationPreferences(
     @Req() request: AuthenticatedRequest,
@@ -509,7 +514,6 @@ export class AuthController {
   @Post('login')
   @ApiExtraModels(
     LoginSuccessResultDto,
-    LoginVerificationRequiredResultDto,
     LoginUserResultDto,
     CurrentUserResultDto,
   )
@@ -520,10 +524,7 @@ export class AuthController {
     content: {
       'application/json': {
         schema: {
-          oneOf: [
-            { $ref: getSchemaPath(LoginSuccessResultDto) },
-            { $ref: getSchemaPath(LoginVerificationRequiredResultDto) },
-          ],
+          $ref: getSchemaPath(LoginSuccessResultDto),
         },
         examples: {
           success: {
@@ -550,17 +551,6 @@ export class AuthController {
                 identityVerification: null,
                 customer: null,
                 bankAccount: null,
-              },
-            },
-          },
-          verificationRequired: {
-            summary: 'Email verification required',
-            value: {
-              requiresVerification: true,
-              email: 'user@example.com',
-              verification: {
-                expiresAt: '2025-01-01T00:10:00.000Z',
-                sentAt: '2025-01-01T00:00:00.000Z',
               },
             },
           },

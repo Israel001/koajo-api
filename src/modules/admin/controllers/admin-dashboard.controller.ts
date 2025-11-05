@@ -11,10 +11,12 @@ import { AdminJwtGuard } from '../guards/admin-jwt.guard';
 import { AdminDashboardResult } from '../contracts/admin-results';
 import { AdminDashboardResultDto } from '../contracts/admin-swagger.dto';
 import { AdminDashboardQuery } from '../queries/admin-dashboard.query';
+import { AdminPermissionsGuard, RequireAdminPermissions } from '../guards/admin-permissions.guard';
+import { ADMIN_PERMISSION_VIEW_DASHBOARD } from '../admin-permission.constants';
 
 @ApiTags('admin-dashboard')
 @Controller({ path: 'admin/dashboard', version: '1' })
-@UseGuards(AdminJwtGuard)
+@UseGuards(AdminJwtGuard, AdminPermissionsGuard)
 @ApiBearerAuth('bearer')
 @ApiUnauthorizedResponse({ description: 'Admin authentication required.' })
 export class AdminDashboardController {
@@ -26,6 +28,7 @@ export class AdminDashboardController {
     description: 'Aggregated metrics and recent activity for the dashboard.',
     type: AdminDashboardResultDto,
   })
+  @RequireAdminPermissions(ADMIN_PERMISSION_VIEW_DASHBOARD)
   async getDashboard(): Promise<AdminDashboardResult> {
     return this.queryBus.execute(new AdminDashboardQuery());
   }

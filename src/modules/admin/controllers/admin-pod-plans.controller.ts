@@ -29,6 +29,7 @@ import type {
   AdminAuthenticatedRequest,
   AuthenticatedAdmin,
 } from '../guards/admin-jwt.guard';
+import { AdminPermissionsGuard, RequireAdminPermissions } from '../guards/admin-permissions.guard';
 import { AdminListQueryDto } from '../dto/list-query.dto';
 import { CreatePodPlanDto } from '../dto/create-pod-plan.dto';
 import { UpdatePodPlanDto } from '../dto/update-pod-plan.dto';
@@ -44,10 +45,14 @@ import {
 import { CreateAdminPodPlanCommand } from '../commands/create-admin-pod-plan.command';
 import { UpdateAdminPodPlanCommand } from '../commands/update-admin-pod-plan.command';
 import { DeleteAdminPodPlanCommand } from '../commands/delete-admin-pod-plan.command';
+import {
+  ADMIN_PERMISSION_REFRESH_POD_PLANS,
+  ADMIN_PERMISSION_VIEW_POD_PLANS,
+} from '../admin-permission.constants';
 
 @ApiTags('admin-pod-plans')
 @Controller({ path: 'admin/pod-plans', version: '1' })
-@UseGuards(AdminJwtGuard)
+@UseGuards(AdminJwtGuard, AdminPermissionsGuard)
 @ApiBearerAuth('bearer')
 @ApiUnauthorizedResponse({ description: 'Admin authentication required.' })
 export class AdminPodPlansController {
@@ -62,6 +67,7 @@ export class AdminPodPlansController {
     description: 'Pod plans fetched.',
     type: AdminPodPlansListResultDto,
   })
+  @RequireAdminPermissions(ADMIN_PERMISSION_VIEW_POD_PLANS)
   async list(
     @Query() query: AdminListQueryDto,
   ): Promise<AdminPodPlansListResult> {
@@ -77,6 +83,7 @@ export class AdminPodPlansController {
     type: AdminPodPlanSummaryDto,
   })
   @ApiConflictResponse({ description: 'Duplicate pod plan code.' })
+  @RequireAdminPermissions(ADMIN_PERMISSION_REFRESH_POD_PLANS)
   async create(
     @Body() payload: CreatePodPlanDto,
     @Req() req: Request,
@@ -105,6 +112,7 @@ export class AdminPodPlansController {
     description:
       'The plan cannot be modified because it is used by pods with real members.',
   })
+  @RequireAdminPermissions(ADMIN_PERMISSION_REFRESH_POD_PLANS)
   async update(
     @Param('planId') planId: string,
     @Body() payload: UpdatePodPlanDto,
@@ -133,6 +141,7 @@ export class AdminPodPlansController {
       'The plan cannot be deleted because it is used by pods with real members.',
   })
   @HttpCode(HttpStatus.NO_CONTENT)
+  @RequireAdminPermissions(ADMIN_PERMISSION_REFRESH_POD_PLANS)
   async delete(
     @Param('planId') planId: string,
     @Req() req: Request,

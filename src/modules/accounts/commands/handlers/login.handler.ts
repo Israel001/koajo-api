@@ -7,12 +7,7 @@ import * as argon2 from 'argon2';
 import { ConfigService } from '@nestjs/config';
 import { AccountEntity } from '../../entities/account.entity';
 import { AccountVerificationAttemptEntity } from '../../entities/account-verification-attempt.entity';
-import { EmailVerificationService } from '../../services/email-verification.service';
-import {
-  LoginResult,
-  LoginSuccessResult,
-  LoginVerificationRequiredResult,
-} from '../../contracts/auth-results';
+import { LoginResult, LoginSuccessResult } from '../../contracts/auth-results';
 import { LoginCommand } from '../login.command';
 import { ChecksumService } from '../../../../common/security/checksum.service';
 import { MailService } from '../../../../common/notification/mail.service';
@@ -31,7 +26,6 @@ export class LoginHandler
     private readonly accountRepository: EntityRepository<AccountEntity>,
     @InjectRepository(AccountVerificationAttemptEntity)
     private readonly verificationAttemptRepository: EntityRepository<AccountVerificationAttemptEntity>,
-    private readonly emailVerificationService: EmailVerificationService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly checksumService: ChecksumService,
@@ -103,27 +97,6 @@ export class LoginHandler
       throw new UnauthorizedException(
         'Account is inactive. Please contact support.',
       );
-    }
-
-    if (!account.emailVerifiedAt) {
-      const verification = await this.emailVerificationService.issue(account, {
-        bypassCooldown: true,
-        reason: 'login',
-        templateVariables: {
-          firstname: account.firstName?.trim() || account.email.split('@')[0],
-        },
-      });
-
-      const response: LoginVerificationRequiredResult = {
-        requiresVerification: true,
-        email: account.email,
-        verification: {
-          expiresAt: verification.expiresAt.toISOString(),
-          sentAt: verification.sentAt.toISOString(),
-        },
-      };
-
-      return response;
     }
 
     const jwtConfig = this.configService.get('auth.jwt', { infer: true })!;

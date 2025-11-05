@@ -11,6 +11,8 @@ import {
 import { AdminListQueryDto } from '../dto/list-query.dto';
 import { AdminPodActivityQueryDto } from '../dto/pod-activity-query.dto';
 import { AdminJwtGuard } from '../guards/admin-jwt.guard';
+import { AdminPermissionsGuard, RequireAdminPermissions } from '../guards/admin-permissions.guard';
+import { ADMIN_PERMISSION_VIEW_PODS } from '../admin-permission.constants';
 import {
   AdminPodDetail,
   AdminPodsListResult,
@@ -23,7 +25,7 @@ import { AdminPodActivityDto } from '../contracts/admin-swagger.dto';
 
 @ApiTags('admin-pods')
 @Controller({ path: 'admin/pods', version: '1' })
-@UseGuards(AdminJwtGuard)
+@UseGuards(AdminJwtGuard, AdminPermissionsGuard)
 @ApiBearerAuth('bearer')
 @ApiUnauthorizedResponse({ description: 'Admin authentication required.' })
 export class AdminPodsController {
@@ -32,6 +34,7 @@ export class AdminPodsController {
   @Get()
   @ApiOperation({ summary: 'List pods' })
   @ApiOkResponse({ description: 'Pods fetched.' })
+  @RequireAdminPermissions(ADMIN_PERMISSION_VIEW_PODS)
   async list(@Query() query: AdminListQueryDto): Promise<AdminPodsListResult> {
     return this.queryBus.execute(
       new ListAdminPodsQuery(query.limit, query.offset),
@@ -42,6 +45,7 @@ export class AdminPodsController {
   @ApiOperation({ summary: 'Get pod details' })
   @ApiOkResponse({ description: 'Pod fetched.' })
   @ApiNotFoundResponse({ description: 'Pod not found.' })
+  @RequireAdminPermissions(ADMIN_PERMISSION_VIEW_PODS)
   async getOne(@Param('podId') podId: string): Promise<AdminPodDetail> {
     return this.queryBus.execute(new GetAdminPodQuery(podId));
   }
@@ -52,6 +56,7 @@ export class AdminPodsController {
     description: 'Pod activities fetched.',
     type: [AdminPodActivityDto],
   })
+  @RequireAdminPermissions(ADMIN_PERMISSION_VIEW_PODS)
   async listActivities(
     @Param('podId') podId: string,
     @Query() query: AdminPodActivityQueryDto,

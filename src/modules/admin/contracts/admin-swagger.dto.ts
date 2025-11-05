@@ -81,7 +81,7 @@ export class AdminPermissionSummaryDto implements AdminPermissionSummary {
   @ApiProperty({ description: 'Permission identifier.' })
   id!: string;
 
-  @ApiProperty({ description: 'Permission code.', example: 'admin.manage_users' })
+  @ApiProperty({ description: 'Permission code.', example: 'admin.users.view' })
   code!: string;
 
   @ApiProperty({ description: 'Human-friendly permission name.', nullable: true })

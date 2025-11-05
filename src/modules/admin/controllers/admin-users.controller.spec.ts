@@ -90,7 +90,7 @@ describe('AdminUsersController', () => {
         email: 'admin@example.com',
         role: AdminRole.SUPER_ADMIN,
         isSuperAdmin: true,
-        permissions: ['admin.manage_users'],
+        permissions: ['admin.team.manage'],
         requiresPasswordChange: false,
       },
     } as unknown as AdminAuthenticatedRequest;
@@ -164,7 +164,7 @@ describe('AdminUsersController', () => {
         email: 'admin@example.com',
         role: AdminRole.SUPER_ADMIN,
         isSuperAdmin: true,
-        permissions: ['admin.manage_users'],
+        permissions: ['admin.team.manage'],
         requiresPasswordChange: false,
       },
     } as unknown as AdminAuthenticatedRequest;
@@ -202,7 +202,7 @@ describe('AdminUsersController', () => {
         email: 'admin@example.com',
         role: AdminRole.SUPER_ADMIN,
         isSuperAdmin: true,
-        permissions: ['admin.manage_users'],
+        permissions: ['admin.team.manage'],
         requiresPasswordChange: false,
       },
     } as unknown as AdminAuthenticatedRequest;
@@ -223,7 +223,7 @@ describe('AdminUsersController', () => {
         email: 'admin@example.com',
         role: AdminRole.SUPER_ADMIN,
         isSuperAdmin: true,
-        permissions: ['admin.manage_users'],
+        permissions: ['admin.team.assign-roles'],
         requiresPasswordChange: false,
       },
     } as unknown as AdminAuthenticatedRequest;
@@ -265,7 +265,7 @@ describe('AdminUsersController', () => {
         email: 'admin@example.com',
         role: AdminRole.SUPER_ADMIN,
         isSuperAdmin: true,
-        permissions: ['admin.manage_users'],
+        permissions: ['admin.team.manage'],
         requiresPasswordChange: false,
       },
     } as unknown as AdminAuthenticatedRequest;
@@ -291,7 +291,7 @@ describe('AdminUsersController', () => {
 
     await controller.setPermissions(
       'admin-2',
-      { allow: ['admin.manage_users'], deny: [] } as any,
+      { allow: ['admin.team.manage'], deny: [] } as any,
       request,
     );
 

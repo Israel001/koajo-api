@@ -9,6 +9,11 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { AdminJwtGuard } from '../guards/admin-jwt.guard';
+import { AdminPermissionsGuard, RequireAdminPermissions } from '../guards/admin-permissions.guard';
+import {
+  ADMIN_PERMISSION_MANAGE_USER_NOTIFICATIONS,
+  ADMIN_PERMISSION_VIEW_USERS,
+} from '../admin-permission.constants';
 import { AdminListQueryDto } from '../dto/list-query.dto';
 import { UpdateNotificationPreferencesDto } from '../../accounts/dto/update-notification-preferences.dto';
 import { UpdateNotificationPreferencesCommand } from '../../accounts/commands/update-notification-preferences.command';
@@ -23,7 +28,7 @@ import { GetAdminAccountQuery } from '../queries/get-admin-account.query';
 
 @ApiTags('admin-accounts')
 @Controller({ path: 'admin/accounts', version: '1' })
-@UseGuards(AdminJwtGuard)
+@UseGuards(AdminJwtGuard, AdminPermissionsGuard)
 @ApiBearerAuth('bearer')
 @ApiUnauthorizedResponse({ description: 'Admin authentication required.' })
 export class AdminAccountsController {
@@ -35,6 +40,7 @@ export class AdminAccountsController {
   @Get()
   @ApiOperation({ summary: 'List customer accounts' })
   @ApiOkResponse({ description: 'Accounts fetched.' })
+  @RequireAdminPermissions(ADMIN_PERMISSION_VIEW_USERS)
   async list(@Query() query: AdminListQueryDto): Promise<AdminAccountsListResult> {
     return this.queryBus.execute(
       new ListAdminAccountsQuery(query.limit, query.offset, query.search),
@@ -45,6 +51,7 @@ export class AdminAccountsController {
   @ApiOperation({ summary: 'Get account details by ID' })
   @ApiOkResponse({ description: 'Account fetched.' })
   @ApiNotFoundResponse({ description: 'Account not found.' })
+  @RequireAdminPermissions(ADMIN_PERMISSION_VIEW_USERS)
   async getOne(@Param('accountId') accountId: string): Promise<AdminAccountDetail> {
     return this.queryBus.execute(new GetAdminAccountQuery(accountId));
   }
@@ -52,6 +59,7 @@ export class AdminAccountsController {
   @Patch(':accountId/notifications')
   @ApiOperation({ summary: 'Update notification preferences for an account' })
   @ApiOkResponse({ description: 'Notification preferences updated.' })
+  @RequireAdminPermissions(ADMIN_PERMISSION_MANAGE_USER_NOTIFICATIONS)
   async updateNotifications(
     @Param('accountId') accountId: string,
     @Body() payload: UpdateNotificationPreferencesDto,
@@ -71,6 +79,7 @@ export class AdminAccountsController {
   @Get(':accountId/achievements')
   @ApiOperation({ summary: 'Fetch achievement summary for an account' })
   @ApiOkResponse({ description: 'Achievements summary fetched.' })
+  @RequireAdminPermissions(ADMIN_PERMISSION_VIEW_USERS)
   async achievements(
     @Param('accountId') accountId: string,
   ): Promise<AchievementsSummaryDto> {

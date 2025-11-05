@@ -32,7 +32,11 @@ import { SetAdminUserRolesCommand } from '../commands/set-admin-user-roles.comma
 import { SetAdminUserPermissionsDto } from '../dto/set-admin-user-permissions.dto';
 import { SetAdminUserPermissionsCommand } from '../commands/set-admin-user-permissions.command';
 import { GetAdminUserQuery } from '../queries/get-admin-user.query';
-import { ADMIN_PERMISSION_MANAGE_USERS } from '../admin-permission.constants';
+import {
+  ADMIN_PERMISSION_ASSIGN_ADMIN_ROLES,
+  ADMIN_PERMISSION_MANAGE_ADMIN_USERS,
+  ADMIN_PERMISSION_VIEW_ADMIN_USERS,
+} from '../admin-permission.constants';
 
 @ApiTags('admin-users')
 @Controller({ path: 'admin/users', version: '1' })
@@ -48,6 +52,7 @@ export class AdminUsersController {
   @Get()
   @ApiOperation({ summary: 'List admin users' })
   @ApiOkResponse({ description: 'Admin users list.', type: [AdminUserDtoClass] })
+  @RequireAdminPermissions(ADMIN_PERMISSION_VIEW_ADMIN_USERS)
   async list(): Promise<AdminUserDto[]> {
     return this.queryBus.execute(new ListAdminUsersQuery());
   }
@@ -55,6 +60,7 @@ export class AdminUsersController {
   @Get(':adminId')
   @ApiOperation({ summary: 'Retrieve an admin user by identifier' })
   @ApiOkResponse({ description: 'Admin user details.', type: AdminUserDtoClass })
+  @RequireAdminPermissions(ADMIN_PERMISSION_VIEW_ADMIN_USERS)
   async get(@Param('adminId') adminId: string): Promise<AdminUserDto> {
     return this.queryBus.execute(new GetAdminUserQuery(adminId));
   }
@@ -65,7 +71,7 @@ export class AdminUsersController {
     description: 'Admin user created.',
     type: CreateAdminUserResultDto,
   })
-  @RequireAdminPermissions(ADMIN_PERMISSION_MANAGE_USERS)
+  @RequireAdminPermissions(ADMIN_PERMISSION_MANAGE_ADMIN_USERS)
   async create(
     @Body() payload: CreateAdminUserDto,
     @Req() req: Request,
@@ -100,7 +106,7 @@ export class AdminUsersController {
   @Patch(':adminId')
   @ApiOperation({ summary: 'Update an admin user profile (super admin only)' })
   @ApiOkResponse({ description: 'Updated admin user.', type: AdminUserDtoClass })
-  @RequireAdminPermissions(ADMIN_PERMISSION_MANAGE_USERS)
+  @RequireAdminPermissions(ADMIN_PERMISSION_MANAGE_ADMIN_USERS)
   async update(
     @Param('adminId') adminId: string,
     @Body() payload: UpdateAdminUserDto,
@@ -129,7 +135,7 @@ export class AdminUsersController {
   @Delete(':adminId')
   @ApiOperation({ summary: 'Remove an admin user (super admin only)' })
   @ApiNoContentResponse({ description: 'Admin user removed.' })
-  @RequireAdminPermissions(ADMIN_PERMISSION_MANAGE_USERS)
+  @RequireAdminPermissions(ADMIN_PERMISSION_MANAGE_ADMIN_USERS)
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(
     @Param('adminId') adminId: string,
@@ -151,7 +157,7 @@ export class AdminUsersController {
   @Put(':adminId/roles')
   @ApiOperation({ summary: 'Replace roles assigned to an admin user' })
   @ApiOkResponse({ description: 'Admin user updated.', type: AdminUserDtoClass })
-  @RequireAdminPermissions(ADMIN_PERMISSION_MANAGE_USERS)
+  @RequireAdminPermissions(ADMIN_PERMISSION_ASSIGN_ADMIN_ROLES)
   async setRoles(
     @Param('adminId') adminId: string,
     @Body() payload: SetAdminUserRolesDto,
@@ -174,7 +180,7 @@ export class AdminUsersController {
   @Put(':adminId/permissions')
   @ApiOperation({ summary: 'Adjust explicit permission grants for an admin user' })
   @ApiOkResponse({ description: 'Admin user updated.', type: AdminUserDtoClass })
-  @RequireAdminPermissions(ADMIN_PERMISSION_MANAGE_USERS)
+  @RequireAdminPermissions(ADMIN_PERMISSION_MANAGE_ADMIN_USERS)
   async setPermissions(
     @Param('adminId') adminId: string,
     @Body() payload: SetAdminUserPermissionsDto,

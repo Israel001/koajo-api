@@ -286,34 +286,4 @@ describe('AuthController (e2e)', () => {
       .expect(responseBody);
   });
 
-  it('POST /v1/auth/login returns verification requirement when needed', async () => {
-    const responseBody = {
-      requiresVerification: true,
-      email: 'user@example.com',
-      verification: {
-        expiresAt: new Date().toISOString(),
-        sentAt: new Date().toISOString(),
-      },
-    };
-
-    commandBus.execute.mockImplementation(async (command: unknown) => {
-      expect(command).toBeInstanceOf(LoginCommand);
-      const loginCommand = command as LoginCommand;
-      expect(loginCommand.metadata).toEqual({
-        ipAddress: expect.any(String),
-        userAgent: 'supertest-login-agent',
-      });
-      return responseBody;
-    });
-
-    await request(app.getHttpServer())
-      .post('/v1/auth/login')
-      .set('User-Agent', 'supertest-login-agent')
-      .send({
-        email: 'user@example.com',
-        password: 'Str0ngP@ssword!',
-      })
-      .expect(200)
-      .expect(responseBody);
-  });
 });

@@ -18,7 +18,7 @@ import { SetRolePermissionsDto } from '../dto/set-role-permissions.dto';
 import { SetAdminRolePermissionsCommand } from '../commands/set-admin-role-permissions.command';
 import type { AdminRoleSummary } from '../contracts/admin-results';
 import { AdminRoleSummaryDto } from '../contracts/admin-swagger.dto';
-import { ADMIN_PERMISSION_MANAGE_ROLES } from '../admin-permission.constants';
+import { ADMIN_PERMISSION_EDIT_ROLES } from '../admin-permission.constants';
 
 @ApiTags('admin-roles')
 @Controller({ path: 'admin/roles', version: '1' })
@@ -34,7 +34,7 @@ export class AdminRolesController {
   @Get()
   @ApiOperation({ summary: 'List all admin roles' })
   @ApiOkResponse({ type: [AdminRoleSummaryDto], description: 'List of admin roles.' })
-  @RequireAdminPermissions(ADMIN_PERMISSION_MANAGE_ROLES)
+  @RequireAdminPermissions(ADMIN_PERMISSION_EDIT_ROLES)
   async list(): Promise<AdminRoleSummary[]> {
     return this.queryBus.execute(new ListAdminRolesQuery());
   }
@@ -42,7 +42,7 @@ export class AdminRolesController {
   @Post()
   @ApiOperation({ summary: 'Create a new admin role' })
   @ApiCreatedResponse({ type: AdminRoleSummaryDto, description: 'Admin role created.' })
-  @RequireAdminPermissions(ADMIN_PERMISSION_MANAGE_ROLES)
+  @RequireAdminPermissions(ADMIN_PERMISSION_EDIT_ROLES)
   async create(
     @Body() payload: CreateAdminRoleDto,
     @Req() req: Request,
@@ -67,7 +67,7 @@ export class AdminRolesController {
   @Put(':roleId/permissions')
   @ApiOperation({ summary: 'Replace the permissions assigned to a role' })
   @ApiOkResponse({ type: AdminRoleSummaryDto, description: 'Updated admin role.' })
-  @RequireAdminPermissions(ADMIN_PERMISSION_MANAGE_ROLES)
+  @RequireAdminPermissions(ADMIN_PERMISSION_EDIT_ROLES)
   async setPermissions(
     @Param('roleId') roleId: string,
     @Body() payload: SetRolePermissionsDto,
