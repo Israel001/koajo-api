@@ -48,6 +48,8 @@ export interface AdminLoginResult {
   isSuperAdmin: boolean;
   permissions: string[];
   requiresPasswordChange: boolean;
+  refreshToken: string | null;
+  refreshExpiresAt: string | null;
 }
 
 export interface AdminChangePasswordResult {

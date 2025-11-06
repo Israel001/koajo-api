@@ -52,6 +52,12 @@ export class AdminLoginResultDto implements AdminLoginResult {
 
   @ApiProperty({ description: 'Indicates if the admin must change their password after login.' })
   requiresPasswordChange!: boolean;
+
+  @ApiProperty({ description: 'Refresh token to obtain new access tokens.', nullable: true })
+  refreshToken!: string | null;
+
+  @ApiProperty({ description: 'ISO timestamp when the refresh token expires.', nullable: true })
+  refreshExpiresAt!: string | null;
 }
 
 export class AdminChangePasswordResultDto

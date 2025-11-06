@@ -3,9 +3,11 @@ import { CommandBus } from '@nestjs/cqrs';
 import { ApiBadRequestResponse, ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { AdminLoginCommand } from '../commands/admin-login.command';
+import { AdminRefreshAccessTokenCommand } from '../commands/admin-refresh-access-token.command';
 import type { AdminLoginResult } from '../contracts/admin-results';
 import { AdminLoginResultDto } from '../contracts/admin-swagger.dto';
 import { AdminLoginDto } from '../dto/admin-login.dto';
+import { AdminRefreshTokenDto } from '../dto/admin-refresh-token.dto';
 import { AdminJwtGuard, AdminAuthenticatedRequest, AuthenticatedAdmin } from '../guards/admin-jwt.guard';
 import { AdminChangePasswordDto } from '../dto/admin-change-password.dto';
 import { ChangeAdminPasswordCommand } from '../commands/change-admin-password.command';
@@ -40,7 +42,7 @@ export class AdminAuthController {
     @Req() request: Request,
   ): Promise<AdminLoginResult> {
     return this.commandBus.execute(
-      new AdminLoginCommand(payload.email, payload.password, {
+      new AdminLoginCommand(payload.email, payload.password, Boolean(payload.rememberMe), {
         ipAddress: request.ip,
         userAgent: request.headers['user-agent'],
       }),
@@ -101,6 +103,19 @@ export class AdminAuthController {
         payload.token,
         payload.newPassword,
       ),
+    );
+  }
+
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Exchange an admin refresh token for a new access token' })
+  @ApiOkResponse({ description: 'Access token refreshed.', type: AdminLoginResultDto })
+  @ApiUnauthorizedResponse({ description: 'Refresh token invalid or expired.' })
+  async refresh(
+    @Body() payload: AdminRefreshTokenDto,
+  ): Promise<AdminLoginResult> {
+    return this.commandBus.execute(
+      new AdminRefreshAccessTokenCommand(payload.refreshToken),
     );
   }
 }

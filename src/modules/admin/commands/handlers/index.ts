@@ -13,6 +13,7 @@ import { ChangeAdminPasswordHandler } from './change-admin-password.handler';
 import { AdminForgotPasswordHandler } from './admin-forgot-password.handler';
 import { AdminResetPasswordHandler } from './admin-reset-password.handler';
 import { CreateAdminAnnouncementHandler } from './create-admin-announcement.handler';
+import { AdminRefreshAccessTokenHandler } from './admin-refresh-access-token.handler';
 
 export const AdminCommandHandlers = [
   AdminLoginHandler,
@@ -30,6 +31,7 @@ export const AdminCommandHandlers = [
   AdminForgotPasswordHandler,
   AdminResetPasswordHandler,
   CreateAdminAnnouncementHandler,
+  AdminRefreshAccessTokenHandler,
 ];
 
 export { AdminLoginHandler } from './admin-login.handler';
@@ -47,3 +49,4 @@ export { ChangeAdminPasswordHandler } from './change-admin-password.handler';
 export { AdminForgotPasswordHandler } from './admin-forgot-password.handler';
 export { AdminResetPasswordHandler } from './admin-reset-password.handler';
 export { CreateAdminAnnouncementHandler } from './create-admin-announcement.handler';
+export { AdminRefreshAccessTokenHandler } from './admin-refresh-access-token.handler';

@@ -13,6 +13,7 @@ import { AdminRole } from '../admin-role.enum';
 import { ChangeAdminPasswordCommand } from '../commands/change-admin-password.command';
 import { AdminForgotPasswordCommand } from '../commands/admin-forgot-password.command';
 import { AdminResetPasswordCommand } from '../commands/admin-reset-password.command';
+import { AdminRefreshAccessTokenCommand } from '../commands/admin-refresh-access-token.command';
 import type { AdminAuthenticatedRequest } from '../guards/admin-jwt.guard';
 
 describe('AdminAuthController', () => {
@@ -41,6 +42,7 @@ describe('AdminAuthController', () => {
     const dto = {
       email: 'admin@example.com',
       password: 'ChangeMe123!',
+      rememberMe: true,
     };
 
     const expected: AdminLoginResult = {
@@ -51,6 +53,8 @@ describe('AdminAuthController', () => {
       isSuperAdmin: false,
       permissions: ['admin.users.view'],
       requiresPasswordChange: false,
+      refreshToken: 'refresh',
+      refreshExpiresAt: new Date().toISOString(),
     };
 
     commandBus.execute.mockResolvedValue(expected);
@@ -66,6 +70,7 @@ describe('AdminAuthController', () => {
     const command = commandBus.execute.mock.calls[0][0] as AdminLoginCommand;
     expect(command.email).toEqual(dto.email);
     expect(command.password).toEqual(dto.password);
+    expect(command.rememberMe).toBe(true);
     expect(command.metadata).toEqual({
       ipAddress: request.ip,
       userAgent: request.headers['user-agent'],
@@ -146,6 +151,30 @@ describe('AdminAuthController', () => {
 
     expect(commandBus.execute).toHaveBeenCalledWith(
       expect.any(AdminResetPasswordCommand),
+    );
+  });
+
+  it('exchanges refresh token for access token', async () => {
+    const expected: AdminLoginResult = {
+      accessToken: 'token',
+      tokenType: 'Bearer',
+      expiresAt: new Date().toISOString(),
+      role: AdminRole.ADMIN,
+      isSuperAdmin: false,
+      permissions: ['admin.users.view'],
+      requiresPasswordChange: false,
+      refreshToken: 'refresh',
+      refreshExpiresAt: new Date().toISOString(),
+    };
+
+    commandBus.execute.mockResolvedValue(expected);
+
+    await expect(
+      controller.refresh({ refreshToken: 'refresh' } as any),
+    ).resolves.toEqual(expected);
+
+    expect(commandBus.execute).toHaveBeenCalledWith(
+      expect.any(AdminRefreshAccessTokenCommand),
     );
   });
 });

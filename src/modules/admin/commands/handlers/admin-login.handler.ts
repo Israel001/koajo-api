@@ -13,6 +13,8 @@ import type { AdminLoginResult } from '../../contracts/admin-results';
 import type { AdminConfig } from '../../../../config/admin.config';
 import { AdminAccessService } from '../../services/admin-access.service';
 
+const ADMIN_REFRESH_TOKEN_TTL_SECONDS = 60 * 60 * 24 * 7;
+
 @Injectable()
 @CommandHandler(AdminLoginCommand)
 export class AdminLoginHandler
@@ -53,6 +55,8 @@ export class AdminLoginHandler
     let role: AdminRole;
     let subject: string;
     let isSuperAdmin = false;
+    let permissions: string[];
+    let requiresPasswordChange = false;
 
     if (adminUser) {
       const passwordMatch = await argon2.verify(
@@ -66,33 +70,12 @@ export class AdminLoginHandler
 
       role = adminUser.role;
       subject = adminUser.id;
+      permissions = this.accessService.computeEffectivePermissions(adminUser)
+        .effective;
+      requiresPasswordChange = adminUser.requiresPasswordChange;
 
       adminUser.lastLoginAt = now;
       await this.adminRepository.getEntityManager().flush();
-
-      const access = this.accessService.computeEffectivePermissions(adminUser);
-
-      const expiresAt = new Date(now.getTime() + jwtConfig.accessTtlSeconds * 1000);
-
-      const payload = {
-        sub: `admin:${adminUser.id}`,
-        email,
-        role,
-        scope: 'admin' as const,
-        super: false,
-      };
-
-      const accessToken = await this.jwtService.signAsync(payload);
-
-      return {
-        accessToken,
-        tokenType: 'Bearer',
-        expiresAt: expiresAt.toISOString(),
-        role,
-        isSuperAdmin,
-        permissions: access.effective,
-        requiresPasswordChange: adminUser.requiresPasswordChange,
-      };
     } else if (email === adminConfig.superAdmin.email) {
       const configuredHash = adminConfig.superAdmin.passwordHash;
       const configuredPassword = adminConfig.superAdmin.password;
@@ -119,6 +102,8 @@ export class AdminLoginHandler
       role = AdminRole.SUPER_ADMIN;
       subject = 'super-admin';
       isSuperAdmin = true;
+      permissions = ['*'];
+      requiresPasswordChange = false;
     } else {
       throw new UnauthorizedException('Invalid credentials.');
     }
@@ -135,15 +120,31 @@ export class AdminLoginHandler
 
     const accessToken = await this.jwtService.signAsync(payload);
 
-    return {
+    const result: AdminLoginResult = {
       accessToken,
       tokenType: 'Bearer',
       expiresAt: expiresAt.toISOString(),
       role,
       isSuperAdmin,
-      permissions: ['*'],
-      requiresPasswordChange: false,
+      permissions,
+      requiresPasswordChange,
+      refreshToken: null,
+      refreshExpiresAt: null,
     };
+
+    if (command.rememberMe) {
+      const refresh = await this.createRefreshToken({
+        subject,
+        email,
+        role,
+        isSuperAdmin,
+        issuedAt: now,
+      });
+      result.refreshToken = refresh.token;
+      result.refreshExpiresAt = refresh.expiresAt.toISOString();
+    }
+
+    return result;
   }
 
   private timingSafeCompare(expected: string, provided: string): boolean {
@@ -155,5 +156,32 @@ export class AdminLoginHandler
     }
 
     return timingSafeEqual(bufferA, bufferB);
+  }
+
+  private async createRefreshToken(params: {
+    subject: string;
+    email: string;
+    role: AdminRole;
+    isSuperAdmin: boolean;
+    issuedAt: Date;
+  }): Promise<{ token: string; expiresAt: Date }> {
+    const expiresAt = new Date(
+      params.issuedAt.getTime() + ADMIN_REFRESH_TOKEN_TTL_SECONDS * 1000,
+    );
+
+    const token = await this.jwtService.signAsync(
+      {
+        sub: `admin:${params.subject}`,
+        email: params.email,
+        role: params.role,
+        scope: 'admin-refresh' as const,
+        super: params.isSuperAdmin,
+      },
+      {
+        expiresIn: ADMIN_REFRESH_TOKEN_TTL_SECONDS,
+      },
+    );
+
+    return { token, expiresAt };
   }
 }

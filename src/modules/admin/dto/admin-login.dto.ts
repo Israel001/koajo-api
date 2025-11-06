@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsString, MinLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsBoolean, IsEmail, IsOptional, IsString, MinLength } from 'class-validator';
 
 export class AdminLoginDto {
   @ApiProperty({ description: 'Admin email address.', example: 'superadmin@koajo.local' })
@@ -10,4 +10,12 @@ export class AdminLoginDto {
   @IsString()
   @MinLength(8)
   password!: string;
+
+  @ApiPropertyOptional({
+    description: 'Indicates whether to issue a persistent refresh token (7-day lifetime).',
+    default: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  rememberMe?: boolean;
 }
