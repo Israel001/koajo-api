@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { QueryBus } from '@nestjs/cqrs';
-import type { Request } from 'express';
 import { AdminPodsController } from './admin-pods.controller';
 import type { AdminPodStatistics } from '../contracts/admin-results';
 

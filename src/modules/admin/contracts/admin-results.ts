@@ -1,5 +1,7 @@
 import { AdminRole } from '../admin-role.enum';
 import type { PodActivitySummary } from '../../pods/contracts/pod-activity-summary';
+import { AnnouncementChannel } from '../announcement-channel.enum';
+import { AnnouncementSeverity } from '../announcement-severity.enum';
 
 export interface AdminPermissionSummary {
   id: string;
@@ -146,6 +148,19 @@ export interface AdminPodStatistics {
   totalMembers: number;
   totalPendingInvites: number;
   totalIncompletePods: number;
+}
+
+export interface AdminAnnouncementResult {
+  id: string;
+  name: string;
+  channel: AnnouncementChannel;
+  severity: AnnouncementSeverity;
+  notificationTitle: string;
+  sendToAll: boolean;
+  actionUrl: string | null;
+  imageUrl: string | null;
+  totalRecipients: number;
+  createdAt: string;
 }
 
 export interface AdminAchievementDefinition {

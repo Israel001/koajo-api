@@ -347,6 +347,80 @@ export class MailService {
     }
   }
 
+  async sendAnnouncementEmail(options: {
+    announcementName: string;
+    account: AccountEntity;
+    title: string;
+    message: string;
+    severity: string;
+    actionUrl?: string;
+    imageUrl?: string;
+  }): Promise<void> {
+    const { account } = options;
+    if (!(await this.shouldSendEmail(account.email, 'system'))) {
+      return;
+    }
+
+    const firstname =
+      account.firstName?.trim() ||
+      (account.email ? account.email.split('@')[0] : 'there');
+    const greeting = `Hi ${firstname},`;
+    const message = options.message.trim();
+
+    const htmlBody = this.composeAnnouncementHtml({
+      greeting,
+      message,
+      actionUrl: options.actionUrl,
+      severity: options.severity,
+      imageUrl: options.imageUrl,
+    });
+
+    const textBody = this.composeAnnouncementText({
+      greeting,
+      message,
+      actionUrl: options.actionUrl,
+      severity: options.severity,
+      imageUrl: options.imageUrl,
+    });
+
+    const severityLabel = options.severity
+      ? `[${options.severity.toUpperCase()}] `
+      : '';
+    const subject = `${severityLabel}${options.title || options.announcementName}`;
+
+    const attachments =
+      options.imageUrl && options.imageUrl.trim().length
+        ? [
+            {
+              filename: this.deriveFilename(options.imageUrl),
+              path: options.imageUrl,
+            },
+          ]
+        : undefined;
+
+    try {
+      const info = await this.transporter.sendMail({
+        to: account.email,
+        from: this.defaultFrom,
+        subject,
+        html: htmlBody,
+        text: textBody,
+        attachments,
+      });
+
+      this.logger.log(
+        `Announcement email queued for ${account.email} (id=${info.messageId}) [announcement=${options.announcementName}]`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to send announcement email to ${account.email}: ${
+          (error as Error).message
+        }`,
+      );
+      throw error;
+    }
+  }
+
   async sendCustomPodInvitation(options: {
     email: string;
     inviterName: string;
@@ -573,5 +647,108 @@ export class MailService {
     }
 
     return true;
+  }
+
+  private composeAnnouncementHtml(params: {
+    greeting: string;
+    message: string;
+    actionUrl?: string;
+    severity?: string;
+    imageUrl?: string;
+  }): string {
+    const parts: string[] = [];
+    parts.push(`<p>${this.escapeHtml(params.greeting)}</p>`);
+
+    const messageParagraphs = params.message
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+
+    if (!messageParagraphs.length) {
+      messageParagraphs.push(params.message.trim());
+    }
+
+    for (const paragraph of messageParagraphs) {
+      parts.push(`<p>${this.escapeHtml(paragraph)}</p>`);
+    }
+
+    if (params.severity) {
+      parts.push(
+        `<p><strong>Severity:</strong> ${this.escapeHtml(
+          params.severity,
+        )}</p>`,
+      );
+    }
+
+    if (params.actionUrl) {
+      const safeUrl = this.escapeAttribute(params.actionUrl);
+      parts.push(
+        `<p><a href="${safeUrl}" target="_blank" rel="noopener noreferrer">View details</a></p>`,
+      );
+    }
+
+    if (params.imageUrl) {
+      const safeImageUrl = this.escapeAttribute(params.imageUrl);
+      parts.push(
+        `<p><a href="${safeImageUrl}" target="_blank" rel="noopener noreferrer">View announcement image</a></p>`,
+      );
+    }
+
+    return parts.join('\n');
+  }
+
+  private composeAnnouncementText(params: {
+    greeting: string;
+    message: string;
+    actionUrl?: string;
+    severity?: string;
+    imageUrl?: string;
+  }): string {
+    const lines: string[] = [params.greeting, ''];
+    const paragraphs = params.message
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+    if (paragraphs.length) {
+      lines.push(...paragraphs);
+    } else {
+      lines.push(params.message.trim());
+    }
+    if (params.severity) {
+      lines.push('', `Severity: ${params.severity}`);
+    }
+    if (params.actionUrl) {
+      lines.push('', `Action: ${params.actionUrl}`);
+    }
+    if (params.imageUrl) {
+      lines.push('', `Image: ${params.imageUrl}`);
+    }
+    return lines.join('\n');
+  }
+
+  private escapeHtml(value: string): string {
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  private escapeAttribute(value: string): string {
+    return this.escapeHtml(value);
+  }
+
+  private deriveFilename(url: string): string {
+    try {
+      const parsed = new URL(url);
+      const pathname = parsed.pathname.split('/').filter(Boolean).pop();
+      if (pathname) {
+        return pathname;
+      }
+    } catch {
+      // ignore
+    }
+    return 'attachment';
   }
 }

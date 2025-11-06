@@ -23,7 +23,10 @@ import type {
   AdminForgotPasswordResult,
   AdminResetPasswordResult,
   AdminPodStatistics,
+  AdminAnnouncementResult,
 } from './admin-results';
+import { AnnouncementChannel } from '../announcement-channel.enum';
+import { AnnouncementSeverity } from '../announcement-severity.enum';
 
 export class AdminLoginResultDto implements AdminLoginResult {
   @ApiProperty({ description: 'JWT access token for admin APIs.' })
@@ -388,6 +391,38 @@ export class AdminPodStatisticsDto implements AdminPodStatistics {
 
   @ApiProperty({ description: 'Total pods that have not yet completed their lifecycle.' })
   totalIncompletePods!: number;
+}
+
+export class AdminAnnouncementResultDto implements AdminAnnouncementResult {
+  @ApiProperty({ description: 'Announcement identifier.' })
+  id!: string;
+
+  @ApiProperty({ description: 'Announcement name.' })
+  name!: string;
+
+  @ApiProperty({ enum: AnnouncementChannel, description: 'Delivery channel for the announcement.' })
+  channel!: AnnouncementChannel;
+
+  @ApiProperty({ enum: AnnouncementSeverity, description: 'Severity level associated with the announcement.' })
+  severity!: AnnouncementSeverity;
+
+  @ApiProperty({ description: 'Title used for in-app notifications or email subject.' })
+  notificationTitle!: string;
+
+  @ApiProperty({ description: 'Indicates whether the announcement was broadcast to all users.' })
+  sendToAll!: boolean;
+
+  @ApiProperty({ description: 'Optional action URL associated with the announcement.', nullable: true })
+  actionUrl!: string | null;
+
+  @ApiProperty({ description: 'Optional image URL attached to the announcement.', nullable: true })
+  imageUrl!: string | null;
+
+  @ApiProperty({ description: 'Number of users targeted by the announcement.' })
+  totalRecipients!: number;
+
+  @ApiProperty({ description: 'Timestamp when the announcement was created.' })
+  createdAt!: string;
 }
 
 export class AdminDashboardMetricsDto implements AdminDashboardMetrics {

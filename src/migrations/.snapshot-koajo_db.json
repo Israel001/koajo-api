@@ -533,6 +533,150 @@
           "length": 36,
           "mappedType": "character"
         },
+        "title": {
+          "name": "title",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 255,
+          "mappedType": "string"
+        },
+        "body": {
+          "name": "body",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": null,
+          "mappedType": "text"
+        },
+        "severity": {
+          "name": "severity",
+          "type": "varchar(32)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 32,
+          "mappedType": "string"
+        },
+        "action_url": {
+          "name": "action_url",
+          "type": "varchar(512)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 512,
+          "mappedType": "string"
+        },
+        "read_at": {
+          "name": "read_at",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 6,
+          "mappedType": "datetime"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "default": "current_timestamp(6)",
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "default": "current_timestamp(6)",
+          "mappedType": "datetime"
+        }
+      },
+      "name": "account_notifications",
+      "indexes": [
+        {
+          "columnNames": [
+            "account_id"
+          ],
+          "composite": false,
+          "keyName": "account_notifications_account_id_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "keyName": "PRIMARY",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "account_notifications_account_id_foreign": {
+          "constraintName": "account_notifications_account_id_foreign",
+          "columnNames": [
+            "account_id"
+          ],
+          "localTableName": "account_notifications",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "accounts",
+          "deleteRule": "cascade",
+          "updateRule": "cascade"
+        }
+      },
+      "nativeEnums": {
+        "admin_permission_override_type": {
+          "name": "admin_permission_override_type",
+          "items": [
+            "allow",
+            "deny"
+          ]
+        }
+      }
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 36,
+          "mappedType": "character"
+        },
+        "account_id": {
+          "name": "account_id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 36,
+          "mappedType": "character"
+        },
         "token_digest": {
           "name": "token_digest",
           "type": "varchar(128)",
@@ -1647,6 +1791,308 @@
             "id"
           ],
           "referencedTableName": "admin_users",
+          "deleteRule": "cascade",
+          "updateRule": "cascade"
+        }
+      },
+      "nativeEnums": {
+        "admin_permission_override_type": {
+          "name": "admin_permission_override_type",
+          "items": [
+            "allow",
+            "deny"
+          ]
+        }
+      }
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 36,
+          "mappedType": "character"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(160)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 160,
+          "mappedType": "string"
+        },
+        "channel": {
+          "name": "channel",
+          "type": "enum('email','in-app')",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "'email'",
+          "enumItems": [
+            "email",
+            "in-app"
+          ],
+          "mappedType": "enum"
+        },
+        "severity": {
+          "name": "severity",
+          "type": "enum('success','info','warning','error','critical')",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "'info'",
+          "enumItems": [
+            "success",
+            "info",
+            "warning",
+            "error",
+            "critical"
+          ],
+          "mappedType": "enum"
+        },
+        "notification_title": {
+          "name": "notification_title",
+          "type": "varchar(180)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 180,
+          "mappedType": "string"
+        },
+        "message": {
+          "name": "message",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": null,
+          "mappedType": "text"
+        },
+        "action_url": {
+          "name": "action_url",
+          "type": "varchar(512)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 512,
+          "mappedType": "string"
+        },
+        "image_url": {
+          "name": "image_url",
+          "type": "varchar(512)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 512,
+          "mappedType": "string"
+        },
+        "send_to_all": {
+          "name": "send_to_all",
+          "type": "tinyint(1)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 1,
+          "default": "false",
+          "mappedType": "boolean"
+        },
+        "created_by_id": {
+          "name": "created_by_id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 36,
+          "mappedType": "character"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "default": "current_timestamp(6)",
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "default": "current_timestamp(6)",
+          "mappedType": "datetime"
+        }
+      },
+      "name": "admin_announcements",
+      "indexes": [
+        {
+          "columnNames": [
+            "created_by_id"
+          ],
+          "composite": false,
+          "keyName": "admin_announcements_created_by_id_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "keyName": "PRIMARY",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "admin_announcements_created_by_id_foreign": {
+          "constraintName": "admin_announcements_created_by_id_foreign",
+          "columnNames": [
+            "created_by_id"
+          ],
+          "localTableName": "admin_announcements",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "admin_users",
+          "deleteRule": "set null",
+          "updateRule": "cascade"
+        }
+      },
+      "nativeEnums": {
+        "admin_permission_override_type": {
+          "name": "admin_permission_override_type",
+          "items": [
+            "allow",
+            "deny"
+          ]
+        }
+      }
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 36,
+          "mappedType": "character"
+        },
+        "announcement_id": {
+          "name": "announcement_id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 36,
+          "mappedType": "character"
+        },
+        "account_id": {
+          "name": "account_id",
+          "type": "char(36)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 36,
+          "mappedType": "character"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "datetime(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "default": "current_timestamp(6)",
+          "mappedType": "datetime"
+        }
+      },
+      "name": "admin_announcement_recipients",
+      "indexes": [
+        {
+          "columnNames": [
+            "announcement_id"
+          ],
+          "composite": false,
+          "keyName": "admin_announcement_recipients_announcement_id_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "account_id"
+          ],
+          "composite": false,
+          "keyName": "admin_announcement_recipients_account_id_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "keyName": "PRIMARY",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "admin_announcement_recipients_announcement_id_foreign": {
+          "constraintName": "admin_announcement_recipients_announcement_id_foreign",
+          "columnNames": [
+            "announcement_id"
+          ],
+          "localTableName": "admin_announcement_recipients",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "admin_announcements",
+          "deleteRule": "cascade",
+          "updateRule": "cascade"
+        },
+        "admin_announcement_recipients_account_id_foreign": {
+          "constraintName": "admin_announcement_recipients_account_id_foreign",
+          "columnNames": [
+            "account_id"
+          ],
+          "localTableName": "admin_announcement_recipients",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "accounts",
           "deleteRule": "cascade",
           "updateRule": "cascade"
         }

@@ -11,6 +11,7 @@ import { ListAdminRolesHandler } from './list-admin-roles.handler';
 import { ListAdminPermissionsHandler } from './list-admin-permissions.handler';
 import { GetAdminUserHandler } from './get-admin-user.handler';
 import { GetAdminPodStatsHandler } from './get-admin-pod-stats.handler';
+import { ListAllAdminAccountsHandler } from './list-all-admin-accounts.handler';
 
 export const AdminQueryHandlers = [
   AdminDashboardHandler,
@@ -26,6 +27,7 @@ export const AdminQueryHandlers = [
   ListAdminPermissionsHandler,
   GetAdminUserHandler,
   GetAdminPodStatsHandler,
+  ListAllAdminAccountsHandler,
 ];
 
 export {
@@ -42,4 +44,5 @@ export {
   ListAdminPermissionsHandler,
   GetAdminUserHandler,
   GetAdminPodStatsHandler,
+  ListAllAdminAccountsHandler,
 };

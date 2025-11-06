@@ -12,6 +12,7 @@ import { SetAdminUserPermissionsHandler } from './set-admin-user-permissions.han
 import { ChangeAdminPasswordHandler } from './change-admin-password.handler';
 import { AdminForgotPasswordHandler } from './admin-forgot-password.handler';
 import { AdminResetPasswordHandler } from './admin-reset-password.handler';
+import { CreateAdminAnnouncementHandler } from './create-admin-announcement.handler';
 
 export const AdminCommandHandlers = [
   AdminLoginHandler,
@@ -28,6 +29,7 @@ export const AdminCommandHandlers = [
   ChangeAdminPasswordHandler,
   AdminForgotPasswordHandler,
   AdminResetPasswordHandler,
+  CreateAdminAnnouncementHandler,
 ];
 
 export { AdminLoginHandler } from './admin-login.handler';
@@ -44,3 +46,4 @@ export { SetAdminUserPermissionsHandler } from './set-admin-user-permissions.han
 export { ChangeAdminPasswordHandler } from './change-admin-password.handler';
 export { AdminForgotPasswordHandler } from './admin-forgot-password.handler';
 export { AdminResetPasswordHandler } from './admin-reset-password.handler';
+export { CreateAdminAnnouncementHandler } from './create-admin-announcement.handler';

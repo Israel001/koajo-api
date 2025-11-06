@@ -25,6 +25,7 @@ import {
 } from '../contracts/admin-results';
 import { ListAdminAccountsQuery } from '../queries/list-admin-accounts.query';
 import { GetAdminAccountQuery } from '../queries/get-admin-account.query';
+import { ListAllAdminAccountsQuery } from '../queries/list-all-admin-accounts.query';
 
 @ApiTags('admin-accounts')
 @Controller({ path: 'admin/accounts', version: '1' })
@@ -45,6 +46,14 @@ export class AdminAccountsController {
     return this.queryBus.execute(
       new ListAdminAccountsQuery(query.limit, query.offset, query.search),
     );
+  }
+
+  @Get('all')
+  @ApiOperation({ summary: 'List all customer accounts without pagination' })
+  @ApiOkResponse({ description: 'All accounts fetched.' })
+  @RequireAdminPermissions(ADMIN_PERMISSION_VIEW_USERS)
+  async listAll(): Promise<AdminAccountDetail[]> {
+    return this.queryBus.execute(new ListAllAdminAccountsQuery());
   }
 
   @Get(':accountId')

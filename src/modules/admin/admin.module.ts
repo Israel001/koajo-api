@@ -37,6 +37,9 @@ import { AdminRolesController } from './controllers/admin-roles.controller';
 import { AdminPermissionsController } from './controllers/admin-permissions.controller';
 import { AdminPasswordResetService } from './services/admin-password-reset.service';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { AdminAnnouncementsController } from './controllers/admin-announcements.controller';
+import { AdminAnnouncementEntity } from './entities/admin-announcement.entity';
+import { AdminAnnouncementRecipientEntity } from './entities/admin-announcement-recipient.entity';
 import { AdminPermissionSyncService } from './services/admin-permission-sync.service';
 
 @Module({
@@ -59,6 +62,8 @@ import { AdminPermissionSyncService } from './services/admin-permission-sync.ser
       PayoutEntity,
       TransactionEntity,
       AccountVerificationAttemptEntity,
+      AdminAnnouncementEntity,
+      AdminAnnouncementRecipientEntity,
     ]),
     AchievementsModule,
     NotificationsModule,
@@ -87,6 +92,7 @@ import { AdminPermissionSyncService } from './services/admin-permission-sync.ser
     AdminDashboardController,
     AdminRolesController,
     AdminPermissionsController,
+    AdminAnnouncementsController,
   ],
   providers: [
     ...AdminCommandHandlers,
