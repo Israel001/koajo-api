@@ -22,6 +22,7 @@ import { PodEntity } from '../pods/entities/pod.entity';
 import { PodMembershipEntity } from '../pods/entities/pod-membership.entity';
 import { PodPlanEntity } from '../pods/entities/pod-plan.entity';
 import { PodActivityEntity } from '../pods/entities/pod-activity.entity';
+import { PodInviteEntity } from '../pods/entities/pod-invite.entity';
 import { AchievementsModule } from '../achievements/achievements.module';
 import { AchievementEntity } from '../achievements/entities/achievement.entity';
 import { PaymentEntity } from '../finance/entities/payment.entity';
@@ -52,6 +53,7 @@ import { AdminPermissionSyncService } from './services/admin-permission-sync.ser
       PodMembershipEntity,
       PodPlanEntity,
       PodActivityEntity,
+      PodInviteEntity,
       AchievementEntity,
       PaymentEntity,
       PayoutEntity,

@@ -179,7 +179,12 @@ describe('AuthController', () => {
 
       commandBus.execute.mockResolvedValue(expected);
 
-      await expect(controller.resendEmail(dto)).resolves.toEqual(expected);
+      const request = {
+        headers: { host: 'localhost:3000' },
+        protocol: 'http',
+      } as unknown as Request;
+
+      await expect(controller.resendEmail(dto, request)).resolves.toEqual(expected);
       expect(commandBus.execute).toHaveBeenCalledWith(
         expect.any(ResendEmailVerificationCommand),
       );
@@ -187,6 +192,7 @@ describe('AuthController', () => {
       const command =
         commandBus.execute.mock.calls[0][0] as ResendEmailVerificationCommand;
       expect(command.email).toEqual(dto.email);
+      expect(command.redirectBaseUrl).toEqual('http://localhost:3000/register/verify-email');
     });
   });
 
@@ -408,7 +414,9 @@ describe('AuthController', () => {
 
       const request = {
         user: { accountId: 'account-1' },
-      } as AuthenticatedRequest;
+        headers: { host: 'app.koajo.test' },
+        protocol: 'https',
+      } as unknown as AuthenticatedRequest;
 
       await expect(
         controller.recordIdentityVerification(request, dto as any),
@@ -472,6 +480,7 @@ describe('AuthController', () => {
       expect(command.accountId).toBe('account-1');
       expect(command.firstName).toBe(dto.firstName);
       expect(command.dateOfBirth).toBe(dto.dateOfBirth);
+      expect(command.verificationRedirectBaseUrl).toBe('https://app.koajo.test/register/verify-email');
     });
   });
 

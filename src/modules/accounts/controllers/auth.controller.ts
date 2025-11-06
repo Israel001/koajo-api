@@ -242,6 +242,7 @@ export class AuthController {
         payload.lastName,
         payload.dateOfBirth,
         payload.phone,
+        this.resolveVerificationRedirectBase(request),
       ),
     );
   }
@@ -379,9 +380,13 @@ export class AuthController {
   })
   async resendEmail(
     @Body() payload: ResendVerificationDtoModule.ResendVerificationDto,
+    @Req() request: Request,
   ): Promise<ResendVerificationResult> {
     return this.commandBus.execute(
-      new ResendEmailVerificationCommand(payload.email),
+      new ResendEmailVerificationCommand(
+        payload.email,
+        this.resolveVerificationRedirectBase(request),
+      ),
     );
   }
 
@@ -571,5 +576,33 @@ export class AuthController {
         userAgent: request.headers['user-agent'],
       }),
     );
+  }
+
+  private resolveVerificationRedirectBase(
+    request: Request,
+  ): string | null {
+    const forwardedHostHeader = request.headers['x-forwarded-host'];
+    const forwardedHost = Array.isArray(forwardedHostHeader)
+      ? forwardedHostHeader[0]
+      : forwardedHostHeader;
+    const host = forwardedHost ?? request.headers.host ?? null;
+
+    if (!host) {
+      return null;
+    }
+
+    const forwardedProtoHeader = request.headers['x-forwarded-proto'];
+    const forwardedProto = Array.isArray(forwardedProtoHeader)
+      ? forwardedProtoHeader[0]
+      : forwardedProtoHeader;
+    const protocolCandidate =
+      forwardedProto?.split(',')[0]?.trim() ??
+      request.protocol ??
+      'https';
+
+    const protocol = protocolCandidate || 'https';
+    const normalizedHost = host.trim().replace(/\/+$/, '');
+    const normalizedProtocol = protocol.replace(/:$/, '');
+    return `${normalizedProtocol}://${normalizedHost}/register/verify-email`;
   }
 }

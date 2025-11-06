@@ -120,7 +120,7 @@ export class AccountEntity {
   emailVerifications = new Collection<AccountEmailVerificationEntity>(this);
 
 
-  constructor(params: {
+  constructor(params?: {
     email: string;
     phoneNumber: string;
     passwordHash: string;
@@ -134,12 +134,28 @@ export class AccountEntity {
     emailNotificationsEnabled?: boolean;
     transactionNotificationsEnabled?: boolean;
   }) {
-    this.email = params.email.toLowerCase();
-    this.phoneNumber = params.phoneNumber;
-    this.passwordHash = params.passwordHash;
-    this.firstName = params.firstName ?? null;
-    this.lastName = params.lastName ?? null;
-    this.avatarUrl = params.avatarUrl ?? null;
+    if (!params) {
+      return;
+    }
+
+    if (typeof params.email === 'string') {
+      this.email = params.email.toLowerCase();
+    }
+    if (typeof params.phoneNumber === 'string') {
+      this.phoneNumber = params.phoneNumber;
+    }
+    if (typeof params.passwordHash === 'string') {
+      this.passwordHash = params.passwordHash;
+    }
+    if ('firstName' in params) {
+      this.firstName = params.firstName ?? null;
+    }
+    if ('lastName' in params) {
+      this.lastName = params.lastName ?? null;
+    }
+    if ('avatarUrl' in params) {
+      this.avatarUrl = params.avatarUrl ?? null;
+    }
     if (typeof params.stripeVerificationCompleted === 'boolean') {
       this.stripeVerificationCompleted = params.stripeVerificationCompleted;
     }
@@ -153,8 +169,12 @@ export class AccountEntity {
       this.transactionNotificationsEnabled =
         params.transactionNotificationsEnabled;
     }
-    this.lastPodJoinedAt = params.lastPodJoinedAt ?? null;
-    this.deactivatedAt = params.deactivatedAt ?? null;
+    if ('lastPodJoinedAt' in params) {
+      this.lastPodJoinedAt = params.lastPodJoinedAt ?? null;
+    }
+    if ('deactivatedAt' in params) {
+      this.deactivatedAt = params.deactivatedAt ?? null;
+    }
   }
 
   markEmailVerified(at: Date = new Date()) {

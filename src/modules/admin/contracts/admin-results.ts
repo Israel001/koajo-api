@@ -141,6 +141,13 @@ export interface AdminPodPlansListResult {
   items: AdminPodPlanSummary[];
 }
 
+export interface AdminPodStatistics {
+  totalOpenPods: number;
+  totalMembers: number;
+  totalPendingInvites: number;
+  totalIncompletePods: number;
+}
+
 export interface AdminAchievementDefinition {
   code: string;
   name: string;

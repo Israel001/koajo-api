@@ -77,6 +77,7 @@ export class UpdateUserProfileHandler
       const issuance = await this.emailVerificationService.issue(account, {
         bypassCooldown: true,
         reason: 'profile-update',
+        redirectBaseUrl: command.verificationRedirectBaseUrl ?? undefined,
         templateVariables: {
           firstname: account.firstName ?? account.email.split('@')[0],
         },

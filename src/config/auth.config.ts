@@ -53,7 +53,7 @@ export default registerAs('auth', () => {
       ),
       redirectBaseUrl:
         process.env.EMAIL_VERIFICATION_REDIRECT_URL ??
-        'https://app.koajo.local/verify-email',
+        'https://koajo.com/register/verify-email',
     },
     passwordReset: {
       ttlSeconds: Number.parseInt(

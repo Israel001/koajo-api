@@ -13,6 +13,7 @@ interface IssueOptions {
   reason?: string;
   from?: string;
   templateVariables?: Record<string, string | number>;
+  redirectBaseUrl?: string | null;
 }
 
 interface IssueResult {
@@ -61,7 +62,7 @@ export class EmailVerificationService {
     const digest = this.createDigest(account.id, token);
     const expiresAt = new Date(now.getTime() + config.ttlSeconds * 1000);
     const verificationLink = this.buildVerificationLink(
-      config.redirectBaseUrl,
+      options.redirectBaseUrl ?? config.redirectBaseUrl,
       account.email,
       token,
     );
@@ -173,7 +174,7 @@ export class EmailVerificationService {
     email: string,
     token: string,
   ): string {
-    const fallback = 'https://app.koajo.local/verify-email';
+    const fallback = 'https://koajo.com/register/verify-email';
     const target = baseUrl?.trim() || fallback;
 
     try {

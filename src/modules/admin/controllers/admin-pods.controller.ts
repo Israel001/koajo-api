@@ -17,11 +17,13 @@ import {
   AdminPodDetail,
   AdminPodsListResult,
   AdminPodActivity,
+  AdminPodStatistics,
 } from '../contracts/admin-results';
 import { ListAdminPodsQuery } from '../queries/list-admin-pods.query';
 import { GetAdminPodQuery } from '../queries/get-admin-pod.query';
 import { ListAdminPodActivitiesQuery } from '../queries/list-admin-pod-activities.query';
-import { AdminPodActivityDto } from '../contracts/admin-swagger.dto';
+import { AdminPodActivityDto, AdminPodStatisticsDto } from '../contracts/admin-swagger.dto';
+import { GetAdminPodStatsQuery } from '../queries/get-admin-pod-stats.query';
 
 @ApiTags('admin-pods')
 @Controller({ path: 'admin/pods', version: '1' })
@@ -30,6 +32,17 @@ import { AdminPodActivityDto } from '../contracts/admin-swagger.dto';
 @ApiUnauthorizedResponse({ description: 'Admin authentication required.' })
 export class AdminPodsController {
   constructor(private readonly queryBus: QueryBus) {}
+
+  @Get('stats')
+  @ApiOperation({ summary: 'Retrieve aggregated pod statistics' })
+  @ApiOkResponse({
+    description: 'Pod statistics fetched.',
+    type: AdminPodStatisticsDto,
+  })
+  @RequireAdminPermissions(ADMIN_PERMISSION_VIEW_PODS)
+  async stats(): Promise<AdminPodStatistics> {
+    return this.queryBus.execute(new GetAdminPodStatsQuery());
+  }
 
   @Get()
   @ApiOperation({ summary: 'List pods' })

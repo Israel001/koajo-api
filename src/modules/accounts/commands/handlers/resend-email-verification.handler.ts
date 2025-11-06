@@ -37,13 +37,17 @@ export class ResendEmailVerificationHandler
       throw new BadRequestException('Email is already verified.');
     }
 
-    const verification = await this.emailVerificationService.issue(account, {
-      bypassCooldown: false,
-      reason: 'resend',
-      templateVariables: {
-        firstname: account.firstName?.trim() || account.email.split('@')[0],
+    const verification = await this.emailVerificationService.issue(
+      account,
+      {
+        bypassCooldown: false,
+        reason: 'resend',
+        redirectBaseUrl: command.redirectBaseUrl ?? undefined,
+        templateVariables: {
+          firstname: account.firstName?.trim() || account.email.split('@')[0],
+        },
       },
-    });
+    );
 
     return {
       email: account.email,

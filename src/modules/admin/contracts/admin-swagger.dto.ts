@@ -22,6 +22,7 @@ import type {
   AdminChangePasswordResult,
   AdminForgotPasswordResult,
   AdminResetPasswordResult,
+  AdminPodStatistics,
 } from './admin-results';
 
 export class AdminLoginResultDto implements AdminLoginResult {
@@ -374,6 +375,20 @@ export class TransactionSummaryDto implements TransactionSummary {
 }
 
 export class AdminPodActivityDto extends PodActivityDto {}
+
+export class AdminPodStatisticsDto implements AdminPodStatistics {
+  @ApiProperty({ description: 'Number of pods currently open for members to join.' })
+  totalOpenPods!: number;
+
+  @ApiProperty({ description: 'Total number of members currently participating in pods.' })
+  totalMembers!: number;
+
+  @ApiProperty({ description: 'Total number of outstanding pod invitations awaiting acceptance.' })
+  totalPendingInvites!: number;
+
+  @ApiProperty({ description: 'Total pods that have not yet completed their lifecycle.' })
+  totalIncompletePods!: number;
+}
 
 export class AdminDashboardMetricsDto implements AdminDashboardMetrics {
   @ApiProperty({ description: 'Total active users and day-over-day delta.', type: MetricWithChangeNumberDto })
