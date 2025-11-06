@@ -352,7 +352,6 @@ export class MailService {
     account: AccountEntity;
     title: string;
     message: string;
-    severity: string;
     actionUrl?: string;
     imageUrl?: string;
   }): Promise<void> {
@@ -371,7 +370,6 @@ export class MailService {
       greeting,
       message,
       actionUrl: options.actionUrl,
-      severity: options.severity,
       imageUrl: options.imageUrl,
     });
 
@@ -379,14 +377,10 @@ export class MailService {
       greeting,
       message,
       actionUrl: options.actionUrl,
-      severity: options.severity,
       imageUrl: options.imageUrl,
     });
 
-    const severityLabel = options.severity
-      ? `[${options.severity.toUpperCase()}] `
-      : '';
-    const subject = `${severityLabel}${options.title || options.announcementName}`;
+    const subject = options.title || options.announcementName;
 
     const attachments =
       options.imageUrl && options.imageUrl.trim().length
@@ -653,7 +647,6 @@ export class MailService {
     greeting: string;
     message: string;
     actionUrl?: string;
-    severity?: string;
     imageUrl?: string;
   }): string {
     const parts: string[] = [];
@@ -670,14 +663,6 @@ export class MailService {
 
     for (const paragraph of messageParagraphs) {
       parts.push(`<p>${this.escapeHtml(paragraph)}</p>`);
-    }
-
-    if (params.severity) {
-      parts.push(
-        `<p><strong>Severity:</strong> ${this.escapeHtml(
-          params.severity,
-        )}</p>`,
-      );
     }
 
     if (params.actionUrl) {
@@ -701,7 +686,6 @@ export class MailService {
     greeting: string;
     message: string;
     actionUrl?: string;
-    severity?: string;
     imageUrl?: string;
   }): string {
     const lines: string[] = [params.greeting, ''];
@@ -713,9 +697,6 @@ export class MailService {
       lines.push(...paragraphs);
     } else {
       lines.push(params.message.trim());
-    }
-    if (params.severity) {
-      lines.push('', `Severity: ${params.severity}`);
     }
     if (params.actionUrl) {
       lines.push('', `Action: ${params.actionUrl}`);

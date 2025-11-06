@@ -24,6 +24,7 @@ import type {
   AdminResetPasswordResult,
   AdminPodStatistics,
   AdminAnnouncementResult,
+  AdminAnnouncementsListResult,
 } from './admin-results';
 import { AnnouncementChannel } from '../announcement-channel.enum';
 import { AnnouncementSeverity } from '../announcement-severity.enum';
@@ -429,6 +430,19 @@ export class AdminAnnouncementResultDto implements AdminAnnouncementResult {
 
   @ApiProperty({ description: 'Timestamp when the announcement was created.' })
   createdAt!: string;
+}
+
+export class AdminAnnouncementsListResultDto
+  implements AdminAnnouncementsListResult
+{
+  @ApiProperty({ description: 'Total announcements matching the supplied filters.' })
+  total!: number;
+
+  @ApiProperty({
+    description: 'Announcements returned for the current page.',
+    type: [AdminAnnouncementResultDto],
+  })
+  items!: AdminAnnouncementResultDto[];
 }
 
 export class AdminDashboardMetricsDto implements AdminDashboardMetrics {

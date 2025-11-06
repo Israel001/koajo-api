@@ -165,6 +165,11 @@ export interface AdminAnnouncementResult {
   createdAt: string;
 }
 
+export interface AdminAnnouncementsListResult {
+  total: number;
+  items: AdminAnnouncementResult[];
+}
+
 export interface AdminAchievementDefinition {
   code: string;
   name: string;

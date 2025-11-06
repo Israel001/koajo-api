@@ -154,6 +154,37 @@ describe('CreateAdminAnnouncementHandler', () => {
     });
   });
 
+  it('allows announcements without a persisted admin record', async () => {
+    const account = {
+      id: 'acc-1',
+      email: 'anon@example.com',
+      firstName: 'Anon',
+    } as any;
+
+    accountRepository.find.mockResolvedValue([account]);
+    // Ensure we can introspect payload created.
+    const announcement = {
+      id: 'announcement-3',
+      name: '',
+      channel: AnnouncementChannel.EMAIL,
+      severity: AnnouncementSeverity.INFO,
+      notificationTitle: '',
+      message: '',
+      sendToAll: false,
+      createdAt: new Date(),
+    };
+    announcementRepository.create.mockReturnValue(announcement);
+
+    const command = buildCommand({ adminId: null });
+
+    await handler.execute(command);
+
+    expect(adminRepository.findOne).not.toHaveBeenCalled();
+
+    const createPayload = announcementRepository.create.mock.calls[0][0];
+    expect(createPayload.createdBy).toBeNull();
+  });
+
   it('creates in-app announcement for all users without duplicating recipients', async () => {
     const admin = { id: 'admin-1' };
     const accounts = [

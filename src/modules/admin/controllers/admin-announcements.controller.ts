@@ -1,9 +1,10 @@
-import { BadRequestException, Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
-import { CommandBus } from '@nestjs/cqrs';
+import { BadRequestException, Body, Controller, Get, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
   ApiCreatedResponse,
+  ApiOkResponse,
   ApiOperation,
   ApiTags,
   ApiUnauthorizedResponse,
@@ -13,9 +14,11 @@ import { AdminJwtGuard, AdminAuthenticatedRequest } from '../guards/admin-jwt.gu
 import { AdminPermissionsGuard, RequireAdminPermissions } from '../guards/admin-permissions.guard';
 import { CreateAnnouncementDto } from '../dto/create-announcement.dto';
 import { CreateAdminAnnouncementCommand } from '../commands/create-admin-announcement.command';
-import { AdminAnnouncementResultDto } from '../contracts/admin-swagger.dto';
-import type { AdminAnnouncementResult } from '../contracts/admin-results';
+import { AdminAnnouncementResultDto, AdminAnnouncementsListResultDto } from '../contracts/admin-swagger.dto';
+import type { AdminAnnouncementResult, AdminAnnouncementsListResult } from '../contracts/admin-results';
 import { ADMIN_PERMISSION_CREATE_ANNOUNCEMENTS } from '../admin-permission.constants';
+import { AdminListQueryDto } from '../dto/list-query.dto';
+import { ListAdminAnnouncementsQuery } from '../queries/list-admin-announcements.query';
 
 @ApiTags('admin-announcements')
 @UseGuards(AdminJwtGuard, AdminPermissionsGuard)
@@ -23,7 +26,23 @@ import { ADMIN_PERMISSION_CREATE_ANNOUNCEMENTS } from '../admin-permission.const
 @ApiUnauthorizedResponse({ description: 'Admin authentication required.' })
 @Controller({ path: 'admin/announcements', version: '1' })
 export class AdminAnnouncementsController {
-  constructor(private readonly commandBus: CommandBus) {}
+  constructor(
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
+  ) {}
+
+  @Get()
+  @ApiOperation({ summary: 'List platform announcements' })
+  @ApiOkResponse({
+    description: 'Announcements fetched.',
+    type: AdminAnnouncementsListResultDto,
+  })
+  @RequireAdminPermissions(ADMIN_PERMISSION_CREATE_ANNOUNCEMENTS)
+  async list(@Query() query: AdminListQueryDto): Promise<AdminAnnouncementsListResult> {
+    return this.queryBus.execute(
+      new ListAdminAnnouncementsQuery(query.limit, query.offset, query.search),
+    );
+  }
 
   @Post()
   @ApiOperation({ summary: 'Create and dispatch an announcement' })
@@ -38,11 +57,17 @@ export class AdminAnnouncementsController {
     @Req() request: Request,
   ): Promise<AdminAnnouncementResult> {
     const adminRequest = request as AdminAuthenticatedRequest;
-    const adminId = adminRequest.admin?.adminId;
+    const adminContext = adminRequest.admin;
 
-    if (!adminId) {
+    if (!adminContext) {
       throw new BadRequestException('Missing admin context.');
     }
+
+    if (!adminContext.adminId && !adminContext.isSuperAdmin) {
+      throw new BadRequestException('Missing admin context.');
+    }
+
+    const adminId = adminContext.adminId ?? null;
 
     const accountIds =
       payload.sendToAll || !payload.accountIds

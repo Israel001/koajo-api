@@ -12,6 +12,7 @@ import { ListAdminPermissionsHandler } from './list-admin-permissions.handler';
 import { GetAdminUserHandler } from './get-admin-user.handler';
 import { GetAdminPodStatsHandler } from './get-admin-pod-stats.handler';
 import { ListAllAdminAccountsHandler } from './list-all-admin-accounts.handler';
+import { ListAdminAnnouncementsHandler } from './list-admin-announcements.handler';
 
 export const AdminQueryHandlers = [
   AdminDashboardHandler,
@@ -28,6 +29,7 @@ export const AdminQueryHandlers = [
   GetAdminUserHandler,
   GetAdminPodStatsHandler,
   ListAllAdminAccountsHandler,
+  ListAdminAnnouncementsHandler,
 ];
 
 export {
@@ -45,4 +47,5 @@ export {
   GetAdminUserHandler,
   GetAdminPodStatsHandler,
   ListAllAdminAccountsHandler,
+  ListAdminAnnouncementsHandler,
 };

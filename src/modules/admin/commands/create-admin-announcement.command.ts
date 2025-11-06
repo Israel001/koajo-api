@@ -3,7 +3,7 @@ import { AnnouncementSeverity } from '../announcement-severity.enum';
 
 export class CreateAdminAnnouncementCommand {
   constructor(
-    public readonly adminId: string,
+    public readonly adminId: string | null,
     public readonly channel: AnnouncementChannel,
     public readonly name: string,
     public readonly notificationTitle: string,

@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
@@ -22,6 +23,8 @@ import { AnnouncementSeverity } from '../../announcement-severity.enum';
 export class CreateAdminAnnouncementHandler
   implements ICommandHandler<CreateAdminAnnouncementCommand, AdminAnnouncementResult>
 {
+  private readonly logger = new Logger(CreateAdminAnnouncementHandler.name);
+
   constructor(
     @InjectRepository(AdminAnnouncementEntity)
     private readonly announcementRepository: EntityRepository<AdminAnnouncementEntity>,
@@ -38,9 +41,12 @@ export class CreateAdminAnnouncementHandler
   async execute(
     command: CreateAdminAnnouncementCommand,
   ): Promise<AdminAnnouncementResult> {
-    const admin = await this.adminRepository.findOne({ id: command.adminId });
-    if (!admin) {
-      throw new NotFoundException('Admin user not found.');
+    let admin: AdminUserEntity | null = null;
+    if (command.adminId) {
+      admin = await this.adminRepository.findOne({ id: command.adminId });
+      if (!admin) {
+        throw new NotFoundException('Admin user not found.');
+      }
     }
 
     const trimmedName = command.name.trim();
@@ -101,7 +107,7 @@ export class CreateAdminAnnouncementHandler
         actionUrl: normalizedActionUrl,
         imageUrl: normalizedImageUrl,
         sendToAll: command.sendToAll,
-        createdBy: admin,
+        createdBy: admin ?? null,
       },
       { partial: true },
     );
@@ -134,7 +140,6 @@ export class CreateAdminAnnouncementHandler
             message: trimmedMessage,
             actionUrl: normalizedActionUrl ?? undefined,
             imageUrl: normalizedImageUrl ?? undefined,
-            severity: command.severity,
           }),
         );
       }
@@ -152,7 +157,7 @@ export class CreateAdminAnnouncementHandler
       );
     }
 
-    await Promise.all(tasks);
+    this.dispatchNotificationTasks(tasks);
 
     return {
       id: announcement.id,
@@ -182,5 +187,25 @@ export class CreateAdminAnnouncementHandler
       (account.email ? account.email.split('@')[0] : 'there');
     const body = message.trim();
     return `Hi ${greetingName},\n\n${body}`;
+  }
+
+  private dispatchNotificationTasks(tasks: Promise<void>[]): void {
+    if (!tasks.length) {
+      return;
+    }
+
+    void Promise.allSettled(tasks).then((results) => {
+      results.forEach((result, index) => {
+        if (result.status === 'rejected') {
+          const reason = result.reason;
+          const message =
+            reason instanceof Error ? reason.message : String(reason);
+          this.logger.error(
+            `Announcement notification task ${index + 1} failed: ${message}`,
+            reason instanceof Error ? reason.stack : undefined,
+          );
+        }
+      });
+    });
   }
 }
