@@ -1,6 +1,12 @@
 import { Transform } from 'class-transformer';
-import { IsEmail, IsString, Length, Matches } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import {
+  IsEmail,
+  IsOptional,
+  IsString,
+  Length,
+  Matches,
+} from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class VerifyEmailDto {
   @ApiProperty({
@@ -22,4 +28,13 @@ export class VerifyEmailDto {
   @Length(64, 128)
   @Matches(/^[a-f0-9]+$/i)
   token!: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Origin (protocol + host) of the requesting frontend, ignored by this endpoint.',
+    example: 'https://app.koajo.test',
+  })
+  @IsOptional()
+  @IsString()
+  origin?: string;
 }
