@@ -581,28 +581,64 @@ export class AuthController {
   private resolveVerificationRedirectBase(
     request: Request,
   ): string | null {
-    const forwardedHostHeader = request.headers['x-forwarded-host'];
-    const forwardedHost = Array.isArray(forwardedHostHeader)
-      ? forwardedHostHeader[0]
-      : forwardedHostHeader;
-    const host = forwardedHost ?? request.headers.host ?? null;
+    const headers =
+      (request.headers as Record<string, string | string[] | undefined>) ?? {};
+
+    const originBase =
+      this.normalizeOriginBase(
+        this.getHeaderValue(headers['x-forwarded-origin']),
+      ) ??
+      this.normalizeOriginBase(this.getHeaderValue(headers.origin)) ??
+      this.normalizeOriginBase(this.getHeaderValue(headers.referer));
+
+    if (originBase) {
+      return `${originBase}/register/verify-email`;
+    }
+
+    const forwardedHost = this.getHeaderValue(headers['x-forwarded-host']);
+    const host = forwardedHost ?? this.getHeaderValue(headers.host);
 
     if (!host) {
       return null;
     }
 
-    const forwardedProtoHeader = request.headers['x-forwarded-proto'];
-    const forwardedProto = Array.isArray(forwardedProtoHeader)
-      ? forwardedProtoHeader[0]
-      : forwardedProtoHeader;
+    const forwardedProto = this.getHeaderValue(headers['x-forwarded-proto']);
     const protocolCandidate =
       forwardedProto?.split(',')[0]?.trim() ??
       request.protocol ??
       'https';
 
-    const protocol = protocolCandidate || 'https';
     const normalizedHost = host.trim().replace(/\/+$/, '');
-    const normalizedProtocol = protocol.replace(/:$/, '');
+    const normalizedProtocol = (protocolCandidate || 'https').replace(/:$/, '');
     return `${normalizedProtocol}://${normalizedHost}/register/verify-email`;
+  }
+
+  private getHeaderValue(
+    header: string | string[] | undefined,
+  ): string | null {
+    if (Array.isArray(header)) {
+      return header.length ? header[0] : null;
+    }
+    return header ?? null;
+  }
+
+  private normalizeOriginBase(raw: string | null): string | null {
+    if (!raw) {
+      return null;
+    }
+    const candidate = raw.split(',')[0]?.trim();
+    if (!candidate) {
+      return null;
+    }
+    try {
+      const url = new URL(candidate);
+      if (!url.host) {
+        return null;
+      }
+      const protocol = url.protocol.replace(/:$/, '') || 'https';
+      return `${protocol}://${url.host}`;
+    } catch {
+      return null;
+    }
   }
 }

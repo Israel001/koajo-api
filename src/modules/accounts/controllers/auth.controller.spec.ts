@@ -164,7 +164,41 @@ describe('AuthController', () => {
   });
 
   describe('resendEmail', () => {
-    it('executes ResendEmailVerificationCommand and returns the result', async () => {
+    it('executes ResendEmailVerificationCommand using the Origin header for redirects', async () => {
+      const dto: ResendVerificationDto = {
+        email: 'user@example.com',
+      };
+
+      const expected: ResendVerificationResult = {
+        email: dto.email,
+        verification: {
+          expiresAt: new Date().toISOString(),
+          sentAt: new Date().toISOString(),
+        },
+      };
+
+      commandBus.execute.mockResolvedValue(expected);
+
+      const request = {
+        headers: {
+          origin: 'https://app.koajo.test',
+          host: 'api.koajo.test',
+        },
+        protocol: 'https',
+      } as unknown as Request;
+
+      await expect(controller.resendEmail(dto, request)).resolves.toEqual(expected);
+      expect(commandBus.execute).toHaveBeenCalledWith(
+        expect.any(ResendEmailVerificationCommand),
+      );
+
+      const command =
+        commandBus.execute.mock.calls[0][0] as ResendEmailVerificationCommand;
+      expect(command.email).toEqual(dto.email);
+      expect(command.redirectBaseUrl).toEqual('https://app.koajo.test/register/verify-email');
+    });
+
+    it('falls back to the request host when Origin is unavailable', async () => {
       const dto: ResendVerificationDto = {
         email: 'user@example.com',
       };
@@ -191,7 +225,6 @@ describe('AuthController', () => {
 
       const command =
         commandBus.execute.mock.calls[0][0] as ResendEmailVerificationCommand;
-      expect(command.email).toEqual(dto.email);
       expect(command.redirectBaseUrl).toEqual('http://localhost:3000/register/verify-email');
     });
   });
@@ -467,6 +500,10 @@ describe('AuthController', () => {
 
       const request = {
         user: { accountId: 'account-1' },
+        headers: {
+          origin: 'https://app.koajo.test',
+          host: 'api.koajo.test',
+        },
       } as AuthenticatedRequest;
 
       await expect(controller.updateUser(request, dto as any)).resolves.toEqual(
