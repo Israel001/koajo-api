@@ -36,6 +36,12 @@ export class AccountVerificationAttemptEntity {
   @Property({ columnType: 'varchar(128)', nullable: true })
   resultId?: string | null;
 
+  @Property({ type: 'json', nullable: true })
+  stripeSessionPayload?: Record<string, unknown> | null;
+
+  @Property({ columnType: 'datetime(6)', nullable: true })
+  stripeSessionRetrievedAt?: Date | null;
+
   @Property({ columnType: 'varchar(64)' })
   status!: string;
 

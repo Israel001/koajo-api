@@ -5,6 +5,10 @@ import { ListAdminAccountsQuery } from '../queries/list-admin-accounts.query';
 import { ListAllAdminAccountsQuery } from '../queries/list-all-admin-accounts.query';
 import { GetAdminAccountQuery } from '../queries/get-admin-account.query';
 import { UpdateNotificationPreferencesCommand } from '../../accounts/commands/update-notification-preferences.command';
+import { ListAccountPodsQuery } from '../../pods/queries/list-account-pods.query';
+import { PodStatus } from '../../pods/pod-status.enum';
+import { PodType } from '../../pods/pod-type.enum';
+import { PodGoalType } from '../../pods/pod-goal.enum';
 
 describe('AdminAccountsController', () => {
   let controller: AdminAccountsController;
@@ -75,4 +79,79 @@ describe('AdminAccountsController', () => {
       expect.any(UpdateNotificationPreferencesCommand),
     );
   });
+
+  it('lists verification attempts with pagination', async () => {
+    const expected = { total: 0, items: [] };
+    queryBus.execute.mockResolvedValue(expected);
+
+    const result = await controller.listVerifications({
+      limit: 25,
+      offset: 0,
+    } as any);
+
+    expect(result).toBe(expected);
+    expect(queryBus.execute).toHaveBeenCalledWith(
+      expect.any(ListAccountVerificationAttemptsQuery),
+    );
+  });
+
+  it('lists current pods for an account', async () => {
+    const membership = buildMembership(PodStatus.ACTIVE);
+    queryBus.execute.mockResolvedValue([membership]);
+
+    const result = await controller.currentPods('acc-1');
+
+    expect(queryBus.execute).toHaveBeenCalledWith(
+      expect.any(ListAccountPodsQuery),
+    );
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({
+      podId: membership.pod.id,
+      status: PodStatus.ACTIVE,
+      totalContributed: membership.totalContributed,
+    });
+  });
+
+  it('lists pod history for an account', async () => {
+    const archived = buildMembership(PodStatus.COMPLETED);
+    const current = buildMembership(PodStatus.ACTIVE);
+    queryBus.execute.mockResolvedValue([archived, current]);
+
+    const result = await controller.podHistory('acc-1');
+
+    expect(queryBus.execute).toHaveBeenCalledWith(
+      expect.any(ListAccountPodsQuery),
+    );
+    expect(result).toHaveLength(1);
+    expect(result[0].status).toBe(PodStatus.COMPLETED);
+    expect(result[0].completedAt).toBe(archived.pod.completedAt?.toISOString());
+  });
 });
+
+const buildMembership = (status: PodStatus) =>
+  ({
+    id: `membership-${status}`,
+    joinOrder: 1,
+    finalOrder: null,
+    payoutDate: null,
+    paidOut: false,
+    joinedAt: new Date('2025-01-01T00:00:00.000Z'),
+    totalContributed: '150.00',
+    goalType: PodGoalType.SAVINGS,
+    goalNote: null,
+    pod: {
+      id: `pod-${status}`,
+      planCode: '100-12',
+      name: 'Test Pod',
+      amount: 100,
+      lifecycleWeeks: 12,
+      maxMembers: 6,
+      status,
+      type: PodType.SYSTEM,
+      cadence: null,
+      completedAt:
+        status === PodStatus.COMPLETED
+          ? new Date('2025-05-01T00:00:00.000Z')
+          : null,
+    },
+  }) as any;

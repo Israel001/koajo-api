@@ -21,11 +21,21 @@ import { GetAchievementsSummaryQuery } from '../../achievements/queries/get-achi
 import type { AchievementsSummaryDto } from '../../achievements/dto/achievements-summary.dto';
 import {
   AdminAccountDetail,
+  AdminAccountPodMembership,
+  AdminAccountVerificationsListResult,
   AdminAccountsListResult,
 } from '../contracts/admin-results';
 import { ListAdminAccountsQuery } from '../queries/list-admin-accounts.query';
 import { GetAdminAccountQuery } from '../queries/get-admin-account.query';
 import { ListAllAdminAccountsQuery } from '../queries/list-all-admin-accounts.query';
+import { ListAccountPodsQuery } from '../../pods/queries/list-account-pods.query';
+import type { MembershipWithPod } from '../../pods/types';
+import { PodStatus } from '../../pods/pod-status.enum';
+import {
+  AdminAccountPodMembershipDto,
+  AdminAccountVerificationsListResultDto,
+} from '../contracts/admin-swagger.dto';
+import { ListAccountVerificationAttemptsQuery } from '../queries/list-account-verification-attempts.query';
 
 @ApiTags('admin-accounts')
 @Controller({ path: 'admin/accounts', version: '1' })
@@ -54,6 +64,23 @@ export class AdminAccountsController {
   @RequireAdminPermissions(ADMIN_PERMISSION_VIEW_USERS)
   async listAll(): Promise<AdminAccountDetail[]> {
     return this.queryBus.execute(new ListAllAdminAccountsQuery());
+  }
+
+  @Get('verifications')
+  @ApiOperation({
+    summary: 'List identity verification attempts with Stripe session details',
+  })
+  @ApiOkResponse({
+    description: 'Verification attempts fetched.',
+    type: AdminAccountVerificationsListResultDto,
+  })
+  @RequireAdminPermissions(ADMIN_PERMISSION_VIEW_USERS)
+  async listVerifications(
+    @Query() query: AdminListQueryDto,
+  ): Promise<AdminAccountVerificationsListResult> {
+    return this.queryBus.execute(
+      new ListAccountVerificationAttemptsQuery(query.limit, query.offset),
+    );
   }
 
   @Get(':accountId')
@@ -93,5 +120,77 @@ export class AdminAccountsController {
     @Param('accountId') accountId: string,
   ): Promise<AchievementsSummaryDto> {
     return this.queryBus.execute(new GetAchievementsSummaryQuery(accountId));
+  }
+
+  @Get(':accountId/pods/current')
+  @ApiOperation({ summary: 'List current pods for an account' })
+  @ApiOkResponse({
+    description: 'Current pods fetched.',
+    type: [AdminAccountPodMembershipDto],
+  })
+  @RequireAdminPermissions(ADMIN_PERMISSION_VIEW_USERS)
+  async currentPods(
+    @Param('accountId') accountId: string,
+  ): Promise<AdminAccountPodMembership[]> {
+    return this.fetchAccountPods(accountId, false);
+  }
+
+  @Get(':accountId/pods/history')
+  @ApiOperation({ summary: 'List completed pod memberships for an account' })
+  @ApiOkResponse({
+    description: 'Historical pods fetched.',
+    type: [AdminAccountPodMembershipDto],
+  })
+  @RequireAdminPermissions(ADMIN_PERMISSION_VIEW_USERS)
+  async podHistory(
+    @Param('accountId') accountId: string,
+  ): Promise<AdminAccountPodMembership[]> {
+    return this.fetchAccountPods(accountId, true);
+  }
+
+  private async fetchAccountPods(
+    accountId: string,
+    history: boolean,
+  ): Promise<AdminAccountPodMembership[]> {
+    const memberships = (await this.queryBus.execute(
+      new ListAccountPodsQuery(accountId),
+    )) as MembershipWithPod[];
+
+    const filtered = memberships.filter((membership) =>
+      history
+        ? membership.pod.status === PodStatus.COMPLETED
+        : membership.pod.status !== PodStatus.COMPLETED,
+    );
+
+    return filtered.map((membership) =>
+      this.toAdminAccountPodMembership(membership),
+    );
+  }
+
+  private toAdminAccountPodMembership(
+    membership: MembershipWithPod,
+  ): AdminAccountPodMembership {
+    const pod = membership.pod;
+    return {
+      membershipId: membership.id,
+      podId: pod.id,
+      planCode: pod.planCode,
+      name: pod.name ?? null,
+      amount: pod.amount,
+      lifecycleWeeks: pod.lifecycleWeeks,
+      maxMembers: pod.maxMembers,
+      status: pod.status,
+      podType: pod.type,
+      cadence: pod.cadence ?? null,
+      joinOrder: membership.joinOrder,
+      finalOrder: membership.finalOrder ?? null,
+      payoutDate: membership.payoutDate?.toISOString() ?? null,
+      paidOut: membership.paidOut,
+      joinedAt: membership.joinedAt.toISOString(),
+      totalContributed: membership.totalContributed ?? '0.00',
+      goalType: membership.goalType,
+      goalNote: membership.goalNote ?? null,
+      completedAt: pod.completedAt?.toISOString() ?? null,
+    };
   }
 }

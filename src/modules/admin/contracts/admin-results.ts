@@ -2,6 +2,10 @@ import { AdminRole } from '../admin-role.enum';
 import type { PodActivitySummary } from '../../pods/contracts/pod-activity-summary';
 import { AnnouncementChannel } from '../announcement-channel.enum';
 import { AnnouncementSeverity } from '../announcement-severity.enum';
+import { PodStatus } from '../../pods/pod-status.enum';
+import { PodType } from '../../pods/pod-type.enum';
+import { PodGoalType } from '../../pods/pod-goal.enum';
+import { CustomPodCadence } from '../../pods/custom-pod-cadence.enum';
 
 export interface AdminPermissionSummary {
   id: string;
@@ -66,6 +70,8 @@ export interface AdminResetPasswordResult {
   reset: boolean;
 }
 
+export type AdminKycStatus = 'verified' | 'pending' | 'not_started' | 'failed';
+
 export interface AdminAccountListItem {
   id: string;
   email: string;
@@ -77,6 +83,8 @@ export interface AdminAccountListItem {
   isActive: boolean;
   emailNotificationsEnabled: boolean;
   transactionNotificationsEnabled: boolean;
+  kycStatus: AdminKycStatus;
+  bankAccountLinked: boolean;
 }
 
 export interface AdminAccountsListResult {
@@ -85,6 +93,51 @@ export interface AdminAccountsListResult {
 }
 
 export interface AdminAccountDetail extends AdminAccountListItem {}
+
+export interface AdminAccountPodMembership {
+  membershipId: string;
+  podId: string;
+  planCode: string;
+  name: string | null;
+  amount: number;
+  lifecycleWeeks: number;
+  maxMembers: number;
+  status: PodStatus;
+  podType: PodType;
+  cadence: CustomPodCadence | null;
+  joinOrder: number;
+  finalOrder: number | null;
+  payoutDate: string | null;
+  paidOut: boolean;
+  joinedAt: string;
+  totalContributed: string;
+  goalType: PodGoalType;
+  goalNote: string | null;
+  completedAt: string | null;
+}
+
+export interface AdminAccountVerificationAttempt {
+  id: string;
+  accountId: string | null;
+  accountEmail: string | null;
+  provider: string;
+  type: string;
+  status: string;
+  sessionId: string;
+  providerReference: string | null;
+  stripeReference: string | null;
+  resultId: string | null;
+  recordedAt: string;
+  completedAt: string | null;
+  stripeSession: Record<string, unknown> | null;
+  stripeError: string | null;
+  stripeSessionRetrievedAt: string | null;
+}
+
+export interface AdminAccountVerificationsListResult {
+  total: number;
+  items: AdminAccountVerificationAttempt[];
+}
 
 export interface AdminDashboardMetrics {
   totalActiveUsers: MetricWithChange<number>;

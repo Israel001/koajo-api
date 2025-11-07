@@ -41,6 +41,7 @@ import { AdminAnnouncementsController } from './controllers/admin-announcements.
 import { AdminAnnouncementEntity } from './entities/admin-announcement.entity';
 import { AdminAnnouncementRecipientEntity } from './entities/admin-announcement-recipient.entity';
 import { AdminPermissionSyncService } from './services/admin-permission-sync.service';
+import { StripeIdentityService } from './services/stripe-identity.service';
 
 @Module({
   imports: [
@@ -103,6 +104,7 @@ import { AdminPermissionSyncService } from './services/admin-permission-sync.ser
     AdminAccessService,
     AdminPasswordResetService,
     AdminPermissionSyncService,
+    StripeIdentityService,
   ],
 })
 export class AdminModule {}

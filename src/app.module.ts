@@ -10,6 +10,7 @@ import authConfig from './config/auth.config';
 import databaseConfig from './config/database.config';
 import mailConfig from './config/mail.config';
 import adminConfig from './config/admin.config';
+import stripeConfig from './config/stripe.config';
 import { AccountsModule } from './modules/accounts/accounts.module';
 import { MikroOrmEntityManagerCleanupInterceptor } from './common/interceptors/mikro-orm-entity-manager-cleanup.interceptor';
 import { MikroOrmRequestContextMiddleware } from './common/middleware/mikro-orm-request-context.middleware';
@@ -26,7 +27,7 @@ import { AvatarsModule } from './modules/avatars/avatars.module';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ['.env'],
-      load: [databaseConfig, authConfig, mailConfig, adminConfig],
+      load: [databaseConfig, authConfig, mailConfig, adminConfig, stripeConfig],
     }),
     CqrsModule,
     ChecksumModule,

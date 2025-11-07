@@ -1,6 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { AdminRole } from '../admin-role.enum';
 import { PodActivityDto } from '../../pods/dto/pod-activity.dto';
+import { PodStatus } from '../../pods/pod-status.enum';
+import { PodType } from '../../pods/pod-type.enum';
+import { CustomPodCadence } from '../../pods/custom-pod-cadence.enum';
+import { PodGoalType } from '../../pods/pod-goal.enum';
 import type {
   AdminDashboardMetrics,
   AdminDashboardResult,
@@ -25,6 +29,9 @@ import type {
   AdminPodStatistics,
   AdminAnnouncementResult,
   AdminAnnouncementsListResult,
+  AdminAccountPodMembership,
+  AdminAccountVerificationAttempt,
+  AdminAccountVerificationsListResult,
 } from './admin-results';
 import { AnnouncementChannel } from '../announcement-channel.enum';
 import { AnnouncementSeverity } from '../announcement-severity.enum';
@@ -195,6 +202,149 @@ export class CreateAdminUserResultDto
     nullable: true,
   })
   temporaryPassword?: string;
+}
+
+export class AdminAccountPodMembershipDto
+  implements AdminAccountPodMembership
+{
+  @ApiProperty({ description: 'Pod membership identifier.' })
+  membershipId!: string;
+
+  @ApiProperty({ description: 'Pod identifier.' })
+  podId!: string;
+
+  @ApiProperty({ description: 'Pod plan code.', example: '100-12' })
+  planCode!: string;
+
+  @ApiProperty({ description: 'Pod name.', nullable: true })
+  name!: string | null;
+
+  @ApiProperty({ description: 'Contribution amount per cycle.' })
+  amount!: number;
+
+  @ApiProperty({ description: 'Total lifecycle length in weeks.' })
+  lifecycleWeeks!: number;
+
+  @ApiProperty({ description: 'Maximum number of members allowed in the pod.' })
+  maxMembers!: number;
+
+  @ApiProperty({ enum: PodStatus, description: 'Current pod status.' })
+  status!: PodStatus;
+
+  @ApiProperty({ enum: PodType, description: 'Type of pod (system or custom).' })
+  podType!: PodType;
+
+  @ApiProperty({
+    enum: CustomPodCadence,
+    nullable: true,
+    description: 'Cadence for custom pods.',
+  })
+  cadence!: CustomPodCadence | null;
+
+  @ApiProperty({ description: 'Join order for the member.' })
+  joinOrder!: number;
+
+  @ApiProperty({ description: 'Final payout order, if assigned.', nullable: true })
+  finalOrder!: number | null;
+
+  @ApiProperty({ description: 'Scheduled payout date for the member.', nullable: true })
+  payoutDate!: string | null;
+
+  @ApiProperty({ description: 'Indicates whether the member has been paid out.' })
+  paidOut!: boolean;
+
+  @ApiProperty({ description: 'Timestamp when the member joined the pod.' })
+  joinedAt!: string;
+
+  @ApiProperty({
+    description: 'Total amount contributed by the member.',
+    example: '2500.00',
+  })
+  totalContributed!: string;
+
+  @ApiProperty({ enum: PodGoalType, description: 'Savings goal selected for the pod.' })
+  goalType!: PodGoalType;
+
+  @ApiProperty({ description: 'Goal description when applicable.', nullable: true })
+  goalNote!: string | null;
+
+  @ApiProperty({
+    description: 'Timestamp indicating when the pod completed, if applicable.',
+    nullable: true,
+  })
+  completedAt!: string | null;
+}
+
+export class AdminAccountVerificationAttemptDto
+  implements AdminAccountVerificationAttempt
+{
+  @ApiProperty({ description: 'Verification attempt identifier.' })
+  id!: string;
+
+  @ApiProperty({ description: 'Account identifier.', nullable: true })
+  accountId!: string | null;
+
+  @ApiProperty({ description: 'Account email address.', nullable: true })
+  accountEmail!: string | null;
+
+  @ApiProperty({ description: 'Provider handling the verification.' })
+  provider!: string;
+
+  @ApiProperty({ description: 'Verification type reported by Stripe.' })
+  type!: string;
+
+  @ApiProperty({ description: 'Status stored in Koajo.' })
+  status!: string;
+
+  @ApiProperty({ description: 'Stripe verification session identifier.' })
+  sessionId!: string;
+
+  @ApiProperty({ description: 'Provider reference recorded for the attempt.', nullable: true })
+  providerReference!: string | null;
+
+  @ApiProperty({ description: 'Stripe-provided reference identifier.', nullable: true })
+  stripeReference!: string | null;
+
+  @ApiProperty({ description: 'Stripe verification report identifier.', nullable: true })
+  resultId!: string | null;
+
+  @ApiProperty({ description: 'Timestamp when the attempt was recorded.' })
+  recordedAt!: string;
+
+  @ApiProperty({ description: 'Timestamp when the attempt completed.', nullable: true })
+  completedAt!: string | null;
+
+  @ApiProperty({
+    description: 'Raw Stripe verification session payload.',
+    nullable: true,
+    type: Object,
+  })
+  stripeSession!: Record<string, unknown> | null;
+
+  @ApiProperty({
+    description: 'Error message encountered while fetching the Stripe session.',
+    nullable: true,
+  })
+  stripeError!: string | null;
+
+  @ApiProperty({
+    description: 'Timestamp when the Stripe session snapshot was last stored.',
+    nullable: true,
+  })
+  stripeSessionRetrievedAt!: string | null;
+}
+
+export class AdminAccountVerificationsListResultDto
+  implements AdminAccountVerificationsListResult
+{
+  @ApiProperty({ description: 'Total verification attempts found.' })
+  total!: number;
+
+  @ApiProperty({
+    description: 'Verification attempts for the current page.',
+    type: [AdminAccountVerificationAttemptDto],
+  })
+  items!: AdminAccountVerificationAttemptDto[];
 }
 
 export class MetricWithChangeNumberDto

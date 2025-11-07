@@ -6,6 +6,7 @@ import { ListAdminAccountsQuery } from '../list-admin-accounts.query';
 import {
   AdminAccountDetail,
   AdminAccountsListResult,
+  AdminKycStatus,
 } from '../../contracts/admin-results';
 
 export const toAdminAccountDetail = (
@@ -21,7 +22,21 @@ export const toAdminAccountDetail = (
   isActive: account.isActive,
   emailNotificationsEnabled: account.emailNotificationsEnabled,
   transactionNotificationsEnabled: account.transactionNotificationsEnabled,
+  kycStatus: deriveKycStatus(account),
+  bankAccountLinked: Boolean(account.stripeBankAccountId),
 });
+
+const deriveKycStatus = (account: AccountEntity): AdminKycStatus => {
+  if (account.stripeVerificationCompleted) {
+    return 'verified';
+  }
+
+  if (account.stripeIdentityId) {
+    return 'pending';
+  }
+
+  return 'not_started';
+};
 
 @QueryHandler(ListAdminAccountsQuery)
 export class ListAdminAccountsHandler

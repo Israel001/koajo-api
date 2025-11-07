@@ -13,6 +13,7 @@ import { GetAdminUserHandler } from './get-admin-user.handler';
 import { GetAdminPodStatsHandler } from './get-admin-pod-stats.handler';
 import { ListAllAdminAccountsHandler } from './list-all-admin-accounts.handler';
 import { ListAdminAnnouncementsHandler } from './list-admin-announcements.handler';
+import { ListAccountVerificationAttemptsHandler } from './list-account-verification-attempts.handler';
 
 export const AdminQueryHandlers = [
   AdminDashboardHandler,
@@ -30,6 +31,7 @@ export const AdminQueryHandlers = [
   GetAdminPodStatsHandler,
   ListAllAdminAccountsHandler,
   ListAdminAnnouncementsHandler,
+  ListAccountVerificationAttemptsHandler,
 ];
 
 export {
@@ -48,4 +50,5 @@ export {
   GetAdminPodStatsHandler,
   ListAllAdminAccountsHandler,
   ListAdminAnnouncementsHandler,
+  ListAccountVerificationAttemptsHandler,
 };
