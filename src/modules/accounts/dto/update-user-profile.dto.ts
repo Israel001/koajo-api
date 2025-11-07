@@ -26,4 +26,12 @@ export class UpdateUserProfileDto {
   @IsOptional()
   @IsString()
   phone?: string;
+
+  @ApiPropertyOptional({
+    description: 'Frontend origin (protocol + host) to use for verification callbacks.',
+    example: 'https://app.koajo.test',
+  })
+  @IsOptional()
+  @IsString()
+  origin?: string;
 }

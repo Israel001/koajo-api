@@ -242,7 +242,7 @@ export class AuthController {
         payload.lastName,
         payload.dateOfBirth,
         payload.phone,
-        this.resolveVerificationRedirectBase(request),
+        this.resolveVerificationRedirectBase(payload.origin),
       ),
     );
   }
@@ -380,12 +380,11 @@ export class AuthController {
   })
   async resendEmail(
     @Body() payload: ResendVerificationDtoModule.ResendVerificationDto,
-    @Req() request: Request,
   ): Promise<ResendVerificationResult> {
     return this.commandBus.execute(
       new ResendEmailVerificationCommand(
         payload.email,
-        this.resolveVerificationRedirectBase(request),
+        this.resolveVerificationRedirectBase(payload.origin),
       ),
     );
   }
@@ -579,47 +578,12 @@ export class AuthController {
   }
 
   private resolveVerificationRedirectBase(
-    request: Request,
+    origin?: string | null,
   ): string | null {
-    const headers =
-      (request.headers as Record<string, string | string[] | undefined>) ?? {};
-
-    const originBase =
-      this.normalizeOriginBase(
-        this.getHeaderValue(headers['x-forwarded-origin']),
-      ) ??
-      this.normalizeOriginBase(this.getHeaderValue(headers.origin)) ??
-      this.normalizeOriginBase(this.getHeaderValue(headers.referer));
-
-    if (originBase) {
-      return `${originBase}/register/verify-email`;
-    }
-
-    const forwardedHost = this.getHeaderValue(headers['x-forwarded-host']);
-    const host = forwardedHost ?? this.getHeaderValue(headers.host);
-
-    if (!host) {
-      return null;
-    }
-
-    const forwardedProto = this.getHeaderValue(headers['x-forwarded-proto']);
-    const protocolCandidate =
-      forwardedProto?.split(',')[0]?.trim() ??
-      request.protocol ??
-      'https';
-
-    const normalizedHost = host.trim().replace(/\/+$/, '');
-    const normalizedProtocol = (protocolCandidate || 'https').replace(/:$/, '');
-    return `${normalizedProtocol}://${normalizedHost}/register/verify-email`;
-  }
-
-  private getHeaderValue(
-    header: string | string[] | undefined,
-  ): string | null {
-    if (Array.isArray(header)) {
-      return header.length ? header[0] : null;
-    }
-    return header ?? null;
+    const normalizedOrigin = this.normalizeOriginBase(origin ?? null);
+    return normalizedOrigin
+      ? `${normalizedOrigin}/register/verify-email`
+      : null;
   }
 
   private normalizeOriginBase(raw: string | null): string | null {

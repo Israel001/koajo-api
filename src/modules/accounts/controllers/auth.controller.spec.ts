@@ -164,9 +164,10 @@ describe('AuthController', () => {
   });
 
   describe('resendEmail', () => {
-    it('executes ResendEmailVerificationCommand using the Origin header for redirects', async () => {
+    it('executes ResendEmailVerificationCommand using the supplied origin for redirects', async () => {
       const dto: ResendVerificationDto = {
         email: 'user@example.com',
+        origin: 'https://app.koajo.test',
       };
 
       const expected: ResendVerificationResult = {
@@ -179,15 +180,7 @@ describe('AuthController', () => {
 
       commandBus.execute.mockResolvedValue(expected);
 
-      const request = {
-        headers: {
-          origin: 'https://app.koajo.test',
-          host: 'api.koajo.test',
-        },
-        protocol: 'https',
-      } as unknown as Request;
-
-      await expect(controller.resendEmail(dto, request)).resolves.toEqual(expected);
+      await expect(controller.resendEmail(dto as any)).resolves.toEqual(expected);
       expect(commandBus.execute).toHaveBeenCalledWith(
         expect.any(ResendEmailVerificationCommand),
       );
@@ -198,7 +191,7 @@ describe('AuthController', () => {
       expect(command.redirectBaseUrl).toEqual('https://app.koajo.test/register/verify-email');
     });
 
-    it('falls back to the request host when Origin is unavailable', async () => {
+    it('passes a null redirect base when no origin is provided', async () => {
       const dto: ResendVerificationDto = {
         email: 'user@example.com',
       };
@@ -213,19 +206,14 @@ describe('AuthController', () => {
 
       commandBus.execute.mockResolvedValue(expected);
 
-      const request = {
-        headers: { host: 'localhost:3000' },
-        protocol: 'http',
-      } as unknown as Request;
-
-      await expect(controller.resendEmail(dto, request)).resolves.toEqual(expected);
+      await expect(controller.resendEmail(dto as any)).resolves.toEqual(expected);
       expect(commandBus.execute).toHaveBeenCalledWith(
         expect.any(ResendEmailVerificationCommand),
       );
 
       const command =
         commandBus.execute.mock.calls[0][0] as ResendEmailVerificationCommand;
-      expect(command.redirectBaseUrl).toEqual('http://localhost:3000/register/verify-email');
+      expect(command.redirectBaseUrl).toBeNull();
     });
   });
 
@@ -472,6 +460,7 @@ describe('AuthController', () => {
         lastName: 'Doe',
         dateOfBirth: '1990-05-10',
         phone: '+2348012345678',
+        origin: 'https://app.koajo.test',
       };
 
       const expected: UpdateUserProfileResult = {

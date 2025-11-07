@@ -1,6 +1,6 @@
 import { Transform } from 'class-transformer';
-import { IsEmail } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { IsEmail, IsOptional, IsString } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class ResendVerificationDto {
   @ApiProperty({
@@ -12,4 +12,12 @@ export class ResendVerificationDto {
   )
   @IsEmail()
   email!: string;
+
+  @ApiPropertyOptional({
+    description: 'Frontend origin (protocol + host) to use when building the verification link.',
+    example: 'https://app.koajo.test',
+  })
+  @IsOptional()
+  @IsString()
+  origin?: string;
 }
