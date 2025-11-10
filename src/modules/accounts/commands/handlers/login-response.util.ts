@@ -19,9 +19,7 @@ export const buildLoginUserResult = (
     phone: account.phoneNumber ?? null,
     emailVerified: Boolean(account.emailVerifiedAt),
     agreedToTerms: account.agreedToTerms,
-    dateOfBirth: account.dateOfBirth
-      ? account.dateOfBirth.toISOString().slice(0, 10)
-      : null,
+    dateOfBirth: serializeDateOnly(account.dateOfBirth),
     avatarId: null,
     isActive: account.isActive,
     emailNotificationsEnabled: account.emailNotificationsEnabled,
@@ -71,4 +69,17 @@ export const buildLoginUserResult = (
         }
       : null,
   };
+};
+
+const serializeDateOnly = (
+  value: Date | string | null | undefined,
+): string | null => {
+  if (!value) {
+    return null;
+  }
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+  return date.toISOString().slice(0, 10);
 };
