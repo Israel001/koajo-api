@@ -138,9 +138,7 @@ export class AuthController {
       phone: account.phoneNumber ?? null,
       email_verified: Boolean(account.emailVerifiedAt),
       agreed_to_terms: account.agreedToTerms,
-      date_of_birth: account.dateOfBirth
-        ? account.dateOfBirth.toISOString().slice(0, 10)
-        : null,
+      date_of_birth: this.serializeDateOnly(account.dateOfBirth),
       avatar_id: null,
       is_active: account.isActive,
       emailNotificationsEnabled: account.emailNotificationsEnabled,
@@ -197,6 +195,18 @@ export class AuthController {
           }
         : null,
     };
+  }
+
+  private serializeDateOnly(value: Date | string | null | undefined): string | null {
+    if (!value) {
+      return null;
+    }
+    const date =
+      value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return null;
+    }
+    return date.toISOString().slice(0, 10);
   }
 
   @Post('identity-verification')
