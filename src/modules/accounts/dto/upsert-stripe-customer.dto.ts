@@ -3,13 +3,20 @@ import { Expose } from 'class-transformer';
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class UpsertStripeCustomerDto {
-  @ApiProperty({ description: 'Stripe customer identifier.' })
+  @ApiProperty({
+    name: 'id',
+    description: 'Stripe customer identifier.',
+  })
   @Expose({ name: 'id' })
   @IsString()
   @IsNotEmpty()
   customerId!: string;
 
-  @ApiProperty({ description: 'Last four digits of SSN.', required: false })
+  @ApiProperty({
+    name: 'ssn_last4',
+    description: 'Last four digits of SSN.',
+    required: false,
+  })
   @Expose({ name: 'ssn_last4' })
   @IsOptional()
   @IsString()

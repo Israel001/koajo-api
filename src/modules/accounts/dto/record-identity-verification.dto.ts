@@ -3,19 +3,28 @@ import { Expose } from 'class-transformer';
 import { IsNotEmpty, IsString } from 'class-validator';
 
 export class RecordIdentityVerificationDto {
-  @ApiProperty({ description: 'Stripe identity verification identifier.' })
+  @ApiProperty({
+    name: 'id',
+    description: 'Stripe identity verification identifier.',
+  })
   @Expose({ name: 'id' })
   @IsString()
   @IsNotEmpty()
   identityId!: string;
 
-  @ApiProperty({ description: 'Stripe identity verification session identifier.' })
+  @ApiProperty({
+    name: 'session_id',
+    description: 'Stripe identity verification session identifier.',
+  })
   @Expose({ name: 'session_id' })
   @IsString()
   @IsNotEmpty()
   sessionId!: string;
 
-  @ApiProperty({ description: 'Stripe identity verification result identifier.' })
+  @ApiProperty({
+    name: 'result_id',
+    description: 'Stripe identity verification result identifier.',
+  })
   @Expose({ name: 'result_id' })
   @IsString()
   @IsNotEmpty()
