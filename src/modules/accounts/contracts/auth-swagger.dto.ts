@@ -455,6 +455,9 @@ export class CurrentUserResultDto implements CurrentUserResult {
 }
 
 export class LoginSuccessResultDto implements LoginSuccessResult {
+  @ApiProperty({ description: 'Type of the issued access token.', example: 'Bearer' })
+  tokenType!: 'Bearer';
+
   @ApiProperty({
     description: 'JWT access token granting API access.',
     example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
@@ -466,6 +469,19 @@ export class LoginSuccessResultDto implements LoginSuccessResult {
     example: '2024-01-01T01:00:00.000Z',
   })
   expiresAt!: string;
+
+  @ApiProperty({
+    description:
+      'Refresh token issued when remember me is enabled.',
+    nullable: true,
+  })
+  refreshToken!: string | null;
+
+  @ApiProperty({
+    description: 'ISO timestamp indicating when the refresh token expires.',
+    nullable: true,
+  })
+  refreshExpiresAt!: string | null;
 
   @ApiProperty({
     description: 'Authenticated user details.',

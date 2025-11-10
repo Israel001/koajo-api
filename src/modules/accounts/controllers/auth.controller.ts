@@ -36,6 +36,7 @@ import { ForgotPasswordCommand } from '../commands/forgot-password.command';
 import { ResetPasswordCommand } from '../commands/reset-password.command';
 import { UpdateAvatarCommand } from '../commands/update-avatar.command';
 import { UpdateNotificationPreferencesCommand } from '../commands/update-notification-preferences.command';
+import { RefreshAccessTokenCommand } from '../commands/refresh-access-token.command';
 import type {
   LoginResult,
   ResendVerificationResult,
@@ -51,6 +52,7 @@ import type {
   UpsertStripeCustomerResult,
   UpsertStripeBankAccountResult,
   DeleteAccountResult,
+  LoginSuccessResult,
 } from '../contracts/auth-results';
 import {
   LoginSuccessResultDto,
@@ -90,6 +92,7 @@ import { RecordIdentityVerificationDto } from '../dto/record-identity-verificati
 import { UpdateUserProfileDto } from '../dto/update-user-profile.dto';
 import { UpsertStripeCustomerDto } from '../dto/upsert-stripe-customer.dto';
 import { UpsertStripeBankAccountDto } from '../dto/upsert-stripe-bank-account.dto';
+import { RefreshTokenDto } from '../dto/refresh-token.dto';
 import { AccountVerificationAttemptEntity } from '../entities/account-verification-attempt.entity';
 import { DeleteAccountCommand } from '../commands/delete-account.command';
 
@@ -534,8 +537,11 @@ export class AuthController {
           success: {
             summary: 'Authentication succeeded',
             value: {
+              tokenType: 'Bearer',
               accessToken: 'token-example',
               expiresAt: '2025-01-01T00:00:00.000Z',
+              refreshToken: 'refresh-token-example',
+              refreshExpiresAt: '2025-01-08T00:00:00.000Z',
               user: {
                 id: 'account-id',
                 email: 'user@example.com',
@@ -570,10 +576,31 @@ export class AuthController {
     @Req() request: Request,
   ): Promise<LoginResult> {
     return this.commandBus.execute(
-      new LoginCommand(payload.email, payload.password, {
-        ipAddress: request.ip,
-        userAgent: request.headers['user-agent'],
-      }),
+      new LoginCommand(
+        payload.email,
+        payload.password,
+        Boolean(payload.rememberMe),
+        {
+          ipAddress: request.ip,
+          userAgent: request.headers['user-agent'],
+        },
+      ),
+    );
+  }
+
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Refresh an access token using a refresh token' })
+  @ApiOkResponse({
+    description: 'Access token refreshed.',
+    type: LoginSuccessResultDto,
+  })
+  @ApiUnauthorizedResponse({ description: 'Refresh token invalid or expired.' })
+  async refresh(
+    @Body() payload: RefreshTokenDto,
+  ): Promise<LoginSuccessResult> {
+    return this.commandBus.execute(
+      new RefreshAccessTokenCommand(payload.refreshToken),
     );
   }
 

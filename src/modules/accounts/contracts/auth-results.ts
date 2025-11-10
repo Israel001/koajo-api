@@ -85,8 +85,11 @@ export interface LoginUserResult {
 }
 
 export interface LoginSuccessResult {
+  tokenType: 'Bearer';
   accessToken: string;
   expiresAt: string;
+  refreshToken: string | null;
+  refreshExpiresAt: string | null;
   user: LoginUserResult;
 }
 

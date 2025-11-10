@@ -15,6 +15,11 @@ import {
   ACCOUNT_CHECKSUM_CONTEXT,
   accountChecksumFields,
 } from '../../domain/account.integrity';
+import { buildLoginUserResult } from './login-response.util';
+import {
+  ACCOUNT_REFRESH_SCOPE,
+  ACCOUNT_REFRESH_TOKEN_TTL_SECONDS,
+} from '../auth-token.constants';
 
 @Injectable()
 @CommandHandler(LoginCommand)
@@ -120,83 +125,53 @@ export class LoginHandler
       { orderBy: { createdAt: 'DESC' } },
     );
 
-    const user: LoginSuccessResult['user'] = {
-      id: account.id,
-      email: account.email,
-      firstName: account.firstName ?? null,
-      lastName: account.lastName ?? null,
-      phone: account.phoneNumber ?? null,
-      emailVerified: Boolean(account.emailVerifiedAt),
-      agreedToTerms: account.agreedToTerms,
-      dateOfBirth: account.dateOfBirth
-        ? account.dateOfBirth.toISOString().slice(0, 10)
-        : null,
-      avatarId: null,
-      isActive: account.isActive,
-      emailNotificationsEnabled: account.emailNotificationsEnabled,
-      transactionNotificationsEnabled: account.transactionNotificationsEnabled,
-      lastLoginAt: account.lastLoginAt
-        ? account.lastLoginAt.toISOString()
-        : null,
-      createdAt: account.createdAt.toISOString(),
-      updatedAt: account.updatedAt.toISOString(),
-      identityVerification:
-        account.stripeIdentityId ||
-        account.stripeIdentityResultId ||
-        latestAttempt
-          ? {
-              id:
-                account.stripeIdentityId ??
-                latestAttempt?.providerReference ??
-                null,
-              resultId:
-                account.stripeIdentityResultId ??
-                latestAttempt?.resultId ??
-                null,
-              status: latestAttempt?.status ?? null,
-              type: latestAttempt?.type ?? null,
-              sessionId: latestAttempt?.sessionId ?? null,
-              completedAt: latestAttempt?.completedAt
-                ? latestAttempt.completedAt.toISOString()
-                : null,
-              recordedAt: latestAttempt
-                ? latestAttempt.createdAt.toISOString()
-                : null,
-            }
-          : null,
-      customer: account.stripeCustomerId
-        ? {
-            id: account.stripeCustomerId,
-            ssnLast4: account.stripeCustomerSsnLast4 ?? null,
-            address: account.stripeCustomerAddress ?? null,
-          }
-        : null,
-      bankAccount: account.stripeBankAccountId
-        ? {
-            id: account.stripeBankAccountId,
-            customerId:
-              account.stripeBankAccountCustomerId ??
-              account.stripeCustomerId ??
-              null,
-            createdAt: (
-              account.stripeBankAccountLinkedAt ?? account.createdAt
-            ).toISOString(),
-            updatedAt: (
-              account.stripeBankAccountUpdatedAt ?? account.updatedAt
-            ).toISOString(),
-          }
-        : null,
-    };
+    const user = buildLoginUserResult(account, latestAttempt ?? null);
 
     const response: LoginSuccessResult = {
+      tokenType: 'Bearer',
       accessToken,
       expiresAt: expiresAt.toISOString(),
+      refreshToken: null,
+      refreshExpiresAt: null,
       user,
     };
+
+    if (command.rememberMe) {
+      const refresh = await this.createRefreshToken({
+        subject: account.id,
+        email: account.email,
+        issuedAt: now,
+      });
+      response.refreshToken = refresh.token;
+      response.refreshExpiresAt = refresh.expiresAt.toISOString();
+    }
 
     const em = this.accountRepository.getEntityManager();
     await em.persistAndFlush(account);
 
     return response;
+  }
+
+  private async createRefreshToken(params: {
+    subject: string;
+    email: string;
+    issuedAt: Date;
+  }): Promise<{ token: string; expiresAt: Date }> {
+    const expiresAt = new Date(
+      params.issuedAt.getTime() + ACCOUNT_REFRESH_TOKEN_TTL_SECONDS * 1000,
+    );
+
+    const token = await this.jwtService.signAsync(
+      {
+        sub: params.subject,
+        email: params.email,
+        scope: ACCOUNT_REFRESH_SCOPE,
+      },
+      {
+        expiresIn: ACCOUNT_REFRESH_TOKEN_TTL_SECONDS,
+      },
+    );
+
+    return { token, expiresAt };
   }
 }

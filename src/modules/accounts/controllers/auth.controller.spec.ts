@@ -19,6 +19,7 @@ import { UpdateUserProfileCommand } from '../commands/update-user-profile.comman
 import { UpsertStripeCustomerCommand } from '../commands/upsert-stripe-customer.command';
 import { UpsertStripeBankAccountCommand } from '../commands/upsert-stripe-bank-account.command';
 import { DeleteAccountCommand } from '../commands/delete-account.command';
+import { RefreshAccessTokenCommand } from '../commands/refresh-access-token.command';
 import { SignupDto } from '../dto/signup.dto';
 import { VerifyEmailDto } from '../dto/verify-email.dto';
 import { ResendVerificationDto } from '../dto/resend-verification.dto';
@@ -26,9 +27,11 @@ import { LoginDto } from '../dto/login.dto';
 import { ChangePasswordDto } from '../dto/change-password.dto';
 import { ForgotPasswordDto } from '../dto/forgot-password.dto';
 import { ResetPasswordDto } from '../dto/reset-password.dto';
+import { RefreshTokenDto } from '../dto/refresh-token.dto';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import type {
   LoginResult,
+  LoginSuccessResult,
   ResendVerificationResult,
   SignupResult,
   ChangePasswordResult,
@@ -731,8 +734,11 @@ describe('AuthController', () => {
       const nowIso = new Date().toISOString();
 
       const expected: LoginResult = {
+        tokenType: 'Bearer',
         accessToken: 'token',
         expiresAt: nowIso,
+        refreshToken: null,
+        refreshExpiresAt: null,
         user: {
           id: 'account-1',
           email: dto.email,
@@ -763,10 +769,107 @@ describe('AuthController', () => {
       const command = commandBus.execute.mock.calls[0][0] as LoginCommand;
       expect(command.email).toEqual(dto.email);
       expect(command.password).toEqual(dto.password);
+      expect(command.rememberMe).toBe(false);
       expect(command.metadata).toEqual({
         ipAddress: request.ip,
         userAgent: request.headers['user-agent'],
       });
+    });
+
+    it('passes through rememberMe flag', async () => {
+      const dto: LoginDto = {
+        email: 'user@example.com',
+        password: 'Str0ngP@ssword!',
+        rememberMe: true,
+      };
+      const request = {
+        ip: '127.0.0.1',
+        headers: {
+          'user-agent': 'jest-test',
+        },
+      } as unknown as Request;
+
+      const expected = {
+        tokenType: 'Bearer',
+        accessToken: 'token',
+        expiresAt: new Date().toISOString(),
+        refreshToken: 'refresh',
+        refreshExpiresAt: new Date().toISOString(),
+        user: {
+          id: 'account-1',
+          email: dto.email,
+          firstName: 'Jane',
+          lastName: 'Doe',
+          phone: null,
+          emailVerified: true,
+          agreedToTerms: true,
+          dateOfBirth: null,
+          avatarId: null,
+          isActive: true,
+          emailNotificationsEnabled: true,
+          transactionNotificationsEnabled: true,
+          lastLoginAt: null,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          identityVerification: null,
+          customer: null,
+          bankAccount: null,
+        },
+      } as LoginResult;
+
+      commandBus.execute.mockResolvedValue(expected);
+
+      await expect(controller.login(dto, request)).resolves.toEqual(expected);
+
+      const command = commandBus.execute.mock.calls[0][0] as LoginCommand;
+      expect(command.rememberMe).toBe(true);
+    });
+  });
+
+  describe('refresh', () => {
+    it('executes RefreshAccessTokenCommand', async () => {
+      const dto: RefreshTokenDto = {
+        refreshToken: 'refresh-token',
+      };
+
+      const expected: LoginSuccessResult = {
+        tokenType: 'Bearer',
+        accessToken: 'new-token',
+        expiresAt: new Date().toISOString(),
+        refreshToken: dto.refreshToken,
+        refreshExpiresAt: new Date(Date.now() + 1000).toISOString(),
+        user: {
+          id: 'account-1',
+          email: 'user@example.com',
+          firstName: 'Jane',
+          lastName: 'Doe',
+          phone: null,
+          emailVerified: true,
+          agreedToTerms: true,
+          dateOfBirth: null,
+          avatarId: null,
+          isActive: true,
+          emailNotificationsEnabled: true,
+          transactionNotificationsEnabled: true,
+          lastLoginAt: null,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          identityVerification: null,
+          customer: null,
+          bankAccount: null,
+        },
+      };
+
+      commandBus.execute.mockResolvedValue(expected);
+
+      await expect(controller.refresh(dto)).resolves.toEqual(expected);
+      expect(commandBus.execute).toHaveBeenCalledWith(
+        expect.any(RefreshAccessTokenCommand),
+      );
+
+      const command =
+        commandBus.execute.mock.calls[0][0] as RefreshAccessTokenCommand;
+      expect(command.refreshToken).toBe(dto.refreshToken);
     });
   });
 });
