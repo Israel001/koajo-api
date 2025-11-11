@@ -214,6 +214,7 @@ describe('PodsController', () => {
         'friend4@example.com',
         'friend5@example.com',
       ],
+      origin: 'https://pods.koajo.test',
     };
 
     const result = await controller.createCustomPod(request, payload as any);
@@ -226,6 +227,7 @@ describe('PodsController', () => {
     expect(command.cadence).toBe(payload.cadence);
     expect(command.inviteEmails).toEqual(payload.invitees);
     expect(command.name).toBe(payload.name);
+    expect(command.inviteOrigin).toBe(payload.origin);
   });
 
   it('accepts a custom pod invite and returns membership summary', async () => {

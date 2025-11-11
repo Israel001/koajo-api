@@ -1,5 +1,5 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
-import { QueryBus } from '@nestjs/cqrs';
+import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
   ApiBearerAuth,
   ApiNotFoundResponse,
@@ -24,6 +24,8 @@ import { GetAdminPodQuery } from '../queries/get-admin-pod.query';
 import { ListAdminPodActivitiesQuery } from '../queries/list-admin-pod-activities.query';
 import { AdminPodActivityDto, AdminPodStatisticsDto } from '../contracts/admin-swagger.dto';
 import { GetAdminPodStatsQuery } from '../queries/get-admin-pod-stats.query';
+import { MarkPodPayoutDto } from '../dto/mark-pod-payout.dto';
+import { MarkPodMembershipPaidCommand } from '../../pods/commands/mark-pod-membership-paid.command';
 
 @ApiTags('admin-pods')
 @Controller({ path: 'admin/pods', version: '1' })
@@ -31,7 +33,10 @@ import { GetAdminPodStatsQuery } from '../queries/get-admin-pod-stats.query';
 @ApiBearerAuth('bearer')
 @ApiUnauthorizedResponse({ description: 'Admin authentication required.' })
 export class AdminPodsController {
-  constructor(private readonly queryBus: QueryBus) {}
+  constructor(
+    private readonly queryBus: QueryBus,
+    private readonly commandBus: CommandBus,
+  ) {}
 
   @Get('stats')
   @ApiOperation({ summary: 'Retrieve aggregated pod statistics' })
@@ -78,5 +83,48 @@ export class AdminPodsController {
     return this.queryBus.execute(
       new ListAdminPodActivitiesQuery(podId, limit),
     );
+  }
+
+  @Post(':podId/payouts')
+  @ApiOperation({ summary: 'Mark a pod membership as paid out' })
+  @ApiOkResponse({
+    description: 'Payout recorded for the member.',
+    schema: {
+      type: 'object',
+      properties: {
+        membershipId: { type: 'string' },
+        podId: { type: 'string' },
+        payoutAmount: { type: 'string' },
+        payoutDate: { type: 'string', format: 'date-time', nullable: true },
+      },
+    },
+  })
+  @RequireAdminPermissions(ADMIN_PERMISSION_VIEW_PODS)
+  async markPayout(
+    @Param('podId') podId: string,
+    @Body() payload: MarkPodPayoutDto,
+  ): Promise<{
+    membershipId: string;
+    podId: string;
+    payoutAmount: string | null;
+    payoutDate: string | null;
+  }> {
+    const membership = await this.commandBus.execute(
+      new MarkPodMembershipPaidCommand(
+        podId,
+        payload.membershipId,
+        payload.amount,
+        new Date(),
+      ),
+    );
+
+    return {
+      membershipId: membership.id,
+      podId: membership.pod.id,
+      payoutAmount: membership.payoutAmount ?? null,
+      payoutDate: membership.payoutDate
+        ? membership.payoutDate.toISOString()
+        : null,
+    };
   }
 }

@@ -34,6 +34,15 @@ export class AccountEntity {
   @Property({ columnType: 'varchar(512)', nullable: true })
   avatarUrl?: string | null;
 
+  @Property({ columnType: 'varchar(120)', nullable: true })
+  stripeBankName?: string | null;
+
+  @Property({ columnType: 'varchar(120)', nullable: true })
+  stripeBankAccountFirstName?: string | null;
+
+  @Property({ columnType: 'varchar(120)', nullable: true })
+  stripeBankAccountLastName?: string | null;
+
   @Property({ columnType: 'date', nullable: true })
   dateOfBirth?: Date | null;
 
@@ -75,6 +84,18 @@ export class AccountEntity {
 
   @Property({ columnType: 'datetime(6)', nullable: true })
   stripeBankAccountUpdatedAt?: Date | null;
+
+  @Property({ columnType: 'tinyint(1)', default: false })
+  requiresFraudReview = false;
+
+  @Property({ columnType: 'varchar(64)', nullable: true })
+  fraudReviewReason?: string | null;
+
+  @Property({ columnType: 'tinyint(1)', default: false })
+  missedPaymentFlag = false;
+
+  @Property({ columnType: 'varchar(128)', nullable: true })
+  missedPaymentReason?: string | null;
 
   @Property({ columnType: 'tinyint(1)', default: true })
   isActive = true;
@@ -194,5 +215,25 @@ export class AccountEntity {
   deactivate(at: Date = new Date()) {
     this.isActive = false;
     this.deactivatedAt = at;
+  }
+
+  markFraudReview(reason: string): void {
+    this.requiresFraudReview = true;
+    this.fraudReviewReason = reason;
+  }
+
+  clearFraudReview(): void {
+    this.requiresFraudReview = false;
+    this.fraudReviewReason = null;
+  }
+
+  flagMissedPayment(reason: string): void {
+    this.missedPaymentFlag = true;
+    this.missedPaymentReason = reason;
+  }
+
+  clearMissedPayment(): void {
+    this.missedPaymentFlag = false;
+    this.missedPaymentReason = null;
   }
 }

@@ -85,6 +85,10 @@ export interface AdminAccountListItem {
   transactionNotificationsEnabled: boolean;
   kycStatus: AdminKycStatus;
   bankAccountLinked: boolean;
+  requiresFraudReview: boolean;
+  fraudReviewReason: string | null;
+  missedPaymentFlag: boolean;
+  missedPaymentReason: string | null;
 }
 
 export interface AdminAccountsListResult {
@@ -114,6 +118,7 @@ export interface AdminAccountPodMembership {
   goalType: PodGoalType;
   goalNote: string | null;
   completedAt: string | null;
+  payoutAmount: string | null;
 }
 
 export interface AdminAccountVerificationAttempt {

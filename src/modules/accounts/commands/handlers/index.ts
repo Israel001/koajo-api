@@ -14,6 +14,8 @@ import { UpsertStripeCustomerHandler } from './upsert-stripe-customer.handler';
 import { UpsertStripeBankAccountHandler } from './upsert-stripe-bank-account.handler';
 import { DeleteAccountHandler } from './delete-account.handler';
 import { RefreshAccessTokenHandler } from './refresh-access-token.handler';
+import { UpdateAccountFlagsHandler } from './update-account-flags.handler';
+import { RemoveAccountBankHandler } from './remove-account-bank.handler';
 
 export const CommandHandlers = [
   RegisterAccountHandler,
@@ -32,6 +34,8 @@ export const CommandHandlers = [
   UpsertStripeBankAccountHandler,
   DeleteAccountHandler,
   RefreshAccessTokenHandler,
+  UpdateAccountFlagsHandler,
+  RemoveAccountBankHandler,
 ];
 
 export { RegisterAccountHandler } from './register-account.handler';
@@ -50,3 +54,5 @@ export { UpsertStripeCustomerHandler } from './upsert-stripe-customer.handler';
 export { UpsertStripeBankAccountHandler } from './upsert-stripe-bank-account.handler';
 export { DeleteAccountHandler } from './delete-account.handler';
 export { RefreshAccessTokenHandler } from './refresh-access-token.handler';
+export { UpdateAccountFlagsHandler } from './update-account-flags.handler';
+export { RemoveAccountBankHandler } from './remove-account-bank.handler';

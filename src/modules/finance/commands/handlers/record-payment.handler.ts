@@ -138,6 +138,8 @@ export class RecordPaymentHandler
       await this.achievementService.handleSuccessfulPayment({
         account,
       });
+    } else {
+      account.flagMissedPayment(`payment_status:${status}`);
     }
 
     return {

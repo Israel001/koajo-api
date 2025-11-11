@@ -104,6 +104,7 @@ export class PodsController {
         payload.cadence,
         payload.randomizePositions,
         payload.invitees,
+        payload.origin ?? null,
       ),
     )) as MembershipWithPod;
 

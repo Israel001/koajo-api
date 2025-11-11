@@ -553,6 +553,9 @@ describe('AuthController', () => {
       const dto = {
         bankAccountId: 'ba_123',
         customerId: 'cus_123',
+        bankName: 'Example Bank',
+        accountFirstName: 'Jane',
+        accountLastName: 'Doe',
       };
 
       const expected: UpsertStripeBankAccountResult = {
@@ -578,6 +581,10 @@ describe('AuthController', () => {
       const command = commandBus.execute.mock.calls[0][0] as UpsertStripeBankAccountCommand;
       expect(command.accountId).toBe('account-1');
       expect(command.bankAccountId).toBe(dto.bankAccountId);
+       expect(command.customerId).toBe(dto.customerId);
+       expect(command.bankName).toBe(dto.bankName);
+       expect(command.accountFirstName).toBe(dto.accountFirstName);
+       expect(command.accountLastName).toBe(dto.accountLastName);
     });
   });
 

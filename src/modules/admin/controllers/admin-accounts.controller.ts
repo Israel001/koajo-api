@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Query, UseGuards } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
   ApiBearerAuth,
@@ -17,6 +17,9 @@ import {
 import { AdminListQueryDto } from '../dto/list-query.dto';
 import { UpdateNotificationPreferencesDto } from '../../accounts/dto/update-notification-preferences.dto';
 import { UpdateNotificationPreferencesCommand } from '../../accounts/commands/update-notification-preferences.command';
+import { UpdateAccountFlagsDto } from '../dto/update-account-flags.dto';
+import { UpdateAccountFlagsCommand } from '../../accounts/commands/update-account-flags.command';
+import { RemoveAccountBankCommand } from '../../accounts/commands/remove-account-bank.command';
 import { GetAchievementsSummaryQuery } from '../../achievements/queries/get-achievements-summary.query';
 import type { AchievementsSummaryDto } from '../../achievements/dto/achievements-summary.dto';
 import {
@@ -112,6 +115,56 @@ export class AdminAccountsController {
     );
   }
 
+  @Patch(':accountId/flags')
+  @ApiOperation({ summary: 'Update fraud or missed payment flags for an account' })
+  @ApiOkResponse({
+    description: 'Account flags updated.',
+    schema: {
+      type: 'object',
+      properties: {
+        fraudReview: { type: 'boolean' },
+        missedPayment: { type: 'boolean' },
+      },
+    },
+  })
+  @RequireAdminPermissions(ADMIN_PERMISSION_MANAGE_USER_NOTIFICATIONS)
+  async updateFlags(
+    @Param('accountId') accountId: string,
+    @Body() payload: UpdateAccountFlagsDto,
+  ): Promise<{ fraudReview: boolean; missedPayment: boolean }> {
+    const account = await this.commandBus.execute(
+      new UpdateAccountFlagsCommand(
+        accountId,
+        payload.fraudReview,
+        payload.missedPayment,
+      ),
+    );
+
+    return {
+      fraudReview: account.requiresFraudReview,
+      missedPayment: account.missedPaymentFlag,
+    };
+  }
+
+  @Delete(':accountId/bank-account')
+  @ApiOperation({ summary: 'Remove the bank account linked to a customer' })
+  @ApiOkResponse({
+    description: 'Bank account removed for the customer.',
+    schema: {
+      type: 'object',
+      properties: {
+        removed: { type: 'boolean' },
+      },
+    },
+  })
+  @RequireAdminPermissions(ADMIN_PERMISSION_MANAGE_USER_NOTIFICATIONS)
+  async removeBankAccount(
+    @Param('accountId') accountId: string,
+  ): Promise<{ removed: boolean }> {
+    await this.commandBus.execute(new RemoveAccountBankCommand(accountId));
+    return { removed: true };
+  }
+
   @Get(':accountId/achievements')
   @ApiOperation({ summary: 'Fetch achievement summary for an account' })
   @ApiOkResponse({ description: 'Achievements summary fetched.' })
@@ -191,6 +244,7 @@ export class AdminAccountsController {
       goalType: membership.goalType,
       goalNote: membership.goalNote ?? null,
       completedAt: pod.completedAt?.toISOString() ?? null,
+      payoutAmount: membership.payoutAmount ?? null,
     };
   }
 }

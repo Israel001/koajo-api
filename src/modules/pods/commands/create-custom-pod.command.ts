@@ -8,5 +8,6 @@ export class CreateCustomPodCommand {
     public readonly cadence: CustomPodCadence,
     public readonly randomizePositions: boolean,
     public readonly inviteEmails: string[],
+    public readonly inviteOrigin: string | null,
   ) {}
 }

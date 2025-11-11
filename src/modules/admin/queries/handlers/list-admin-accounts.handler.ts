@@ -24,6 +24,10 @@ export const toAdminAccountDetail = (
   transactionNotificationsEnabled: account.transactionNotificationsEnabled,
   kycStatus: deriveKycStatus(account),
   bankAccountLinked: Boolean(account.stripeBankAccountId),
+  requiresFraudReview: account.requiresFraudReview,
+  fraudReviewReason: account.fraudReviewReason ?? null,
+  missedPaymentFlag: account.missedPaymentFlag,
+  missedPaymentReason: account.missedPaymentReason ?? null,
 });
 
 const deriveKycStatus = (account: AccountEntity): AdminKycStatus => {

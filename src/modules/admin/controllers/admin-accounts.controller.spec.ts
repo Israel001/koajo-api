@@ -5,6 +5,8 @@ import { ListAdminAccountsQuery } from '../queries/list-admin-accounts.query';
 import { ListAllAdminAccountsQuery } from '../queries/list-all-admin-accounts.query';
 import { GetAdminAccountQuery } from '../queries/get-admin-account.query';
 import { UpdateNotificationPreferencesCommand } from '../../accounts/commands/update-notification-preferences.command';
+import { UpdateAccountFlagsCommand } from '../../accounts/commands/update-account-flags.command';
+import { RemoveAccountBankCommand } from '../../accounts/commands/remove-account-bank.command';
 import { ListAccountPodsQuery } from '../../pods/queries/list-account-pods.query';
 import { PodStatus } from '../../pods/pod-status.enum';
 import { PodType } from '../../pods/pod-type.enum';
@@ -77,6 +79,33 @@ describe('AdminAccountsController', () => {
 
     expect(commandBus.execute).toHaveBeenCalledWith(
       expect.any(UpdateNotificationPreferencesCommand),
+    );
+  });
+
+  it('updates account flags', async () => {
+    commandBus.execute.mockResolvedValue({
+      requiresFraudReview: false,
+      missedPaymentFlag: true,
+    });
+
+    const result = await controller.updateFlags('acc-1', {
+      fraudReview: false,
+    } as any);
+
+    expect(result).toEqual({ fraudReview: false, missedPayment: true });
+    expect(commandBus.execute).toHaveBeenCalledWith(
+      expect.any(UpdateAccountFlagsCommand),
+    );
+  });
+
+  it('removes bank account connection', async () => {
+    commandBus.execute.mockResolvedValue(undefined);
+
+    const result = await controller.removeBankAccount('acc-1');
+
+    expect(result).toEqual({ removed: true });
+    expect(commandBus.execute).toHaveBeenCalledWith(
+      expect.any(RemoveAccountBankCommand),
     );
   });
 

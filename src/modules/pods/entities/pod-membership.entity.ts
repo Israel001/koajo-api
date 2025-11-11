@@ -53,6 +53,9 @@ export class PodMembershipEntity {
   @Property({ columnType: 'tinyint(1)', default: false })
   paidOut = false;
 
+  @Property({ columnType: 'decimal(15,2)', nullable: true })
+  payoutAmount?: string | null;
+
   @Property({ columnType: 'tinyint(1)', default: false })
   autoDebited = false;
 

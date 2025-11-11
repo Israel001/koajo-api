@@ -18,6 +18,7 @@ import {
 import { AchievementService } from '../../../achievements/achievements.service';
 import { PodActivityService } from '../../services/pod-activity.service';
 import { PodActivityType } from '../../pod-activity-type.enum';
+import { PodJoinGuardService } from '../../services/pod-join-guard.service';
 
 @CommandHandler(JoinPodCommand)
 export class JoinPodHandler
@@ -34,6 +35,7 @@ export class JoinPodHandler
     private readonly checksumService: ChecksumService,
     private readonly achievementService: AchievementService,
     private readonly activityService: PodActivityService,
+    private readonly joinGuard: PodJoinGuardService,
   ) {}
 
   async execute(command: JoinPodCommand): Promise<MembershipWithPod> {
@@ -56,6 +58,8 @@ export class JoinPodHandler
         'Complete Stripe verification before joining a pod.',
       );
     }
+
+    this.joinGuard.ensureAccountEligible(account);
 
     const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
     const sevenDaysAgo = new Date(now.getTime() - sevenDaysMs);
@@ -142,6 +146,10 @@ export class JoinPodHandler
       ...accountChecksumFields(account),
     );
     await em.persistAndFlush(membership);
+    const flagged = await this.joinGuard.evaluateRapidJoins(account, now);
+    if (flagged) {
+      await em.flush();
+    }
 
     await this.activityService.recordActivity({
       pod,

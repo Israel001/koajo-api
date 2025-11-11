@@ -29,6 +29,7 @@ import {
 } from '../../custom-pod-integrity.util';
 import { PodActivityService } from '../../services/pod-activity.service';
 import { PodActivityType } from '../../pod-activity-type.enum';
+import { PodJoinGuardService } from '../../services/pod-join-guard.service';
 
 @Injectable()
 @CommandHandler(CreateCustomPodCommand)
@@ -47,6 +48,7 @@ export class CreateCustomPodHandler
     private readonly checksumService: ChecksumService,
     private readonly mailService: MailService,
     private readonly activityService: PodActivityService,
+    private readonly joinGuard: PodJoinGuardService,
   ) {}
 
   async execute(
@@ -75,6 +77,8 @@ export class CreateCustomPodHandler
         'Complete Stripe verification before creating a custom pod.',
       );
     }
+
+    this.joinGuard.ensureAccountEligible(creator);
 
     const normalizedEmails = this.normalizeInvites(inviteEmails, creator.email);
     const totalMembers = normalizedEmails.length + 1;
@@ -213,6 +217,11 @@ export class CreateCustomPodHandler
       });
     }
 
+    const flagged = await this.joinGuard.evaluateRapidJoins(creator, now);
+    if (flagged) {
+      await em.flush();
+    }
+
     await Promise.all(
       tokens.map(({ email, token }) =>
         this.mailService.sendCustomPodInvitation({
@@ -225,6 +234,7 @@ export class CreateCustomPodHandler
           cadence,
           amount,
           podName: trimmedName || undefined,
+          originBase: command.inviteOrigin ?? undefined,
         }),
       ),
     );

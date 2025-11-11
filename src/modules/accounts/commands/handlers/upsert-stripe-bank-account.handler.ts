@@ -5,6 +5,7 @@ import { EntityRepository } from '@mikro-orm/mysql';
 import { UpsertStripeBankAccountCommand } from '../upsert-stripe-bank-account.command';
 import { AccountEntity } from '../../entities/account.entity';
 import { UpsertStripeBankAccountResult } from '../../contracts/auth-results';
+import { MailService } from '../../../../common/notification/mail.service';
 
 @Injectable()
 @CommandHandler(UpsertStripeBankAccountCommand)
@@ -18,6 +19,7 @@ export class UpsertStripeBankAccountHandler
   constructor(
     @InjectRepository(AccountEntity)
     private readonly accountRepository: EntityRepository<AccountEntity>,
+    private readonly mailService: MailService,
   ) {}
 
   async execute(
@@ -43,10 +45,26 @@ export class UpsertStripeBankAccountHandler
     const now = new Date();
     account.stripeBankAccountId = command.bankAccountId.trim();
     account.stripeBankAccountCustomerId = command.customerId.trim();
+    account.stripeBankName = this.normalizeValue(command.bankName);
+    account.stripeBankAccountFirstName = this.normalizeValue(
+      command.accountFirstName,
+    );
+    account.stripeBankAccountLastName = this.normalizeValue(
+      command.accountLastName,
+    );
     if (!account.stripeBankAccountLinkedAt) {
       account.stripeBankAccountLinkedAt = now;
     }
     account.stripeBankAccountUpdatedAt = now;
+
+    const mismatch = this.hasNameMismatch(account);
+    if (mismatch && !account.requiresFraudReview) {
+      account.markFraudReview('bank_name_mismatch');
+      await this.mailService.sendRequestForInformationEmail({
+        email: account.email,
+        firstName: account.firstName ?? account.email.split('@')[0],
+      });
+    }
 
     const em = this.accountRepository.getEntityManager();
     await em.persistAndFlush(account);
@@ -57,5 +75,34 @@ export class UpsertStripeBankAccountHandler
       created_at: account.stripeBankAccountLinkedAt.toISOString(),
       updated_at: account.stripeBankAccountUpdatedAt.toISOString(),
     };
+  }
+
+  private hasNameMismatch(account: AccountEntity): boolean {
+    const accountFirst = (account.firstName ?? '').trim().toLowerCase();
+    const accountLast = (account.lastName ?? '').trim().toLowerCase();
+    const bankFirst =
+      account.stripeBankAccountFirstName?.trim().toLowerCase() ?? '';
+    const bankLast =
+      account.stripeBankAccountLastName?.trim().toLowerCase() ?? '';
+
+    if (!bankFirst && !bankLast) {
+      return false;
+    }
+
+    let mismatch = false;
+    if (bankFirst && accountFirst && bankFirst !== accountFirst) {
+      mismatch = true;
+    }
+
+    if (bankLast && accountLast && bankLast !== accountLast) {
+      mismatch = true;
+    }
+
+    return mismatch;
+  }
+
+  private normalizeValue(value: string): string | null {
+    const trimmed = value.trim();
+    return trimmed.length ? trimmed : null;
   }
 }

@@ -18,6 +18,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
 import { PodInviteEntity } from './entities/pod-invite.entity';
 import { PodActivityEntity } from './entities/pod-activity.entity';
 import { PodActivityService } from './services/pod-activity.service';
+import { PodJoinGuardService } from './services/pod-join-guard.service';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { PodActivityService } from './services/pod-activity.service';
   providers: [
     PodDomainHelper,
     PodActivityService,
+    PodJoinGuardService,
     JwtAuthGuard,
     PodsScheduler,
     ...PodCommandHandlers,

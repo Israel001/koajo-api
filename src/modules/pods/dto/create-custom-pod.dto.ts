@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   ArrayMaxSize,
   ArrayMinSize,
@@ -7,6 +7,7 @@ import {
   IsEmail,
   IsEnum,
   IsInt,
+  IsOptional,
   IsString,
   MaxLength,
   Min,
@@ -60,4 +61,13 @@ export class CreateCustomPodDto {
   @ArrayMaxSize(19)
   @IsEmail({}, { each: true })
   invitees!: string[];
+
+  @ApiPropertyOptional({
+    description:
+      'Frontend origin (protocol + host) used to build invite links in emails.',
+    example: 'https://app.koajo.com',
+  })
+  @IsString()
+  @IsOptional()
+  origin?: string;
 }

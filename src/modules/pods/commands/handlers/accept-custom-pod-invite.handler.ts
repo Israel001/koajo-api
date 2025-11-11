@@ -35,6 +35,7 @@ import { PodGoalType } from '../../pod-goal.enum';
 import { AchievementService } from '../../../achievements/achievements.service';
 import { PodActivityService } from '../../services/pod-activity.service';
 import { PodActivityType } from '../../pod-activity-type.enum';
+import { PodJoinGuardService } from '../../services/pod-join-guard.service';
 
 @Injectable()
 @CommandHandler(AcceptCustomPodInviteCommand)
@@ -53,6 +54,7 @@ export class AcceptCustomPodInviteHandler
     private readonly checksumService: ChecksumService,
     private readonly achievementService: AchievementService,
     private readonly activityService: PodActivityService,
+    private readonly joinGuard: PodJoinGuardService,
   ) {}
 
   async execute(
@@ -106,6 +108,8 @@ export class AcceptCustomPodInviteHandler
         'Complete Stripe verification before joining this custom pod.',
       );
     }
+
+    this.joinGuard.ensureAccountEligible(account);
 
     if (invite.acceptedAt) {
       throw new BadRequestException('Invitation has already been accepted.');
@@ -217,6 +221,11 @@ export class AcceptCustomPodInviteHandler
           cadence: pod.cadence,
         },
       });
+    }
+
+    const flagged = await this.joinGuard.evaluateRapidJoins(account, now);
+    if (flagged) {
+      await em.flush();
     }
 
     await this.activityService.recordActivity({

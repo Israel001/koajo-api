@@ -32,6 +32,21 @@ export const accountChecksumFields = (
   account.emailNotificationsEnabled ? 1 : 0,
   account.transactionNotificationsEnabled ? 1 : 0,
   account.agreedToTerms ? 1 : 0,
-  account.dateOfBirth ? account.dateOfBirth.getTime() : 0,
-  account.lastLoginAt ? account.lastLoginAt.getTime() : 0,
+  toMillis(account.dateOfBirth),
+  toMillis(account.lastLoginAt),
+  account.stripeBankName ?? '',
+  account.stripeBankAccountFirstName ?? '',
+  account.stripeBankAccountLastName ?? '',
+  account.requiresFraudReview ? 1 : 0,
+  account.fraudReviewReason ?? '',
+  account.missedPaymentFlag ? 1 : 0,
+  account.missedPaymentReason ?? '',
 ];
+
+const toMillis = (value: Date | string | null | undefined): number => {
+  if (!value) {
+    return 0;
+  }
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? 0 : date.getTime();
+};

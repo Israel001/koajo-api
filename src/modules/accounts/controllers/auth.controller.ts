@@ -307,6 +307,9 @@ export class AuthController {
         request.user.accountId,
         payload.bankAccountId,
         payload.customerId,
+        payload.bankName,
+        payload.accountFirstName,
+        payload.accountLastName,
       ),
     );
   }

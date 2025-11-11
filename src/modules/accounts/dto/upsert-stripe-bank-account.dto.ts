@@ -20,4 +20,31 @@ export class UpsertStripeBankAccountDto {
   @IsString()
   @IsNotEmpty()
   customerId!: string;
+
+  @ApiProperty({
+    name: 'bank_name',
+    description: 'Name of the financial institution for the bank account.',
+  })
+  @Expose({ name: 'bank_name' })
+  @IsString()
+  @IsNotEmpty()
+  bankName!: string;
+
+  @ApiProperty({
+    name: 'account_first_name',
+    description: 'First name associated with the bank account.',
+  })
+  @Expose({ name: 'account_first_name' })
+  @IsString()
+  @IsNotEmpty()
+  accountFirstName!: string;
+
+  @ApiProperty({
+    name: 'account_last_name',
+    description: 'Last name associated with the bank account.',
+  })
+  @Expose({ name: 'account_last_name' })
+  @IsString()
+  @IsNotEmpty()
+  accountLastName!: string;
 }

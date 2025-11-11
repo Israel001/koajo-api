@@ -1,14 +1,19 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { QueryBus } from '@nestjs/cqrs';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { AdminPodsController } from './admin-pods.controller';
 import type { AdminPodStatistics } from '../contracts/admin-results';
+import { MarkPodMembershipPaidCommand } from '../../pods/commands/mark-pod-membership-paid.command';
 
 describe('AdminPodsController', () => {
   let controller: AdminPodsController;
   let queryBus: { execute: jest.Mock };
+  let commandBus: { execute: jest.Mock };
 
   beforeEach(async () => {
     queryBus = {
+      execute: jest.fn(),
+    };
+    commandBus = {
       execute: jest.fn(),
     };
 
@@ -18,6 +23,10 @@ describe('AdminPodsController', () => {
         {
           provide: QueryBus,
           useValue: queryBus,
+        },
+        {
+          provide: CommandBus,
+          useValue: commandBus,
         },
       ],
     }).compile();
@@ -46,5 +55,27 @@ describe('AdminPodsController', () => {
 
     expect(result).toEqual([]);
     expect(queryBus.execute).toHaveBeenCalled();
+  });
+
+  it('marks a membership payout via the command bus', async () => {
+    const membership = {
+      id: 'membership-1',
+      pod: { id: 'pod-1' },
+      payoutAmount: '500.00',
+      payoutDate: new Date(),
+    } as any;
+
+    commandBus.execute.mockResolvedValue(membership);
+
+    const result = await controller.markPayout('pod-1', {
+      membershipId: 'membership-1',
+      amount: 500,
+    } as any);
+
+    expect(result.membershipId).toBe('membership-1');
+    expect(commandBus.execute).toHaveBeenCalled();
+    const command =
+      commandBus.execute.mock.calls[0][0] as MarkPodMembershipPaidCommand;
+    expect(command.podId).toBe('pod-1');
   });
 });

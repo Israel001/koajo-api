@@ -415,6 +415,116 @@ export class MailService {
     }
   }
 
+  async sendRequestForInformationEmail(options: {
+    email: string;
+    firstName: string;
+  }): Promise<void> {
+    if (!(await this.shouldSendEmail(options.email, 'system'))) {
+      return;
+    }
+
+    const subject = 'Help us verify your account activity';
+    const replacements = {
+      firstName: options.firstName,
+      firstname: options.firstName,
+    };
+
+    let htmlBody: string;
+    try {
+      htmlBody = await this.notificationTemplateService.render(
+        'request_for_information',
+        replacements,
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Falling back to default request-for-information template: ${(error as Error).message}`,
+      );
+      htmlBody = `
+        <p>Hi ${options.firstName},</p>
+        <p>Please confirm your recent account activity so we can keep your Koajo account secure.</p>
+      `;
+    }
+
+    await this.queueSystemEmail({
+      to: options.email,
+      subject,
+      html: htmlBody,
+    });
+  }
+
+  async sendTooManyPodsWarningEmail(options: {
+    email: string;
+    firstName: string;
+  }): Promise<void> {
+    if (!(await this.shouldSendEmail(options.email, 'system'))) {
+      return;
+    }
+
+    const subject = "Let's make sure your pods work for you";
+    const replacements = {
+      firstName: options.firstName,
+      firstname: options.firstName,
+    };
+
+    let htmlBody: string;
+    try {
+      htmlBody = await this.notificationTemplateService.render(
+        'too_many_pods',
+        replacements,
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Falling back to default too-many-pods template: ${(error as Error).message}`,
+      );
+      htmlBody = `
+        <p>Hi ${options.firstName},</p>
+        <p>We noticed you recently joined several pods. Please hold tight while we review your account.</p>
+      `;
+    }
+
+    await this.queueSystemEmail({
+      to: options.email,
+      subject,
+      html: htmlBody,
+    });
+  }
+
+  private async queueSystemEmail(options: {
+    to: string;
+    subject: string;
+    html: string;
+    text?: string;
+  }): Promise<void> {
+    let textBody = options.text;
+    if (!textBody) {
+      try {
+        textBody = options.html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+      } catch {
+        textBody = undefined;
+      }
+    }
+
+    try {
+      const info = await this.transporter.sendMail({
+        to: options.to,
+        from: this.defaultFrom,
+        subject: options.subject,
+        html: options.html,
+        text: textBody,
+      });
+      this.logger.log(
+        `System email (${options.subject}) queued for ${options.to} (id=${info.messageId})`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to send ${options.subject} email to ${options.to}: ${
+          (error as Error).message
+        }`,
+      );
+      throw error;
+    }
+  }
+
   async sendCustomPodInvitation(options: {
     email: string;
     inviterName: string;
@@ -423,6 +533,7 @@ export class MailService {
     cadence: string;
     amount: number;
     podName?: string;
+    originBase?: string | null;
   }): Promise<void> {
     if (!(await this.shouldSendEmail(options.email, 'system'))) {
       return;
@@ -436,7 +547,13 @@ export class MailService {
     });
 
     const fallbackBase = 'https://app.koajo.local/custom-pods/accept';
-    const baseUrl = rawBaseUrl && rawBaseUrl.trim().length ? rawBaseUrl.trim() : fallbackBase;
+    const preferredOrigin =
+      options.originBase && options.originBase.trim().length
+        ? options.originBase.trim()
+        : null;
+    const baseUrl =
+      preferredOrigin ??
+      (rawBaseUrl && rawBaseUrl.trim().length ? rawBaseUrl.trim() : fallbackBase);
 
     let inviteLink = `${baseUrl}?token=${encodeURIComponent(options.token)}&podId=${encodeURIComponent(options.podId)}`;
     try {

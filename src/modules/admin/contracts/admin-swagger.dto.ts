@@ -273,6 +273,13 @@ export class AdminAccountPodMembershipDto
     nullable: true,
   })
   completedAt!: string | null;
+
+  @ApiProperty({
+    description: 'Amount recorded as payout for the member.',
+    nullable: true,
+    example: '5000.00',
+  })
+  payoutAmount!: string | null;
 }
 
 export class AdminAccountVerificationAttemptDto
