@@ -1,8 +1,9 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { CqrsModule } from '@nestjs/cqrs';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ChecksumModule } from './common/security/checksum.module';
@@ -31,6 +32,22 @@ import { AvatarsModule } from './modules/avatars/avatars.module';
     }),
     CqrsModule,
     ChecksumModule,
+    ThrottlerModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const ttl = Number(configService.get('THROTTLE_TTL') ?? 60);
+        const limit = Number(configService.get('THROTTLE_LIMIT') ?? 60);
+        return {
+          throttlers: [
+            {
+              name: 'default',
+              ttl,
+              limit,
+            },
+          ],
+        };
+      },
+    }),
     MikroOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
@@ -56,6 +73,10 @@ import { AvatarsModule } from './modules/avatars/avatars.module';
     {
       provide: APP_INTERCEPTOR,
       useClass: MikroOrmEntityManagerCleanupInterceptor,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
   ],
 })

@@ -82,6 +82,7 @@ import * as ResetPasswordDtoModule from '../dto/reset-password.dto';
 import * as UpdateAvatarDtoModule from '../dto/update-avatar.dto';
 import * as UpdateNotificationPreferencesDtoModule from '../dto/update-notification-preferences.dto';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
+import { Throttle } from '@nestjs/throttler';
 import type { AuthenticatedRequest } from '../guards/jwt-auth.guard';
 import { AccountEntity } from '../entities/account.entity';
 import { RecordIdentityVerificationCommand } from '../commands/record-identity-verification.command';
@@ -197,12 +198,13 @@ export class AuthController {
     };
   }
 
-  private serializeDateOnly(value: Date | string | null | undefined): string | null {
+  private serializeDateOnly(
+    value: Date | string | null | undefined,
+  ): string | null {
     if (!value) {
       return null;
     }
-    const date =
-      value instanceof Date ? value : new Date(value);
+    const date = value instanceof Date ? value : new Date(value);
     if (Number.isNaN(date.getTime())) {
       return null;
     }
@@ -332,6 +334,7 @@ export class AuthController {
   }
 
   @Post('signup')
+  @Throttle({ default: { limit: 5, ttl: 300 } })
   @ApiOperation({ summary: 'Register a new account' })
   @ApiCreatedResponse({
     description: 'Account successfully created.',
@@ -385,6 +388,7 @@ export class AuthController {
   }
 
   @Post('resend-email')
+  @Throttle({ default: { limit: 3, ttl: 180 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Resend verification email' })
   @ApiOkResponse({
@@ -406,6 +410,7 @@ export class AuthController {
   }
 
   @Post('forgot-password')
+  @Throttle({ default: { limit: 3, ttl: 180 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Request a password reset link' })
   @ApiOkResponse({
@@ -419,6 +424,7 @@ export class AuthController {
   }
 
   @Post('forgot-password/resend')
+  @Throttle({ default: { limit: 3, ttl: 180 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Resend a password reset link' })
   @ApiOkResponse({
@@ -532,6 +538,7 @@ export class AuthController {
   }
 
   @Post('login')
+  @Throttle({ default: { limit: 5, ttl: 60 } })
   @ApiExtraModels(
     LoginSuccessResultDto,
     LoginUserResultDto,
@@ -609,9 +616,7 @@ export class AuthController {
     type: LoginSuccessResultDto,
   })
   @ApiUnauthorizedResponse({ description: 'Refresh token invalid or expired.' })
-  async refresh(
-    @Body() payload: RefreshTokenDto,
-  ): Promise<LoginSuccessResult> {
+  async refresh(@Body() payload: RefreshTokenDto): Promise<LoginSuccessResult> {
     return this.commandBus.execute(
       new RefreshAccessTokenCommand(payload.refreshToken),
     );
