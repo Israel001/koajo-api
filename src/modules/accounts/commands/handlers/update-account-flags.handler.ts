@@ -4,6 +4,7 @@ import { InjectRepository } from '@mikro-orm/nestjs';
 import { EntityRepository } from '@mikro-orm/mysql';
 import { UpdateAccountFlagsCommand } from '../update-account-flags.command';
 import { AccountEntity } from '../../entities/account.entity';
+import { MailService } from '../../../../common/notification/mail.service';
 
 @Injectable()
 @CommandHandler(UpdateAccountFlagsCommand)
@@ -13,6 +14,7 @@ export class UpdateAccountFlagsHandler
   constructor(
     @InjectRepository(AccountEntity)
     private readonly accountRepository: EntityRepository<AccountEntity>,
+    private readonly mailService: MailService,
   ) {}
 
   async execute(
@@ -35,9 +37,12 @@ export class UpdateAccountFlagsHandler
       );
     }
 
+    let fraudFlagRaised = false;
+
     if (typeof command.fraudReview !== 'undefined') {
       if (command.fraudReview) {
         account.markFraudReview(account.fraudReviewReason ?? 'manual_update');
+        fraudFlagRaised = true;
       } else {
         account.clearFraudReview();
       }
@@ -54,6 +59,13 @@ export class UpdateAccountFlagsHandler
     }
 
     await this.accountRepository.getEntityManager().flush();
+
+    if (fraudFlagRaised) {
+      await this.mailService.sendRequestForInformationEmail({
+        email: account.email,
+        firstName: account.firstName ?? account.email.split('@')[0],
+      });
+    }
 
     return account;
   }

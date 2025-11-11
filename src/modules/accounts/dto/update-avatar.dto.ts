@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsOptional, IsUrl } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 export class UpdateAvatarDto {
   @ApiProperty({
@@ -11,6 +11,6 @@ export class UpdateAvatarDto {
   })
   @IsOptional()
   @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
-  @IsUrl({ require_protocol: true, require_tld: false })
+  @IsString()
   avatarUrl?: string | null;
 }
