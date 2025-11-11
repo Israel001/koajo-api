@@ -395,10 +395,10 @@ export class CurrentUserResultDto implements CurrentUserResult {
   date_of_birth!: string | null;
 
   @ApiProperty({
-    description: 'Identifier of the selected avatar.',
+    description: 'URL of the selected avatar image, if available.',
     nullable: true,
   })
-  avatar_id!: string | null;
+  avatar_url!: string | null;
 
   @ApiProperty({
     description: 'Indicates whether the account is active.',

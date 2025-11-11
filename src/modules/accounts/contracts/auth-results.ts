@@ -113,7 +113,7 @@ export interface CurrentUserResult {
   email_verified: boolean;
   agreed_to_terms: boolean;
   date_of_birth: string | null;
-  avatar_id: string | null;
+  avatar_url: string | null;
   is_active: boolean;
   emailNotificationsEnabled: boolean;
   transactionNotificationsEnabled: boolean;

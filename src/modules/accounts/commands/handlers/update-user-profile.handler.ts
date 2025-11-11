@@ -115,7 +115,7 @@ export class UpdateUserProfileHandler
       date_of_birth: account.dateOfBirth
         ? account.dateOfBirth.toISOString().slice(0, 10)
         : null,
-      avatar_id: null,
+      avatar_url: account.avatarUrl ?? null,
       is_active: account.isActive,
       emailNotificationsEnabled: account.emailNotificationsEnabled,
       transactionNotificationsEnabled: account.transactionNotificationsEnabled,

@@ -140,7 +140,7 @@ export class AuthController {
       email_verified: Boolean(account.emailVerifiedAt),
       agreed_to_terms: account.agreedToTerms,
       date_of_birth: this.serializeDateOnly(account.dateOfBirth),
-      avatar_id: null,
+      avatar_url: account.avatarUrl ?? null,
       is_active: account.isActive,
       emailNotificationsEnabled: account.emailNotificationsEnabled,
       transactionNotificationsEnabled: account.transactionNotificationsEnabled,
