@@ -18,6 +18,8 @@ import {
 import { AchievementService } from '../../../achievements/achievements.service';
 import { PodActivityService } from '../../services/pod-activity.service';
 import { PodActivityType } from '../../pod-activity-type.enum';
+import { MailService } from '../../../../common/notification/mail.service';
+import { buildPodConfirmationDetails } from '../../pod-confirmation.util';
 import { PodJoinGuardService } from '../../services/pod-join-guard.service';
 
 @CommandHandler(JoinPodCommand)
@@ -36,6 +38,7 @@ export class JoinPodHandler
     private readonly achievementService: AchievementService,
     private readonly activityService: PodActivityService,
     private readonly joinGuard: PodJoinGuardService,
+    private readonly mailService: MailService,
   ) {}
 
   async execute(command: JoinPodCommand): Promise<MembershipWithPod> {
@@ -182,6 +185,16 @@ export class JoinPodHandler
       { id: membership.id },
       { populate: ['pod', 'pod.memberships', 'pod.memberships.account'] as const },
     );
+
+    const confirmation = buildPodConfirmationDetails(pod as PodEntity);
+    await this.mailService.sendPodJoinConfirmationEmail({
+      email: account.email,
+      firstName: account.firstName ?? account.email.split('@')[0],
+      podAmount: confirmation.podAmount,
+      podMembers: confirmation.podMembers,
+      podCycle: confirmation.podCycle,
+      isCustom: confirmation.isCustom,
+    });
 
     return loaded as MembershipWithPod;
   }

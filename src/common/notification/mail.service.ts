@@ -620,6 +620,58 @@ export class MailService {
     }
   }
 
+  async sendPodJoinConfirmationEmail(options: {
+    email: string;
+    firstName: string;
+    podAmount: string;
+    podMembers: string;
+    podCycle: string;
+    isCustom: boolean;
+  }): Promise<void> {
+    if (!(await this.shouldSendEmail(options.email, 'system'))) {
+      return;
+    }
+
+    const template = options.isCustom
+      ? 'custom_pod_confirmation'
+      : 'pod_confirmation';
+
+    const replacements = {
+      podAmount: options.podAmount,
+      podMembers: options.podMembers,
+      podCycle: options.podCycle,
+    };
+
+    let htmlBody: string;
+    try {
+      htmlBody = await this.notificationTemplateService.render(
+        template,
+        replacements,
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Falling back to default pod confirmation template (${template}): ${(
+          error as Error
+        ).message}`,
+      );
+      htmlBody = `
+        <p>Hi ${options.firstName},</p>
+        <p>Your pod details:</p>
+        <ul>
+          <li>Amount: ${options.podAmount}</li>
+          <li>Members: ${options.podMembers}</li>
+          <li>Cycle: ${options.podCycle}</li>
+        </ul>
+      `;
+    }
+
+    await this.queueSystemEmail({
+      to: options.email,
+      subject: 'You just joined a Koajo pod',
+      html: htmlBody,
+    });
+  }
+
   async sendAccountInactivityReminder(email: string): Promise<void> {
     if (!(await this.shouldSendEmail(email, 'system'))) {
       return;

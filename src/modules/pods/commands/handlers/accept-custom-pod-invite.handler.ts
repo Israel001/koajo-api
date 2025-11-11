@@ -36,6 +36,8 @@ import { AchievementService } from '../../../achievements/achievements.service';
 import { PodActivityService } from '../../services/pod-activity.service';
 import { PodActivityType } from '../../pod-activity-type.enum';
 import { PodJoinGuardService } from '../../services/pod-join-guard.service';
+import { MailService } from '../../../../common/notification/mail.service';
+import { buildPodConfirmationDetails } from '../../pod-confirmation.util';
 
 @Injectable()
 @CommandHandler(AcceptCustomPodInviteCommand)
@@ -55,6 +57,7 @@ export class AcceptCustomPodInviteHandler
     private readonly achievementService: AchievementService,
     private readonly activityService: PodActivityService,
     private readonly joinGuard: PodJoinGuardService,
+    private readonly mailService: MailService,
   ) {}
 
   async execute(
@@ -245,6 +248,16 @@ export class AcceptCustomPodInviteHandler
         populate: ['pod', 'pod.memberships', 'pod.memberships.account'] as const,
       },
     )) as MembershipWithPod;
+
+    const confirmation = buildPodConfirmationDetails(pod);
+    await this.mailService.sendPodJoinConfirmationEmail({
+      email: account.email,
+      firstName: account.firstName ?? account.email.split('@')[0],
+      podAmount: confirmation.podAmount,
+      podMembers: confirmation.podMembers,
+      podCycle: confirmation.podCycle,
+      isCustom: confirmation.isCustom,
+    });
 
     return createdMembership;
   }

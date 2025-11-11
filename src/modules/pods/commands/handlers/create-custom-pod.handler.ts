@@ -29,6 +29,7 @@ import {
 } from '../../custom-pod-integrity.util';
 import { PodActivityService } from '../../services/pod-activity.service';
 import { PodActivityType } from '../../pod-activity-type.enum';
+import { buildPodConfirmationDetails } from '../../pod-confirmation.util';
 import { PodJoinGuardService } from '../../services/pod-join-guard.service';
 
 @Injectable()
@@ -245,6 +246,16 @@ export class CreateCustomPodHandler
         populate: ['pod', 'pod.memberships', 'pod.memberships.account'] as const,
       },
     )) as MembershipWithPod;
+
+    const confirmation = buildPodConfirmationDetails(pod);
+    await this.mailService.sendPodJoinConfirmationEmail({
+      email: creator.email,
+      firstName: creator.firstName ?? creator.email.split('@')[0],
+      podAmount: confirmation.podAmount,
+      podMembers: confirmation.podMembers,
+      podCycle: confirmation.podCycle,
+      isCustom: confirmation.isCustom,
+    });
 
     return createdMembership;
   }
