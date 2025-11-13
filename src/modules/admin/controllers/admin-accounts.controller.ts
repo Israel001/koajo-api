@@ -11,6 +11,7 @@ import {
 import { AdminJwtGuard } from '../guards/admin-jwt.guard';
 import { AdminPermissionsGuard, RequireAdminPermissions } from '../guards/admin-permissions.guard';
 import {
+  ADMIN_PERMISSION_EDIT_USER_DETAILS,
   ADMIN_PERMISSION_MANAGE_USER_NOTIFICATIONS,
   ADMIN_PERMISSION_VIEW_USERS,
 } from '../admin-permission.constants';
@@ -20,6 +21,7 @@ import { UpdateNotificationPreferencesCommand } from '../../accounts/commands/up
 import { UpdateAccountFlagsDto } from '../dto/update-account-flags.dto';
 import { UpdateAccountFlagsCommand } from '../../accounts/commands/update-account-flags.command';
 import { RemoveAccountBankCommand } from '../../accounts/commands/remove-account-bank.command';
+import { AdminUpdateAccountProfileDto } from '../dto/update-account-profile.dto';
 import { GetAchievementsSummaryQuery } from '../../achievements/queries/get-achievements-summary.query';
 import type { AchievementsSummaryDto } from '../../achievements/dto/achievements-summary.dto';
 import {
@@ -39,6 +41,9 @@ import {
   AdminAccountVerificationsListResultDto,
 } from '../contracts/admin-swagger.dto';
 import { ListAccountVerificationAttemptsQuery } from '../queries/list-account-verification-attempts.query';
+import { UpdateUserProfileCommand } from '../../accounts/commands/update-user-profile.command';
+import { UpdateUserProfileResult } from '../../accounts/contracts/auth-results';
+import { UpdateUserProfileResultDto } from '../../accounts/contracts/auth-swagger.dto';
 
 @ApiTags('admin-accounts')
 @Controller({ path: 'admin/accounts', version: '1' })
@@ -111,6 +116,30 @@ export class AdminAccountsController {
         accountId,
         payload.emailNotificationsEnabled,
         payload.transactionNotificationsEnabled,
+      ),
+    );
+  }
+
+  @Patch(':accountId/profile')
+  @ApiOperation({ summary: 'Update core profile information for an account' })
+  @ApiOkResponse({
+    description: 'Profile information updated.',
+    type: UpdateUserProfileResultDto,
+  })
+  @RequireAdminPermissions(ADMIN_PERMISSION_EDIT_USER_DETAILS)
+  async updateProfile(
+    @Param('accountId') accountId: string,
+    @Body() payload: AdminUpdateAccountProfileDto,
+  ): Promise<UpdateUserProfileResult> {
+    return this.commandBus.execute(
+      new UpdateUserProfileCommand(
+        accountId,
+        payload.firstName,
+        payload.lastName,
+        payload.dateOfBirth,
+        payload.phone,
+        null,
+        true,
       ),
     );
   }

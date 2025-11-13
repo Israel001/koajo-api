@@ -51,6 +51,7 @@ describe('ListAccountPodActivitiesHandler', () => {
             email: 'member@example.com',
             firstName: 'Jane',
             lastName: 'Doe',
+            avatarUrl: 'https://example.com/avatar.png',
           },
         },
         {
@@ -75,7 +76,7 @@ describe('ListAccountPodActivitiesHandler', () => {
       type: PodActivityType.MEMBER_JOINED,
       actor: {
         accountId: 'account-2',
-        email: 'member@example.com',
+        avatarUrl: 'https://example.com/avatar.png',
       },
     });
     expect(activityRepository.findAndCount).toHaveBeenCalledWith(

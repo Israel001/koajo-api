@@ -11,6 +11,10 @@ import { ListAccountPodsQuery } from '../../pods/queries/list-account-pods.query
 import { PodStatus } from '../../pods/pod-status.enum';
 import { PodType } from '../../pods/pod-type.enum';
 import { PodGoalType } from '../../pods/pod-goal.enum';
+import { ListAccountVerificationAttemptsQuery } from '../queries/list-account-verification-attempts.query';
+import { UpdateUserProfileCommand } from '../../accounts/commands/update-user-profile.command';
+import { AdminJwtGuard } from '../guards/admin-jwt.guard';
+import { AdminPermissionsGuard } from '../guards/admin-permissions.guard';
 
 describe('AdminAccountsController', () => {
   let controller: AdminAccountsController;
@@ -25,7 +29,7 @@ describe('AdminAccountsController', () => {
       execute: jest.fn(),
     };
 
-    const module: TestingModule = await Test.createTestingModule({
+    const moduleBuilder = Test.createTestingModule({
       controllers: [AdminAccountsController],
       providers: [
         {
@@ -37,7 +41,16 @@ describe('AdminAccountsController', () => {
           useValue: queryBus,
         },
       ],
-    }).compile();
+    });
+
+    moduleBuilder
+      .overrideGuard(AdminJwtGuard)
+      .useValue({ canActivate: jest.fn().mockReturnValue(true) });
+    moduleBuilder
+      .overrideGuard(AdminPermissionsGuard)
+      .useValue({ canActivate: jest.fn().mockReturnValue(true) });
+
+    const module: TestingModule = await moduleBuilder.compile();
 
     controller = module.get<AdminAccountsController>(AdminAccountsController);
   });
@@ -80,6 +93,26 @@ describe('AdminAccountsController', () => {
     expect(commandBus.execute).toHaveBeenCalledWith(
       expect.any(UpdateNotificationPreferencesCommand),
     );
+  });
+
+  it('updates profile information for an account', async () => {
+    const expected = {
+      user: { id: 'acc-1' },
+      verification: null,
+    };
+    commandBus.execute.mockResolvedValue(expected);
+
+    const result = await controller.updateProfile('acc-1', {
+      firstName: 'Jane',
+    } as any);
+
+    expect(result).toBe(expected);
+    expect(commandBus.execute).toHaveBeenCalledWith(
+      expect.any(UpdateUserProfileCommand),
+    );
+    const command = commandBus.execute.mock.calls[0][0] as UpdateUserProfileCommand;
+    expect(command.accountId).toBe('acc-1');
+    expect(command.allowLockedProfileUpdate).toBe(true);
   });
 
   it('updates account flags', async () => {

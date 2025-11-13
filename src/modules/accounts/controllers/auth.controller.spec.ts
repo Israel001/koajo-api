@@ -558,6 +558,7 @@ describe('AuthController', () => {
       expect(command.firstName).toBe(dto.firstName);
       expect(command.dateOfBirth).toBe(dto.dateOfBirth);
       expect(command.verificationRedirectBaseUrl).toBe('https://app.koajo.test/register/verify-email');
+      expect(command.allowLockedProfileUpdate).toBe(false);
     });
   });
 

@@ -11,22 +11,10 @@ class PodActivityActorDto implements PodActivityActorSummary {
   accountId!: string;
 
   @ApiProperty({
-    description: 'Email address of the actor, if available.',
+    description: 'Avatar URL for the actor, if available.',
     nullable: true,
   })
-  email!: string | null;
-
-  @ApiProperty({
-    description: 'First name of the actor, if available.',
-    nullable: true,
-  })
-  firstName!: string | null;
-
-  @ApiProperty({
-    description: 'Last name of the actor, if available.',
-    nullable: true,
-  })
-  lastName!: string | null;
+  avatarUrl!: string | null;
 }
 
 export class PodActivityDto implements PodActivitySummary {
@@ -49,7 +37,7 @@ export class PodActivityDto implements PodActivitySummary {
   createdAt!: string;
 
   @ApiProperty({
-    description: 'Account details for the actor, if available.',
+    description: 'Actor information (accountId and avatar), if available.',
     type: () => PodActivityActorDto,
     nullable: true,
   })

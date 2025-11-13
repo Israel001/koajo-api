@@ -53,9 +53,7 @@ export class ListPodActivitiesHandler
         actor: activity.account
           ? {
               accountId: activity.account.id,
-              email: activity.account.email ?? null,
-              firstName: activity.account.firstName ?? null,
-              lastName: activity.account.lastName ?? null,
+              avatarUrl: activity.account.avatarUrl ?? null,
             }
           : null,
       })),

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { EntityRepository } from '@mikro-orm/mysql';
@@ -37,6 +37,12 @@ export class UpdateUserProfileHandler
 
     if (!account) {
       throw new NotFoundException('Account not found.');
+    }
+
+    if (account.lastPodJoinedAt && !command.allowLockedProfileUpdate) {
+      throw new BadRequestException(
+        'Profile updates are no longer allowed after joining a pod.',
+      );
     }
 
     if (command.firstName !== undefined) {

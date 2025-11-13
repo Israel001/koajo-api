@@ -6,5 +6,6 @@ export class UpdateUserProfileCommand {
     public readonly dateOfBirth?: string | null,
     public readonly phoneNumber?: string | null,
     public readonly verificationRedirectBaseUrl: string | null = null,
+    public readonly allowLockedProfileUpdate = false,
   ) {}
 }

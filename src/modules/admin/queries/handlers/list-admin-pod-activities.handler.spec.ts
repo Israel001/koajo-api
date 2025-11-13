@@ -40,7 +40,13 @@ describe('ListAdminPodActivitiesHandler', () => {
         type: PodActivityType.POD_CREATED,
         metadata: { cadence: 'bi-weekly' },
         createdAt: new Date('2025-01-03T00:00:00.000Z'),
-        account: null,
+        account: {
+          id: 'acc-123',
+          avatarUrl: 'https://example.com/avatar.png',
+          email: 'member@example.com',
+          firstName: 'Jane',
+          lastName: 'Doe',
+        },
       },
     ]);
 
@@ -50,6 +56,13 @@ describe('ListAdminPodActivitiesHandler', () => {
 
     expect(result).toHaveLength(1);
     expect(result[0].type).toBe(PodActivityType.POD_CREATED);
+    expect(result[0].actor).toEqual({
+      accountId: 'acc-123',
+      avatarUrl: 'https://example.com/avatar.png',
+      email: 'member@example.com',
+      firstName: 'Jane',
+      lastName: 'Doe',
+    });
     expect(activityRepository.find).toHaveBeenCalledWith(
       { pod },
       expect.objectContaining({ limit: expect.any(Number) }),

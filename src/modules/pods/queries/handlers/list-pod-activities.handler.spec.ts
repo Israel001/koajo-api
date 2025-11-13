@@ -46,6 +46,7 @@ describe('ListPodActivitiesHandler', () => {
             email: 'member@example.com',
             firstName: 'Jane',
             lastName: 'Doe',
+            avatarUrl: 'https://example.com/avatar.png',
           },
         },
         {
@@ -70,9 +71,7 @@ describe('ListPodActivitiesHandler', () => {
       type: PodActivityType.MEMBER_JOINED,
       actor: {
         accountId: 'account-1',
-        email: 'member@example.com',
-        firstName: 'Jane',
-        lastName: 'Doe',
+        avatarUrl: 'https://example.com/avatar.png',
       },
     });
     expect(result.items[1].actor).toBeNull();

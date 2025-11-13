@@ -181,7 +181,18 @@ export interface AdminPodsListResult {
   items: AdminPodSummary[];
 }
 
-export interface AdminPodActivity extends PodActivitySummary {}
+export interface AdminPodActivityActor {
+  accountId: string;
+  avatarUrl: string | null;
+  email: string | null;
+  firstName: string | null;
+  lastName: string | null;
+}
+
+export interface AdminPodActivity
+  extends Omit<PodActivitySummary, 'actor'> {
+  actor: AdminPodActivityActor | null;
+}
 
 export interface AdminPodPlanSummary {
   id: string;

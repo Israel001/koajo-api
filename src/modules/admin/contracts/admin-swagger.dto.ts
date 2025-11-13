@@ -32,6 +32,8 @@ import type {
   AdminAccountPodMembership,
   AdminAccountVerificationAttempt,
   AdminAccountVerificationsListResult,
+  AdminPodActivity,
+  AdminPodActivityActor,
 } from './admin-results';
 import { AnnouncementChannel } from '../announcement-channel.enum';
 import { AnnouncementSeverity } from '../announcement-severity.enum';
@@ -541,7 +543,34 @@ export class TransactionSummaryDto implements TransactionSummary {
   podPlanCode!: string;
 }
 
-export class AdminPodActivityDto extends PodActivityDto {}
+class AdminPodActivityActorDto implements AdminPodActivityActor {
+  @ApiProperty({ description: 'Identifier of the account that triggered the activity.' })
+  accountId!: string;
+
+  @ApiProperty({ description: 'Avatar URL of the actor, if available.', nullable: true })
+  avatarUrl!: string | null;
+
+  @ApiProperty({ description: 'Email address of the actor.', nullable: true })
+  email!: string | null;
+
+  @ApiProperty({ description: 'First name of the actor.', nullable: true })
+  firstName!: string | null;
+
+  @ApiProperty({ description: 'Last name of the actor.', nullable: true })
+  lastName!: string | null;
+}
+
+export class AdminPodActivityDto
+  extends PodActivityDto
+  implements AdminPodActivity
+{
+  @ApiProperty({
+    description: 'Actor details including contact information.',
+    type: () => AdminPodActivityActorDto,
+    nullable: true,
+  })
+  override actor: AdminPodActivityActor | null = null;
+}
 
 export class AdminPodStatisticsDto implements AdminPodStatistics {
   @ApiProperty({ description: 'Number of pods currently open for members to join.' })

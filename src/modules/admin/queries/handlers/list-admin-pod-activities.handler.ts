@@ -5,12 +5,12 @@ import { EntityRepository } from '@mikro-orm/mysql';
 import { PodEntity } from '../../../pods/entities/pod.entity';
 import { PodActivityEntity } from '../../../pods/entities/pod-activity.entity';
 import { ListAdminPodActivitiesQuery } from '../list-admin-pod-activities.query';
-import type { PodActivitySummary } from '../../../pods/contracts/pod-activity-summary';
+import type { AdminPodActivity } from '../../contracts/admin-results';
 
 @Injectable()
 @QueryHandler(ListAdminPodActivitiesQuery)
 export class ListAdminPodActivitiesHandler
-  implements IQueryHandler<ListAdminPodActivitiesQuery, PodActivitySummary[]>
+  implements IQueryHandler<ListAdminPodActivitiesQuery, AdminPodActivity[]>
 {
   constructor(
     @InjectRepository(PodEntity)
@@ -21,7 +21,7 @@ export class ListAdminPodActivitiesHandler
 
   async execute(
     query: ListAdminPodActivitiesQuery,
-  ): Promise<PodActivitySummary[]> {
+  ): Promise<AdminPodActivity[]> {
     const pod = await this.podRepository.findOne({
       id: query.podId,
     });
@@ -49,6 +49,7 @@ export class ListAdminPodActivitiesHandler
       actor: activity.account
         ? {
             accountId: activity.account.id,
+            avatarUrl: activity.account.avatarUrl ?? null,
             email: activity.account.email ?? null,
             firstName: activity.account.firstName ?? null,
             lastName: activity.account.lastName ?? null,
