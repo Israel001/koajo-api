@@ -1,6 +1,6 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsEmail } from 'class-validator';
+import { IsEmail, IsOptional, IsString } from 'class-validator';
 
 export class ForgotPasswordDto {
   @ApiProperty({
@@ -12,4 +12,13 @@ export class ForgotPasswordDto {
   )
   @IsEmail()
   email!: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Frontend origin (protocol + host) used to build the password reset link.',
+    example: 'https://app.koajo.test',
+  })
+  @IsOptional()
+  @IsString()
+  origin?: string;
 }

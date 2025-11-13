@@ -420,7 +420,13 @@ export class AuthController {
   async forgotPassword(
     @Body() payload: ForgotPasswordDtoModule.ForgotPasswordDto,
   ): Promise<ForgotPasswordResult> {
-    return this.commandBus.execute(new ForgotPasswordCommand(payload.email));
+    return this.commandBus.execute(
+      new ForgotPasswordCommand(
+        payload.email,
+        false,
+        this.resolvePasswordResetRedirectBase(payload.origin),
+      ),
+    );
   }
 
   @Post('forgot-password/resend')
@@ -435,7 +441,11 @@ export class AuthController {
     @Body() payload: ForgotPasswordDtoModule.ForgotPasswordDto,
   ): Promise<ForgotPasswordResult> {
     return this.commandBus.execute(
-      new ForgotPasswordCommand(payload.email, true),
+      new ForgotPasswordCommand(
+        payload.email,
+        true,
+        this.resolvePasswordResetRedirectBase(payload.origin),
+      ),
     );
   }
 
@@ -628,6 +638,15 @@ export class AuthController {
     const normalizedOrigin = this.normalizeOriginBase(origin ?? null);
     return normalizedOrigin
       ? `${normalizedOrigin}/register/verify-email`
+      : null;
+  }
+
+  private resolvePasswordResetRedirectBase(
+    origin?: string | null,
+  ): string | null {
+    const normalizedOrigin = this.normalizeOriginBase(origin ?? null);
+    return normalizedOrigin
+      ? `${normalizedOrigin}/auth/new-password`
       : null;
   }
 

@@ -280,6 +280,76 @@ export class MailService {
     }
   }
 
+  async sendBankAccountRemovalEmail(options: {
+    email: string;
+    firstName?: string | null;
+    removedAt: Date;
+  }): Promise<void> {
+    if (!(await this.shouldSendEmail(options.email, 'system'))) {
+      return;
+    }
+
+    const subject = 'You removed your linked bank account';
+    const firstname =
+      options.firstName?.trim() ||
+      (options.email ? options.email.split('@')[0] : 'there');
+    const dateTimeLabel = options.removedAt.toLocaleString('en-US', {
+      dateStyle: 'long',
+      timeStyle: 'short',
+      timeZoneName: 'short',
+    });
+
+    const replacements = {
+      firstName: firstname,
+      dateTime: dateTimeLabel,
+    };
+
+    let htmlBody: string;
+    try {
+      htmlBody = await this.notificationTemplateService.render(
+        'remove_bank_account',
+        replacements,
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Falling back to default remove bank account template: ${(error as Error).message}`,
+      );
+      htmlBody = `
+        <p>Hello ${firstname},</p>
+        <p>We removed your linked bank account on ${dateTimeLabel}.</p>
+        <p>If this wasn't you, please contact support immediately at <a href="mailto:support@koajo.com">support@koajo.com</a>.</p>
+      `;
+    }
+
+    let textBody: string | undefined;
+    try {
+      textBody = htmlBody.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    } catch {
+      textBody = undefined;
+    }
+
+    try {
+      const info = await this.transporter.sendMail({
+        to: options.email,
+        from: this.defaultFrom,
+        subject,
+        html: htmlBody,
+        text: textBody,
+      });
+
+      this.logger.log(
+        `Remove bank account email queued for ${options.email} (id=${info.messageId})`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to send remove bank account email to ${options.email}: ${
+          (error as Error).message
+        }`,
+      );
+      throw error;
+    }
+  }
+
   async sendAdminInvite(
     email: string,
     options: {
@@ -532,6 +602,9 @@ export class MailService {
     token: string;
     cadence: string;
     amount: number;
+    podAmount: string;
+    podMembers: string;
+    podCycle: string;
     podName?: string;
     originBase?: string | null;
   }): Promise<void> {
@@ -540,7 +613,7 @@ export class MailService {
     }
 
     const from = this.defaultFrom;
-    const subject = `${options.inviterName} invited you to join a custom pod`;
+    const subject = 'You were invited to a Koajo custom pod';
 
     const rawBaseUrl = this.configService.get<string>('app.customPodInviteUrl', {
       infer: true,
@@ -571,6 +644,9 @@ export class MailService {
       amount: options.amount,
       inviteLink,
       podName: options.podName ?? 'Custom pod',
+      podAmount: options.podAmount,
+      podMembers: options.podMembers,
+      podCycle: options.podCycle,
     };
 
     let htmlBody: string;

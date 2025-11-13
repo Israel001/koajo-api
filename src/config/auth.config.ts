@@ -66,7 +66,7 @@ export default registerAs('auth', () => {
       ),
       redirectBaseUrl:
         process.env.PASSWORD_RESET_REDIRECT_URL ??
-        'https://app.koajo.local/reset-password',
+        'https://koajo-web.vercel.app/auth/new-password',
     },
   };
 });

@@ -12,6 +12,7 @@ interface IssueOptions {
   reason?: string;
   from?: string;
   templateVariables?: Record<string, string | number>;
+  redirectBaseUrl?: string | null;
 }
 
 interface IssueResult {
@@ -42,8 +43,12 @@ export class PasswordResetService {
     const token = this.generateToken();
     const digest = this.createDigest(account.id, token);
     const expiresAt = new Date(now.getTime() + config.ttlSeconds * 1000);
+    const redirectBaseUrl =
+      options.redirectBaseUrl && options.redirectBaseUrl.trim().length
+        ? options.redirectBaseUrl.trim()
+        : config.redirectBaseUrl;
     const resetLink = this.buildResetLink(
-      config.redirectBaseUrl,
+      redirectBaseUrl,
       account.email,
       token,
     );
@@ -160,7 +165,7 @@ export class PasswordResetService {
     email: string,
     token: string,
   ): string {
-    const fallback = 'https://app.koajo.local/reset-password';
+    const fallback = 'https://koajo-web.vercel.app/auth/new-password';
     const target = baseUrl?.trim() || fallback;
 
     try {

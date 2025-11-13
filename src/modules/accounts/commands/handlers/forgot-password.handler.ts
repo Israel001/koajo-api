@@ -30,6 +30,7 @@ export class ForgotPasswordHandler
         : 'forgot-password';
       await this.passwordResetService.issue(account, {
         reason,
+        redirectBaseUrl: command.redirectBaseUrl ?? undefined,
       });
     }
 

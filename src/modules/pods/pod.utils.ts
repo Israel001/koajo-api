@@ -7,15 +7,17 @@ export const addDays = (date: Date, days: number): Date => {
 };
 
 export const startOfDay = (date: Date): Date => {
-  return new Date(Date.UTC(
-    date.getUTCFullYear(),
-    date.getUTCMonth(),
-    date.getUTCDate(),
-    0,
-    0,
-    0,
-    0,
-  ));
+  return new Date(
+    Date.UTC(
+      date.getUTCFullYear(),
+      date.getUTCMonth(),
+      date.getUTCDate(),
+      0,
+      0,
+      0,
+      0,
+    ),
+  );
 };
 
 export const computeNextStartDate = (from: Date): Date => {
@@ -45,7 +47,7 @@ export const generatePayoutSchedule = (
   slotCount: number,
 ): Date[] => {
   const schedule: Date[] = [];
-  let cursor = startOfDay(startDate);
+  const cursor = startOfDay(startDate);
 
   const advance = (date: Date) => {
     const day = date.getUTCDate();
@@ -156,10 +158,7 @@ export const computeNextPayoutAnchor = (
   }
 
   // fallback to next contribution window
-  const nextWindow = resolveContributionWindowStart(
-    addDays(start, 1),
-    cadence,
-  );
+  const nextWindow = resolveContributionWindowStart(addDays(start, 1), cadence);
   return computeNextPayoutAnchor(nextWindow, cadence);
 };
 
@@ -184,7 +183,7 @@ export const generateCustomPayoutSchedule = (
     return schedule;
   }
 
-  let cursor = generatePayoutSchedule(contributionStart, 1)[0];
+  const cursor = generatePayoutSchedule(contributionStart, 1)[0];
   schedule.push(cursor);
 
   for (let index = 1; index < slotCount; index += 1) {

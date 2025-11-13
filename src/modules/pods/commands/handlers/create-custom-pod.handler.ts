@@ -223,6 +223,8 @@ export class CreateCustomPodHandler
       await em.flush();
     }
 
+    const confirmationDetails = buildPodConfirmationDetails(pod);
+
     await Promise.all(
       tokens.map(({ email, token }) =>
         this.mailService.sendCustomPodInvitation({
@@ -234,6 +236,9 @@ export class CreateCustomPodHandler
           token,
           cadence,
           amount,
+          podAmount: confirmationDetails.podAmount,
+          podMembers: confirmationDetails.podMembers,
+          podCycle: confirmationDetails.podCycle,
           podName: trimmedName || undefined,
           originBase: command.inviteOrigin ?? undefined,
         }),
@@ -247,14 +252,13 @@ export class CreateCustomPodHandler
       },
     )) as MembershipWithPod;
 
-    const confirmation = buildPodConfirmationDetails(pod);
     await this.mailService.sendPodJoinConfirmationEmail({
       email: creator.email,
       firstName: creator.firstName ?? creator.email.split('@')[0],
-      podAmount: confirmation.podAmount,
-      podMembers: confirmation.podMembers,
-      podCycle: confirmation.podCycle,
-      isCustom: confirmation.isCustom,
+      podAmount: confirmationDetails.podAmount,
+      podMembers: confirmationDetails.podMembers,
+      podCycle: confirmationDetails.podCycle,
+      isCustom: confirmationDetails.isCustom,
     });
 
     return createdMembership;

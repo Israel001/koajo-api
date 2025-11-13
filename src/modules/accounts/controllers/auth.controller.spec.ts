@@ -221,9 +221,10 @@ describe('AuthController', () => {
   });
 
   describe('forgotPassword', () => {
-    it('executes ForgotPasswordCommand and returns the result', async () => {
+    it('executes ForgotPasswordCommand with a derived redirect base when origin is provided', async () => {
       const dto: ForgotPasswordDto = {
         email: 'user@example.com',
+        origin: 'https://app.koajo.test',
       };
 
       const expected: ForgotPasswordResult = {
@@ -243,13 +244,36 @@ describe('AuthController', () => {
         commandBus.execute.mock.calls[0][0] as ForgotPasswordCommand;
       expect(command.email).toEqual(dto.email);
       expect(command.isResend).toBe(false);
+      expect(command.redirectBaseUrl).toEqual(
+        'https://app.koajo.test/auth/new-password',
+      );
+    });
+
+    it('passes null redirect base when no origin is supplied', async () => {
+      const dto: ForgotPasswordDto = {
+        email: 'user@example.com',
+      };
+
+      const expected: ForgotPasswordResult = {
+        email: dto.email,
+        requested: true,
+      };
+
+      commandBus.execute.mockResolvedValue(expected);
+
+      await expect(controller.forgotPassword(dto)).resolves.toEqual(expected);
+
+      const command =
+        commandBus.execute.mock.calls[0][0] as ForgotPasswordCommand;
+      expect(command.redirectBaseUrl).toBeNull();
     });
   });
 
   describe('resendForgotPassword', () => {
-    it('delegates to ForgotPasswordCommand with resend flag', async () => {
+    it('delegates to ForgotPasswordCommand with resend flag and derived redirect base', async () => {
       const dto: ForgotPasswordDto = {
         email: 'user@example.com',
+        origin: 'https://app.koajo.test',
       };
 
       const expected: ForgotPasswordResult = {
@@ -271,6 +295,30 @@ describe('AuthController', () => {
         commandBus.execute.mock.calls[0][0] as ForgotPasswordCommand;
       expect(command.email).toEqual(dto.email);
       expect(command.isResend).toBe(true);
+      expect(command.redirectBaseUrl).toEqual(
+        'https://app.koajo.test/auth/new-password',
+      );
+    });
+
+    it('passes null redirect base on resend when origin is missing', async () => {
+      const dto: ForgotPasswordDto = {
+        email: 'user@example.com',
+      };
+
+      const expected: ForgotPasswordResult = {
+        email: dto.email,
+        requested: true,
+      };
+
+      commandBus.execute.mockResolvedValue(expected);
+
+      await expect(controller.resendForgotPassword(dto)).resolves.toEqual(
+        expected,
+      );
+
+      const command =
+        commandBus.execute.mock.calls[0][0] as ForgotPasswordCommand;
+      expect(command.redirectBaseUrl).toBeNull();
     });
   });
 

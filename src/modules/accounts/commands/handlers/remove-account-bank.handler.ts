@@ -4,6 +4,7 @@ import { InjectRepository } from '@mikro-orm/nestjs';
 import { EntityRepository } from '@mikro-orm/mysql';
 import { RemoveAccountBankCommand } from '../remove-account-bank.command';
 import { AccountEntity } from '../../entities/account.entity';
+import { MailService } from '../../../../common/notification/mail.service';
 
 @Injectable()
 @CommandHandler(RemoveAccountBankCommand)
@@ -13,6 +14,7 @@ export class RemoveAccountBankHandler
   constructor(
     @InjectRepository(AccountEntity)
     private readonly accountRepository: EntityRepository<AccountEntity>,
+    private readonly mailService: MailService,
   ) {}
 
   async execute(
@@ -26,6 +28,8 @@ export class RemoveAccountBankHandler
       throw new NotFoundException('Account not found.');
     }
 
+    const removedAt = new Date();
+
     account.stripeBankAccountId = null;
     account.stripeBankAccountCustomerId = null;
     account.stripeBankAccountLinkedAt = null;
@@ -35,6 +39,12 @@ export class RemoveAccountBankHandler
     account.stripeBankAccountLastName = null;
 
     await this.accountRepository.getEntityManager().flush();
+
+    await this.mailService.sendBankAccountRemovalEmail({
+      email: account.email,
+      firstName: account.firstName ?? null,
+      removedAt,
+    });
 
     return account;
   }
