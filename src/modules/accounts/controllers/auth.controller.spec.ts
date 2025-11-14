@@ -103,6 +103,8 @@ describe('AuthController', () => {
         phoneNumber: '+2348012345678',
         password: 'Str0ngP@ssword!',
         avatarUrl: 'https://cdn.example.com/avatar.png',
+        first_name: 'Jane',
+        last_name: 'Doe',
       };
       const request = {
         ip: '127.0.0.1',
@@ -115,6 +117,8 @@ describe('AuthController', () => {
         id: 'account-123',
         email: dto.email,
         phoneNumber: dto.phoneNumber,
+        first_name: dto.first_name,
+        last_name: dto.last_name,
         avatarUrl: dto.avatarUrl,
         emailVerified: false,
         verification: null,
@@ -133,6 +137,8 @@ describe('AuthController', () => {
       expect(command.phoneNumber).toEqual(dto.phoneNumber);
       expect(command.password).toEqual(dto.password);
       expect(command.avatarUrl).toEqual(dto.avatarUrl);
+      expect(command.firstName).toEqual(dto.first_name);
+      expect(command.lastName).toEqual(dto.last_name);
       expect(command.metadata).toEqual({
         ipAddress: request.ip,
         userAgent: request.headers['user-agent'],

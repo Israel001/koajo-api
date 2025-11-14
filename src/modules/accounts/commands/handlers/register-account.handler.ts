@@ -52,6 +52,8 @@ export class RegisterAccountHandler
         phoneNumber: phone,
         passwordHash,
         avatarUrl: command.avatarUrl ?? null,
+        firstName: command.firstName?.trim() || null,
+        lastName: command.lastName?.trim() || null,
       },
       { partial: true },
     );
@@ -67,6 +69,8 @@ export class RegisterAccountHandler
       id: account.id,
       email: account.email,
       phoneNumber: account.phoneNumber,
+      first_name: account.firstName ?? null,
+      last_name: account.lastName ?? null,
       avatarUrl: account.avatarUrl ?? null,
       emailVerified: Boolean(account.emailVerifiedAt),
       verification: null,

@@ -2,6 +2,8 @@ export interface SignupResult {
   id: string;
   email: string;
   phoneNumber: string;
+  first_name: string | null;
+  last_name: string | null;
   avatarUrl: string | null;
   emailVerified: boolean;
   verification: {

@@ -357,6 +357,8 @@ export class AuthController {
         payload.phoneNumber,
         payload.password,
         payload.avatarUrl ?? null,
+        payload.first_name,
+        payload.last_name,
         {
           ipAddress: request.ip,
           userAgent: request.headers['user-agent'],

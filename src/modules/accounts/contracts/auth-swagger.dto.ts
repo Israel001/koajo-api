@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Expose } from 'class-transformer';
 import type {
   LoginResult,
   LoginSuccessResult,
@@ -56,6 +57,18 @@ export class SignupResultDto implements SignupResult {
     example: '+2348012345678',
   })
   phoneNumber!: string;
+
+  @ApiProperty({
+    description: 'First name provided during signup.',
+    nullable: true,
+  })
+  first_name!: string | null;
+
+  @ApiProperty({
+    description: 'Last name provided during signup.',
+    nullable: true,
+  })
+  last_name!: string | null;
 
   @ApiProperty({
     description: 'Avatar image URL if provided during signup.',
@@ -247,9 +260,11 @@ export class LoginUserResultDto implements LoginUserResult {
   email!: string;
 
   @ApiProperty({ description: 'First name of the account holder.', nullable: true })
+  @Expose({ name: 'first_name' })
   firstName!: string | null;
 
   @ApiProperty({ description: 'Last name of the account holder.', nullable: true })
+  @Expose({ name: 'last_name' })
   lastName!: string | null;
 
   @ApiProperty({ description: 'Primary phone number on file.', nullable: true })

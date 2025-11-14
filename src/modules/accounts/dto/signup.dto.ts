@@ -1,4 +1,4 @@
-import { Transform } from 'class-transformer';
+import { Expose, Transform } from 'class-transformer';
 import {
   IsEmail,
   IsOptional,
@@ -63,4 +63,24 @@ export class SignupDto {
   @IsOptional()
   @IsUrl({ require_protocol: true, require_tld: false })
   avatarUrl?: string | null;
+
+  @ApiProperty({
+    name: 'first_name',
+    description: 'First name of the account holder.',
+    example: 'Jane',
+  })
+  @IsString()
+  @MinLength(1)
+  @MaxLength(60)
+  first_name!: string;
+
+  @ApiProperty({
+    name: 'last_name',
+    description: 'Last name of the account holder.',
+    example: 'Doe',
+  })
+  @IsString()
+  @MinLength(1)
+  @MaxLength(60)
+  last_name!: string;
 }
