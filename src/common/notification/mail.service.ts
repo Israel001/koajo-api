@@ -1,15 +1,36 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import nodemailer, { Transporter } from 'nodemailer';
+import type { SendMailOptions } from 'nodemailer';
 import { NotificationTemplateService } from '../../modules/notifications/notification-template.service';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { EntityRepository } from '@mikro-orm/mysql';
 import { AccountEntity } from '../../modules/accounts/entities/account.entity';
+import {
+  EmailLogCategory,
+  EmailLogEntity,
+  EmailLogStatus,
+} from '../../modules/notifications/entities/email-log.entity';
+
+const ADMIN_PORTAL_URL_DEFAULT = 'https://koajo-admin.vercel.app';
 
 interface SendOptions {
   from?: string;
   reason?: string;
   variables?: Record<string, string | number>;
+}
+
+interface TrackedEmailSendOptions {
+  to: string;
+  from?: string;
+  subject: string;
+  html: string;
+  text?: string;
+  attachments?: SendMailOptions['attachments'];
+  template?: string | null;
+  category: EmailLogCategory;
+  reason?: string | null;
+  metadata?: Record<string, unknown> | null;
 }
 
 @Injectable()
@@ -23,6 +44,8 @@ export class MailService {
     private readonly notificationTemplateService: NotificationTemplateService,
     @InjectRepository(AccountEntity)
     private readonly accountRepository: EntityRepository<AccountEntity>,
+    @InjectRepository(EmailLogEntity)
+    private readonly emailLogRepository: EntityRepository<EmailLogEntity>,
   ) {
     const mailConfig = this.configService.get('mail', { infer: true })!;
 
@@ -81,14 +104,16 @@ export class MailService {
         : undefined;
 
     try {
-      const info = await this.transporter.sendMail({
+      const info = await this.sendAndTrackEmail({
         to: email,
         from,
         subject,
         html: htmlBody,
         text: textBody,
+        template: 'verify_account',
+        category: EmailLogCategory.SYSTEM,
+        reason: options.reason ?? null,
       });
-
       this.logger.log(
         `Verification email queued for ${email} (id=${info.messageId})${
           options.reason ? ` [reason=${options.reason}]` : ''
@@ -154,12 +179,15 @@ export class MailService {
         : undefined;
 
     try {
-      const info = await this.transporter.sendMail({
+      const info = await this.sendAndTrackEmail({
         to: email,
         from,
         subject,
         html: htmlBody,
         text: textBody,
+        template: 'reset_password',
+        category: EmailLogCategory.SYSTEM,
+        reason: options.reason ?? null,
       });
 
       this.logger.log(
@@ -206,14 +234,15 @@ export class MailService {
     }
 
     try {
-      const info = await this.transporter.sendMail({
+      const info = await this.sendAndTrackEmail({
         to: email,
         from: this.defaultFrom,
         subject,
         html: htmlBody,
         text: textBody,
+        template: 'welcome',
+        category: EmailLogCategory.SYSTEM,
       });
-
       this.logger.log(
         `Welcome email queued for ${email} (id=${info.messageId})`,
       );
@@ -259,12 +288,14 @@ export class MailService {
     }
 
     try {
-      const info = await this.transporter.sendMail({
+      const info = await this.sendAndTrackEmail({
         to: email,
         from: this.defaultFrom,
         subject,
         html: htmlBody,
         text: textBody,
+        template: 'change_password',
+        category: EmailLogCategory.SYSTEM,
       });
 
       this.logger.log(
@@ -329,14 +360,15 @@ export class MailService {
     }
 
     try {
-      const info = await this.transporter.sendMail({
+      const info = await this.sendAndTrackEmail({
         to: options.email,
         from: this.defaultFrom,
         subject,
         html: htmlBody,
         text: textBody,
+        template: 'remove_bank_account',
+        category: EmailLogCategory.SYSTEM,
       });
-
       this.logger.log(
         `Remove bank account email queued for ${options.email} (id=${info.messageId})`,
       );
@@ -356,14 +388,61 @@ export class MailService {
       password: string;
       templateCode?: string;
       from?: string;
+      portalUrl?: string;
+      username?: string;
+      name?: string;
       variables?: Record<string, string | number>;
     },
   ): Promise<void> {
     const from = options.from ?? this.defaultFrom;
     const template = options.templateCode ?? 'admin_invite';
+    const portalUrl =
+      options.portalUrl?.trim().length && options.portalUrl.trim()
+        ? options.portalUrl.trim()
+        : ADMIN_PORTAL_URL_DEFAULT;
+    const username =
+      options.username?.trim().length && options.username.trim()
+        ? options.username.trim()
+        : email;
+
+    const templateVariables: Record<string, string | number> = {
+      ...(options.variables ?? {}),
+    };
+
+    const derivedName =
+      options.name?.trim().length
+        ? options.name.trim()
+        : (typeof templateVariables.name === 'string' &&
+            templateVariables.name.trim().length
+            ? (templateVariables.name as string).trim()
+            : `${templateVariables.firstname !== undefined ? String(templateVariables.firstname) : ''} ${
+                templateVariables.lastname !== undefined ? String(templateVariables.lastname) : ''
+              }`.trim()) || email.split('@')[0];
+
+    if (
+      typeof templateVariables.name !== 'string' ||
+      !templateVariables.name.trim().length
+    ) {
+      templateVariables.name = derivedName;
+    }
+
+    if (
+      typeof templateVariables.portalUrl !== 'string' ||
+      !templateVariables.portalUrl.trim().length
+    ) {
+      templateVariables.portalUrl = portalUrl;
+    }
+
+    if (
+      typeof templateVariables.username !== 'string' ||
+      !templateVariables.username.trim().length
+    ) {
+      templateVariables.username = username;
+    }
+
     const replacements = {
       password: options.password,
-      ...(options.variables ?? {}),
+      ...templateVariables,
     };
 
     let htmlBody: string;
@@ -376,13 +455,11 @@ export class MailService {
       this.logger.warn(
         `Falling back to default admin invite template: ${(error as Error).message}`,
       );
-      const firstname =
-        typeof options.variables?.firstname === 'string'
-          ? options.variables.firstname
-          : 'there';
       htmlBody = `
-        <p>Hello ${firstname},</p>
+        <p>Hello ${derivedName},</p>
         <p>You have been invited to the Koajo admin platform.</p>
+        <p>Admin Portal: <a href="${portalUrl}">${portalUrl}</a></p>
+        <p>Username: <strong>${username}</strong></p>
         <p>Your temporary password is: <strong>${options.password}</strong></p>
         <p>Please sign in and change your password immediately.</p>
       `;
@@ -396,14 +473,20 @@ export class MailService {
     }
 
     try {
-      const info = await this.transporter.sendMail({
+      const info = await this.sendAndTrackEmail({
         to: email,
         from,
-        subject: 'Koajo admin invitation',
+        subject: 'Welcome to the Team! Your Admin Portal Acess',
         html: htmlBody,
         text: textBody,
+        template,
+        category: EmailLogCategory.SYSTEM,
+        reason: 'admin_invite',
+        metadata: {
+          portalUrl,
+          username,
+        },
       });
-
       this.logger.log(
         `Admin invite email queued for ${email} (id=${info.messageId})`,
       );
@@ -463,15 +546,19 @@ export class MailService {
         : undefined;
 
     try {
-      const info = await this.transporter.sendMail({
+      const info = await this.sendAndTrackEmail({
         to: account.email,
         from: this.defaultFrom,
         subject,
         html: htmlBody,
         text: textBody,
         attachments,
+        category: EmailLogCategory.SYSTEM,
+        reason: options.announcementName,
+        metadata: {
+          announcementName: options.announcementName,
+        },
       });
-
       this.logger.log(
         `Announcement email queued for ${account.email} (id=${info.messageId}) [announcement=${options.announcementName}]`,
       );
@@ -575,12 +662,13 @@ export class MailService {
     }
 
     try {
-      const info = await this.transporter.sendMail({
+      const info = await this.sendAndTrackEmail({
         to: options.to,
         from: this.defaultFrom,
         subject: options.subject,
         html: options.html,
         text: textBody,
+        category: EmailLogCategory.SYSTEM,
       });
       this.logger.log(
         `System email (${options.subject}) queued for ${options.to} (id=${info.messageId})`,
@@ -677,14 +765,18 @@ export class MailService {
     }
 
     try {
-      const info = await this.transporter.sendMail({
+      const info = await this.sendAndTrackEmail({
         to: options.email,
         from,
         subject,
         html: htmlBody,
         text: textBody,
+        template: 'custom_pod_invite',
+        category: EmailLogCategory.SYSTEM,
+        metadata: {
+          podId: options.podId,
+        },
       });
-
       this.logger.log(
         `Custom pod invitation email queued for ${options.email} (id=${info.messageId})`,
       );
@@ -777,14 +869,15 @@ export class MailService {
     }
 
     try {
-      const info = await this.transporter.sendMail({
+      const info = await this.sendAndTrackEmail({
         to: email,
         from: this.defaultFrom,
         subject,
         html: htmlBody,
         text: textBody,
+        template: templateCode,
+        category: EmailLogCategory.SYSTEM,
       });
-
       this.logger.log(
         `60-day inactivity email queued for ${email} (id=${info.messageId})`,
       );
@@ -829,14 +922,18 @@ export class MailService {
     }
 
     try {
-      const info = await this.transporter.sendMail({
+      const info = await this.sendAndTrackEmail({
         to: email,
         from: this.defaultFrom,
         subject,
         html: htmlBody,
         text: textBody,
+        template: templateCode,
+        category: EmailLogCategory.SYSTEM,
+        metadata: {
+          currentDate: variables.currentDate,
+        },
       });
-
       this.logger.log(
         `Account closure email queued for ${email} (id=${info.messageId})`,
       );
@@ -886,6 +983,160 @@ export class MailService {
     }
 
     return true;
+  }
+
+  private async sendAndTrackEmail(options: TrackedEmailSendOptions) {
+    const log = await this.createEmailLog({
+      to: options.to,
+      from: options.from ?? this.defaultFrom,
+      subject: options.subject,
+      template: options.template ?? null,
+      category: options.category,
+      reason: options.reason ?? null,
+      metadata: options.metadata ?? null,
+    });
+
+    try {
+      const info = await this.transporter.sendMail({
+        to: options.to,
+        from: options.from ?? this.defaultFrom,
+        subject: options.subject,
+        html: options.html,
+        text: options.text,
+        attachments: options.attachments,
+      });
+      await this.markEmailLogSent(log, info?.messageId);
+      return info;
+    } catch (error) {
+      await this.markEmailLogFailed(log, error as Error);
+      throw error;
+    }
+  }
+
+  private async createEmailLog(details: {
+    to: string;
+    from: string;
+    subject: string;
+    template: string | null;
+    category: EmailLogCategory;
+    reason: string | null;
+    metadata: Record<string, unknown> | null;
+  }): Promise<EmailLogEntity | null> {
+    try {
+      const log = this.emailLogRepository.create(
+        {
+          to: details.to,
+          from: details.from,
+          subject: details.subject,
+          template: details.template,
+          category: details.category,
+          reason: details.reason,
+          metadata: details.metadata,
+        },
+        { partial: true },
+      );
+      await this.emailLogRepository.getEntityManager().persistAndFlush(log);
+      return log;
+    } catch (error) {
+      this.logger.warn(
+        `Failed to record email log for ${details.to}: ${(error as Error).message}`,
+      );
+      return null;
+    }
+  }
+
+  private async markEmailLogSent(
+    log: EmailLogEntity | null,
+    messageId?: string | null,
+  ): Promise<void> {
+    if (!log) {
+      return;
+    }
+    log.status = EmailLogStatus.SENT;
+    log.messageId = messageId ?? null;
+    log.sentAt = new Date();
+
+    try {
+      await this.emailLogRepository.getEntityManager().flush();
+    } catch (error) {
+      this.logger.warn(
+        `Failed to update email log ${log.id} as sent: ${(error as Error).message}`,
+      );
+    }
+  }
+
+  private async markEmailLogFailed(
+    log: EmailLogEntity | null,
+    error: Error,
+  ): Promise<void> {
+    if (!log) {
+      return;
+    }
+    log.status = EmailLogStatus.FAILED;
+    log.errorMessage = error.message;
+    log.failedAt = new Date();
+
+    try {
+      await this.emailLogRepository.getEntityManager().flush();
+    } catch (flushError) {
+      this.logger.warn(
+        `Failed to update email log ${log.id} as failed: ${(flushError as Error).message}`,
+      );
+    }
+  }
+
+  async sendManualTemplateEmail(options: {
+    templateCode: string;
+    subject: string;
+    recipients: Array<{
+      email: string;
+      variables?: Record<string, string | number>;
+    }>;
+    reason?: string;
+  }): Promise<number> {
+    let sent = 0;
+
+    for (const recipient of options.recipients) {
+      if (!(await this.shouldSendEmail(recipient.email, 'system'))) {
+        continue;
+      }
+
+      let htmlBody: string;
+      try {
+        htmlBody = await this.notificationTemplateService.render(
+          options.templateCode,
+          recipient.variables ?? {},
+        );
+      } catch (error) {
+        this.logger.error(
+          `Failed to render template ${options.templateCode} for ${recipient.email}: ${
+            (error as Error).message
+          }`,
+        );
+        throw error;
+      }
+
+      let textBody: string | undefined;
+      try {
+        textBody = htmlBody.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+      } catch {
+        textBody = undefined;
+      }
+
+      await this.sendAndTrackEmail({
+        to: recipient.email,
+        subject: options.subject,
+        html: htmlBody,
+        text: textBody,
+        template: options.templateCode,
+        category: EmailLogCategory.SYSTEM,
+        reason: options.reason ?? options.templateCode,
+        metadata: recipient.variables ?? null,
+      });
+      sent += 1;
+    }
+
+    return sent;
   }
 
   private composeAnnouncementHtml(params: {

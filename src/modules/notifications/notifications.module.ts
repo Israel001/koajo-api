@@ -5,6 +5,7 @@ import { NotificationTemplateEntity } from './entities/notification-template.ent
 import { NotificationTemplateService } from './notification-template.service';
 import { AccountEntity } from '../accounts/entities/account.entity';
 import { AccountNotificationEntity } from '../accounts/entities/account-notification.entity';
+import { EmailLogEntity } from './entities/email-log.entity';
 import { InAppNotificationService } from './in-app-notification.service';
 
 @Module({
@@ -13,6 +14,7 @@ import { InAppNotificationService } from './in-app-notification.service';
       NotificationTemplateEntity,
       AccountEntity,
       AccountNotificationEntity,
+      EmailLogEntity,
     ]),
   ],
   providers: [NotificationTemplateService, MailService, InAppNotificationService],

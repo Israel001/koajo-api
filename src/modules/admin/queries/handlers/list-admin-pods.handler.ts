@@ -9,6 +9,7 @@ import {
   AdminPodSummary,
   AdminPodsListResult,
 } from '../../contracts/admin-results';
+import { toAdminAccountDetail } from './list-admin-accounts.handler';
 
 export const toAdminPodSummary = (pod: PodEntity): AdminPodSummary => ({
   id: pod.id,
@@ -28,6 +29,7 @@ export const toAdminPodDetail = (pod: PodEntity): AdminPodDetail => {
     .map((membership) => ({
       id: membership.id,
       accountId: membership.account?.id ?? null,
+      account: membership.account ? toAdminAccountDetail(membership.account) : null,
       joinOrder: membership.joinOrder,
       finalOrder: membership.finalOrder ?? null,
       payoutDate: membership.payoutDate

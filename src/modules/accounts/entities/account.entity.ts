@@ -97,6 +97,12 @@ export class AccountEntity {
   @Property({ columnType: 'varchar(128)', nullable: true })
   missedPaymentReason?: string | null;
 
+  @Property({ columnType: 'tinyint(1)', default: false })
+  overheatFlag = false;
+
+  @Property({ columnType: 'varchar(128)', nullable: true })
+  overheatReason?: string | null;
+
   @Property({ columnType: 'tinyint(1)', default: true })
   isActive = true;
 
@@ -217,6 +223,12 @@ export class AccountEntity {
     this.deactivatedAt = at;
   }
 
+  activate(at: Date = new Date()) {
+    this.isActive = true;
+    this.deactivatedAt = null;
+    this.lastPodJoinedAt = this.lastPodJoinedAt ?? at;
+  }
+
   markFraudReview(reason: string): void {
     this.requiresFraudReview = true;
     this.fraudReviewReason = reason;
@@ -235,5 +247,15 @@ export class AccountEntity {
   clearMissedPayment(): void {
     this.missedPaymentFlag = false;
     this.missedPaymentReason = null;
+  }
+
+  markOverheat(reason: string): void {
+    this.overheatFlag = true;
+    this.overheatReason = reason;
+  }
+
+  clearOverheat(): void {
+    this.overheatFlag = false;
+    this.overheatReason = null;
   }
 }

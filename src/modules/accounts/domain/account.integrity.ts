@@ -41,6 +41,8 @@ export const accountChecksumFields = (
   account.fraudReviewReason ?? '',
   account.missedPaymentFlag ? 1 : 0,
   account.missedPaymentReason ?? '',
+  account.overheatFlag ? 1 : 0,
+  account.overheatReason ?? '',
 ];
 
 const toMillis = (value: Date | string | null | undefined): number => {

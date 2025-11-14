@@ -68,6 +68,12 @@ export class AdminLoginHandler
         throw new UnauthorizedException('Invalid credentials.');
       }
 
+      if (adminUser.requiresPasswordChange && adminUser.lastLoginAt) {
+        throw new UnauthorizedException(
+          'Please reset your password before logging in again.',
+        );
+      }
+
       role = adminUser.role;
       subject = adminUser.id;
       permissions = this.accessService.computeEffectivePermissions(adminUser)

@@ -89,6 +89,8 @@ export interface AdminAccountListItem {
   fraudReviewReason: string | null;
   missedPaymentFlag: boolean;
   missedPaymentReason: string | null;
+  overheatFlag: boolean;
+  overheatReason: string | null;
 }
 
 export interface AdminAccountsListResult {
@@ -166,6 +168,7 @@ export interface AdminPodSummary {
 export interface AdminPodMembershipSummary {
   id: string;
   accountId: string | null;
+  account: AdminAccountDetail | null;
   joinOrder: number;
   finalOrder: number | null;
   payoutDate: string | null;

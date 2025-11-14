@@ -16,6 +16,7 @@ import { DeleteAccountHandler } from './delete-account.handler';
 import { RefreshAccessTokenHandler } from './refresh-access-token.handler';
 import { UpdateAccountFlagsHandler } from './update-account-flags.handler';
 import { RemoveAccountBankHandler } from './remove-account-bank.handler';
+import { UpdateAccountStatusHandler } from './update-account-status.handler';
 
 export const CommandHandlers = [
   RegisterAccountHandler,
@@ -36,6 +37,7 @@ export const CommandHandlers = [
   RefreshAccessTokenHandler,
   UpdateAccountFlagsHandler,
   RemoveAccountBankHandler,
+  UpdateAccountStatusHandler,
 ];
 
 export { RegisterAccountHandler } from './register-account.handler';
@@ -56,3 +58,4 @@ export { DeleteAccountHandler } from './delete-account.handler';
 export { RefreshAccessTokenHandler } from './refresh-access-token.handler';
 export { UpdateAccountFlagsHandler } from './update-account-flags.handler';
 export { RemoveAccountBankHandler } from './remove-account-bank.handler';
+export { UpdateAccountStatusHandler } from './update-account-status.handler';

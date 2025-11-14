@@ -97,7 +97,7 @@
                               padding-bottom: 16px;
                             "
                           >
-                            Hey Rich friend,
+                            Hey {{firstName}},
                           </td>
                         </tr>
                         <tr>
@@ -109,60 +109,13 @@
                               padding-bottom: 16px;
                             "
                           >
-                            You were invited to join a custom Koajo pod... If
-                            you already have a Koajo account, just log in and
-                            accept your pod.
-                          </td>
-                        </tr>
-                        <tr>
-                          <td
-                            style="
-                              font-size: 16px;
-                              line-height: 24px;
-                              color: #4b5563;
-                              padding-bottom: 16px;
-                            "
-                          >
-                            If you're new with us, welcome! We are excited to be
-                            a part of your savings journey.
-                          </td>
-                        </tr>
-                        <tr>
-                          <td
-                            style="
-                              font-size: 16px;
-                              line-height: 24px;
-                              color: #4b5563;
-                              padding-bottom: 16px;
-                            "
-                          >
-                            We are a first-of-it's-kind digitally safe rotating
-                            savings platform to help change how our generation
-                            generates wealth for themselves and fund the things
-                            that matters most.
-                          </td>
-                        </tr>
-                        <tr>
-                          <td
-                            style="
-                              font-size: 16px;
-                              line-height: 24px;
-                              color: #4b5563;
-                              padding-bottom: 16px;
-                            "
-                          >
-                            You can create an account, verify your identity and begin your journey. <br />
-                            Here are your pod details:
+                            We were notified by your bank that a dispute has
+                            been filed on a recent Koajo transaction:
                             <ul>
+                              <li><strong>Amount</strong>: ${{amount}}</li>
+                              <li><strong>Date</strong>: {{date}}</li>
                               <li>
-                                <strong>Pod Amount:</strong> $ {{podAmount}}
-                              </li>
-                              <li><strong>Members:</strong> {{podMembers}}</li>
-                              <li><strong>Cycle:</strong> {{podCycle}}</li>
-                              <li>
-                                <strong>Your Payout Position:</strong> Available
-                                on your dashboard after the first savings is
-                                received.
+                                <strong>Reference</strong>: {{transactionId}}
                               </li>
                             </ul>
                           </td>
@@ -176,13 +129,9 @@
                               padding-bottom: 16px;
                             "
                           >
-                            Your pod cycle begins
-                            <strong
-                              >only when your first contribution is
-                              made.</strong
-                            >
-                            Once that happens, the countdown starts and your
-                            savings journey is officially underway.
+                            We've paused activity on your account while we
+                            investigate. If this dispute was filed in error,
+                            please contact your bank to cancel it.
                           </td>
                         </tr>
                         <tr>
@@ -194,7 +143,13 @@
                               padding-bottom: 16px;
                             "
                           >
-                            Don't worry, we'll guide you every step of the way.
+                            In the meantime, please reply with:
+                            <ul>
+                              <li>A brief explanation of your experience</li>
+                              <li>
+                                Any documentation you believe supports your case
+                              </li>
+                            </ul>
                           </td>
                         </tr>
                         <tr>
@@ -206,8 +161,8 @@
                               padding-bottom: 16px;
                             "
                           >
-                            Here for your journey,<br />
-                            Koajo Pod Operations
+                            Yours in wealth, <br />
+                            Koajo Financial Operations
                           </td>
                         </tr>
                       </table>
@@ -355,16 +310,40 @@
                         <tr>
                           <td
                             colspan="2"
-                            style="
-                              padding-top: 16px;
-                              font-size: 13px;
-                              color: #6b7280;
-                              text-align: left;
-                            "
-                          >
-                            <a
-                              href="https://www.koajo.com"
-                              style="
+                        style="
+                          padding-top: 16px;
+                          font-size: 13px;
+                          color: #6b7280;
+                          text-align: left;
+                        "
+                      >
+                        Koajo is a fintech company, not a bank, lender, advisor,
+                        broker, fund manager, investment firm, MLM scheme, credit
+                        repair service, credit reporting agency, money service
+                        business, money transmitter, financial institution or issuer
+                        of stored valued products. Koajo does not control user
+                        behavior and disclaims any liability in this regard. Koajo
+                        is not designed to pool funds for investment or generate
+                        profits for users. We do not offer investment returns or
+                        shares on savings. Users' relationship with Koajo is
+                        independent, and their savings are paid out either in
+                        advance or arrears, based solely on their own contributions,
+                        with no reliance on the efforts of others.
+                      </td>
+                    </tr>
+                    <tr>
+                      <td
+                        colspan="2"
+                        style="
+                          padding-top: 16px;
+                          font-size: 13px;
+                          color: #6b7280;
+                          text-align: left;
+                        "
+                      >
+                        <a
+                          href="https://www.koajo.com"
+                          style="
                                 color: #0ea5e9;
                                 text-decoration: none;
                                 margin-right: 16px;
@@ -397,18 +376,5 @@
         </td>
       </tr>
     </table>
-  
-    <p
-      style="
-        margin: 24px auto 0;
-        max-width: 560px;
-        font-size: 12px;
-        line-height: 20px;
-        color: #6b7280;
-        text-align: left;
-      "
-    >
-      Koajo is a fintech company, not a bank, lender, advisor, broker, fund manager, investment firm, MLM scheme, credit repair service, credit reporting agency, money service business, money transmitter, financial institution or issuer of stored valued products. Koajo does not control user behavior and disclaims any liability in this regard. Koajo is not designed to pool funds for investment or generate profits for users. We do not offer investment returns or shares on savings. Users' relationship with Koajo is independent, and their savings are paid out either in advance or arrears, based solely on their own contributions, with no reliance on the efforts of others.
-    </p>
-</body>
+  </body>
 </html>

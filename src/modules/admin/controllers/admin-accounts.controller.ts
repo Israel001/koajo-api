@@ -1,4 +1,13 @@
-import { Body, Controller, Delete, Get, Param, Patch, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
   ApiBearerAuth,
@@ -9,9 +18,13 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { AdminJwtGuard } from '../guards/admin-jwt.guard';
-import { AdminPermissionsGuard, RequireAdminPermissions } from '../guards/admin-permissions.guard';
+import {
+  AdminPermissionsGuard,
+  RequireAdminPermissions,
+} from '../guards/admin-permissions.guard';
 import {
   ADMIN_PERMISSION_EDIT_USER_DETAILS,
+  ADMIN_PERMISSION_TOGGLE_USER_STATUS,
   ADMIN_PERMISSION_MANAGE_USER_NOTIFICATIONS,
   ADMIN_PERMISSION_VIEW_USERS,
 } from '../admin-permission.constants';
@@ -44,6 +57,9 @@ import { ListAccountVerificationAttemptsQuery } from '../queries/list-account-ve
 import { UpdateUserProfileCommand } from '../../accounts/commands/update-user-profile.command';
 import { UpdateUserProfileResult } from '../../accounts/contracts/auth-results';
 import { UpdateUserProfileResultDto } from '../../accounts/contracts/auth-swagger.dto';
+import { UpdateAccountStatusCommand } from '../../accounts/commands/update-account-status.command';
+import { UpdateAccountStatusDto } from '../dto/update-account-status.dto';
+import { AdminAccountPodsQueryDto } from '../dto/account-pods-query.dto';
 
 @ApiTags('admin-accounts')
 @Controller({ path: 'admin/accounts', version: '1' })
@@ -60,7 +76,9 @@ export class AdminAccountsController {
   @ApiOperation({ summary: 'List customer accounts' })
   @ApiOkResponse({ description: 'Accounts fetched.' })
   @RequireAdminPermissions(ADMIN_PERMISSION_VIEW_USERS)
-  async list(@Query() query: AdminListQueryDto): Promise<AdminAccountsListResult> {
+  async list(
+    @Query() query: AdminListQueryDto,
+  ): Promise<AdminAccountsListResult> {
     return this.queryBus.execute(
       new ListAdminAccountsQuery(query.limit, query.offset, query.search),
     );
@@ -96,7 +114,9 @@ export class AdminAccountsController {
   @ApiOkResponse({ description: 'Account fetched.' })
   @ApiNotFoundResponse({ description: 'Account not found.' })
   @RequireAdminPermissions(ADMIN_PERMISSION_VIEW_USERS)
-  async getOne(@Param('accountId') accountId: string): Promise<AdminAccountDetail> {
+  async getOne(
+    @Param('accountId') accountId: string,
+  ): Promise<AdminAccountDetail> {
     return this.queryBus.execute(new GetAdminAccountQuery(accountId));
   }
 
@@ -118,6 +138,31 @@ export class AdminAccountsController {
         payload.transactionNotificationsEnabled,
       ),
     );
+  }
+
+  @Patch(':accountId/status')
+  @ApiOperation({ summary: 'Activate or deactivate a customer account' })
+  @ApiOkResponse({
+    description: 'Account status updated.',
+    schema: {
+      type: 'object',
+      properties: {
+        isActive: { type: 'boolean' },
+      },
+    },
+  })
+  @RequireAdminPermissions(ADMIN_PERMISSION_TOGGLE_USER_STATUS)
+  async updateStatus(
+    @Param('accountId') accountId: string,
+    @Body() payload: UpdateAccountStatusDto,
+  ): Promise<{ isActive: boolean }> {
+    const account = await this.commandBus.execute(
+      new UpdateAccountStatusCommand(accountId, payload.isActive),
+    );
+
+    return {
+      isActive: account.isActive,
+    };
   }
 
   @Patch(':accountId/profile')
@@ -145,7 +190,9 @@ export class AdminAccountsController {
   }
 
   @Patch(':accountId/flags')
-  @ApiOperation({ summary: 'Update fraud or missed payment flags for an account' })
+  @ApiOperation({
+    summary: 'Update fraud or missed payment flags for an account',
+  })
   @ApiOkResponse({
     description: 'Account flags updated.',
     schema: {
@@ -160,18 +207,24 @@ export class AdminAccountsController {
   async updateFlags(
     @Param('accountId') accountId: string,
     @Body() payload: UpdateAccountFlagsDto,
-  ): Promise<{ fraudReview: boolean; missedPayment: boolean }> {
+  ): Promise<{
+    fraudReview: boolean;
+    missedPayment: boolean;
+    overheat: boolean;
+  }> {
     const account = await this.commandBus.execute(
       new UpdateAccountFlagsCommand(
         accountId,
         payload.fraudReview,
         payload.missedPayment,
+        payload.overheat,
       ),
     );
 
     return {
       fraudReview: account.requiresFraudReview,
       missedPayment: account.missedPaymentFlag,
+      overheat: account.overheatFlag,
     };
   }
 
@@ -204,45 +257,41 @@ export class AdminAccountsController {
     return this.queryBus.execute(new GetAchievementsSummaryQuery(accountId));
   }
 
-  @Get(':accountId/pods/current')
-  @ApiOperation({ summary: 'List current pods for an account' })
+  @Get(':accountId/pods')
+  @ApiOperation({
+    summary: 'List pods for an account with optional status filter',
+  })
   @ApiOkResponse({
-    description: 'Current pods fetched.',
+    description: 'Pods fetched.',
     type: [AdminAccountPodMembershipDto],
   })
   @RequireAdminPermissions(ADMIN_PERMISSION_VIEW_USERS)
-  async currentPods(
+  async pods(
     @Param('accountId') accountId: string,
+    @Query() query: AdminAccountPodsQueryDto,
   ): Promise<AdminAccountPodMembership[]> {
-    return this.fetchAccountPods(accountId, false);
-  }
-
-  @Get(':accountId/pods/history')
-  @ApiOperation({ summary: 'List completed pod memberships for an account' })
-  @ApiOkResponse({
-    description: 'Historical pods fetched.',
-    type: [AdminAccountPodMembershipDto],
-  })
-  @RequireAdminPermissions(ADMIN_PERMISSION_VIEW_USERS)
-  async podHistory(
-    @Param('accountId') accountId: string,
-  ): Promise<AdminAccountPodMembership[]> {
-    return this.fetchAccountPods(accountId, true);
+    const filter = query.filter ?? 'current';
+    return this.fetchAccountPods(accountId, filter);
   }
 
   private async fetchAccountPods(
     accountId: string,
-    history: boolean,
+    filter: 'current' | 'completed' | 'all',
   ): Promise<AdminAccountPodMembership[]> {
     const memberships = (await this.queryBus.execute(
       new ListAccountPodsQuery(accountId),
     )) as MembershipWithPod[];
 
-    const filtered = memberships.filter((membership) =>
-      history
-        ? membership.pod.status === PodStatus.COMPLETED
-        : membership.pod.status !== PodStatus.COMPLETED,
-    );
+    let filtered = memberships;
+    if (filter === 'completed') {
+      filtered = memberships.filter(
+        (membership) => membership.pod.status === PodStatus.COMPLETED,
+      );
+    } else if (filter === 'current') {
+      filtered = memberships.filter(
+        (membership) => membership.pod.status !== PodStatus.COMPLETED,
+      );
+    }
 
     return filtered.map((membership) =>
       this.toAdminAccountPodMembership(membership),

@@ -38,6 +38,7 @@ import { AdminPermissionsController } from './controllers/admin-permissions.cont
 import { AdminPasswordResetService } from './services/admin-password-reset.service';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { AdminAnnouncementsController } from './controllers/admin-announcements.controller';
+import { AdminManualEmailsController } from './controllers/admin-manual-emails.controller';
 import { AdminAnnouncementEntity } from './entities/admin-announcement.entity';
 import { AdminAnnouncementRecipientEntity } from './entities/admin-announcement-recipient.entity';
 import { AdminPermissionSyncService } from './services/admin-permission-sync.service';
@@ -94,6 +95,7 @@ import { StripeIdentityService } from './services/stripe-identity.service';
     AdminRolesController,
     AdminPermissionsController,
     AdminAnnouncementsController,
+    AdminManualEmailsController,
   ],
   providers: [
     ...AdminCommandHandlers,

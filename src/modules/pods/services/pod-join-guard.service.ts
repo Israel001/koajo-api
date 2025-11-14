@@ -33,6 +33,12 @@ export class PodJoinGuardService {
         'Your account has a missed payment. Please resolve it before joining new pods.',
       );
     }
+
+    if (account.overheatFlag) {
+      throw new BadRequestException(
+        'Your account is temporarily limited due to rapid pod joins. Please contact support to continue joining pods.',
+      );
+    }
   }
 
   async evaluateRapidJoins(
@@ -49,8 +55,8 @@ export class PodJoinGuardService {
       joinedAt: { $gte: windowStart },
     });
 
-    if (recentCount >= 4 && !account.requiresFraudReview) {
-      account.markFraudReview('too_many_pods');
+    if (recentCount > 4 && !account.overheatFlag) {
+      account.markOverheat('overheat');
       await this.mailService.sendTooManyPodsWarningEmail({
         email: account.email,
         firstName: account.firstName ?? account.email.split('@')[0],

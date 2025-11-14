@@ -28,6 +28,8 @@ export const toAdminAccountDetail = (
   fraudReviewReason: account.fraudReviewReason ?? null,
   missedPaymentFlag: account.missedPaymentFlag,
   missedPaymentReason: account.missedPaymentReason ?? null,
+  overheatFlag: account.overheatFlag,
+  overheatReason: account.overheatReason ?? null,
 });
 
 const deriveKycStatus = (account: AccountEntity): AdminKycStatus => {

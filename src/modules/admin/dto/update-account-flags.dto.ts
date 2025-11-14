@@ -15,4 +15,11 @@ export class UpdateAccountFlagsDto {
   @IsOptional()
   @IsBoolean()
   missedPayment?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'When provided, toggles the overheat flag (rapid pod joins) for the account.',
+  })
+  @IsOptional()
+  @IsBoolean()
+  overheat?: boolean;
 }

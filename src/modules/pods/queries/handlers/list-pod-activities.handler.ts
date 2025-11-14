@@ -48,7 +48,7 @@ export class ListPodActivitiesHandler
       items: activities.map((activity) => ({
         id: activity.id,
         type: activity.type,
-        metadata: (activity.metadata as Record<string, unknown> | null) ?? null,
+        metadata: null,
         createdAt: activity.createdAt.toISOString(),
         actor: activity.account
           ? {

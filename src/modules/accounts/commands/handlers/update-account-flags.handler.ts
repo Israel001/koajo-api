@@ -30,10 +30,11 @@ export class UpdateAccountFlagsHandler
 
     if (
       typeof command.fraudReview === 'undefined' &&
-      typeof command.missedPayment === 'undefined'
+      typeof command.missedPayment === 'undefined' &&
+      typeof command.overheat === 'undefined'
     ) {
       throw new BadRequestException(
-        'No flag updates were supplied. Provide fraudReview and/or missedPayment.',
+        'No flag updates were supplied. Provide fraudReview, missedPayment, and/or overheat.',
       );
     }
 
@@ -55,6 +56,14 @@ export class UpdateAccountFlagsHandler
         );
       } else {
         account.clearMissedPayment();
+      }
+    }
+
+    if (typeof command.overheat !== 'undefined') {
+      if (command.overheat) {
+        account.markOverheat(account.overheatReason ?? 'manual_update');
+      } else {
+        account.clearOverheat();
       }
     }
 

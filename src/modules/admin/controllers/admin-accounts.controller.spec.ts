@@ -6,6 +6,7 @@ import { ListAllAdminAccountsQuery } from '../queries/list-all-admin-accounts.qu
 import { GetAdminAccountQuery } from '../queries/get-admin-account.query';
 import { UpdateNotificationPreferencesCommand } from '../../accounts/commands/update-notification-preferences.command';
 import { UpdateAccountFlagsCommand } from '../../accounts/commands/update-account-flags.command';
+import { UpdateAccountStatusCommand } from '../../accounts/commands/update-account-status.command';
 import { RemoveAccountBankCommand } from '../../accounts/commands/remove-account-bank.command';
 import { ListAccountPodsQuery } from '../../pods/queries/list-account-pods.query';
 import { PodStatus } from '../../pods/pod-status.enum';
@@ -95,6 +96,21 @@ describe('AdminAccountsController', () => {
     );
   });
 
+  it('updates account status', async () => {
+    commandBus.execute.mockResolvedValue({
+      isActive: false,
+    });
+
+    const result = await controller.updateStatus('acc-1', {
+      isActive: false,
+    } as any);
+
+    expect(result).toEqual({ isActive: false });
+    expect(commandBus.execute).toHaveBeenCalledWith(
+      expect.any(UpdateAccountStatusCommand),
+    );
+  });
+
   it('updates profile information for an account', async () => {
     const expected = {
       user: { id: 'acc-1' },
@@ -119,13 +135,15 @@ describe('AdminAccountsController', () => {
     commandBus.execute.mockResolvedValue({
       requiresFraudReview: false,
       missedPaymentFlag: true,
+      overheatFlag: false,
     });
 
     const result = await controller.updateFlags('acc-1', {
       fraudReview: false,
+      overheat: false,
     } as any);
 
-    expect(result).toEqual({ fraudReview: false, missedPayment: true });
+    expect(result).toEqual({ fraudReview: false, missedPayment: true, overheat: false });
     expect(commandBus.execute).toHaveBeenCalledWith(
       expect.any(UpdateAccountFlagsCommand),
     );
@@ -157,36 +175,31 @@ describe('AdminAccountsController', () => {
     );
   });
 
-  it('lists current pods for an account', async () => {
-    const membership = buildMembership(PodStatus.ACTIVE);
-    queryBus.execute.mockResolvedValue([membership]);
-
-    const result = await controller.currentPods('acc-1');
-
-    expect(queryBus.execute).toHaveBeenCalledWith(
-      expect.any(ListAccountPodsQuery),
-    );
-    expect(result).toHaveLength(1);
-    expect(result[0]).toMatchObject({
-      podId: membership.pod.id,
-      status: PodStatus.ACTIVE,
-      totalContributed: membership.totalContributed,
-    });
-  });
-
-  it('lists pod history for an account', async () => {
+  it('lists pods for an account with filters', async () => {
     const archived = buildMembership(PodStatus.COMPLETED);
     const current = buildMembership(PodStatus.ACTIVE);
     queryBus.execute.mockResolvedValue([archived, current]);
 
-    const result = await controller.podHistory('acc-1');
+    const currentPods = await controller.pods('acc-1', {
+      filter: 'current',
+    } as any);
+    expect(currentPods).toHaveLength(1);
+    expect(currentPods[0].status).toBe(PodStatus.ACTIVE);
+
+    const history = await controller.pods('acc-1', {
+      filter: 'completed',
+    } as any);
+    expect(history).toHaveLength(1);
+    expect(history[0].status).toBe(PodStatus.COMPLETED);
+
+    const all = await controller.pods('acc-1', {
+      filter: 'all',
+    } as any);
+    expect(all).toHaveLength(2);
 
     expect(queryBus.execute).toHaveBeenCalledWith(
       expect.any(ListAccountPodsQuery),
     );
-    expect(result).toHaveLength(1);
-    expect(result[0].status).toBe(PodStatus.COMPLETED);
-    expect(result[0].completedAt).toBe(archived.pod.completedAt?.toISOString());
   });
 });
 

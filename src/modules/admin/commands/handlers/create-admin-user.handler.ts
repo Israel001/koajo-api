@@ -192,13 +192,27 @@ export class CreateAdminUserHandler
       'permissionOverrides.permission',
     ]);
 
+    const adminPortalUrl = 'https://koajo-admin.vercel.app';
+    const displayName =
+      [admin.firstName, admin.lastName]
+        .map((value) => value?.trim())
+        .filter((value): value is string => Boolean(value && value.length))
+        .join(' ')
+        .trim() || admin.email.split('@')[0];
+
     try {
       await this.mailService.sendAdminInvite(email, {
         password: plainPassword,
         templateCode: inviteTemplateCode ?? 'admin_invite',
+        portalUrl: adminPortalUrl,
+        username: email,
+        name: displayName,
         variables: {
-          firstname: admin.firstName ?? admin.email.split('@')[0],
+          firstname: admin.firstName ?? '',
           lastname: admin.lastName ?? '',
+          name: displayName,
+          username: email,
+          portalUrl: adminPortalUrl,
         },
       });
     } catch {
