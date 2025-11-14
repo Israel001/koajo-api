@@ -6,7 +6,7 @@ export class RecordIdentityVerificationCommand {
     public readonly resultId: string,
     public readonly status: string,
     public readonly type: string,
-    public readonly firstName: string,
-    public readonly lastName: string,
+    public readonly firstName?: string,
+    public readonly lastName?: string,
   ) {}
 }

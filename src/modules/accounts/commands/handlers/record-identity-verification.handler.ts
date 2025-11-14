@@ -42,8 +42,8 @@ export class RecordIdentityVerificationHandler
 
     const normalizedStatus = command.status.trim().toLowerCase();
     const normalizedType = command.type.trim();
-    const normalizedFirst = command.firstName.trim();
-    const normalizedLast = command.lastName.trim();
+    const normalizedFirst = command.firstName?.trim() ?? '';
+    const normalizedLast = command.lastName?.trim() ?? '';
 
     const attempt = this.verificationAttemptRepository.create(
       {
@@ -61,8 +61,12 @@ export class RecordIdentityVerificationHandler
       { partial: true },
     );
 
-    account.firstName = normalizedFirst || account.firstName || null;
-    account.lastName = normalizedLast || account.lastName || null;
+    if (normalizedFirst.length) {
+      account.firstName = normalizedFirst;
+    }
+    if (normalizedLast.length) {
+      account.lastName = normalizedLast;
+    }
     account.stripeIdentityId = command.identityId.trim();
     account.stripeIdentityResultId = command.resultId.trim();
     account.stripeVerificationCompleted = this.isSuccessfulStatus(

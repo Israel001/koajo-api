@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class RecordIdentityVerificationDto {
   @ApiProperty({
@@ -45,16 +45,16 @@ export class RecordIdentityVerificationDto {
     description: 'First name supplied during the verification flow.',
   })
   @Expose({ name: 'first_name' })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  firstName!: string;
+  firstName?: string;
 
   @ApiProperty({
     name: 'last_name',
     description: 'Last name supplied during the verification flow.',
   })
   @Expose({ name: 'last_name' })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  lastName!: string;
+  lastName?: string;
 }
