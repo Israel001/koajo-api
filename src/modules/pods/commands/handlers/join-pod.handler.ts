@@ -71,6 +71,7 @@ export class JoinPodHandler
       isSystemBot: false,
       joinedAt: { $gte: sevenDaysAgo },
     });
+    let shouldMarkOverheat = false;
 
     if (recentJoinCount >= 3) {
       const latestJoin = await this.membershipRepository.findOne(
@@ -80,15 +81,14 @@ export class JoinPodHandler
 
       if (
         latestJoin &&
-        now.getTime() <
-          latestJoin.joinedAt.getTime() + sevenDaysMs
+        now.getTime() < latestJoin.joinedAt.getTime() + sevenDaysMs
       ) {
-        const availableAt = new Date(
-          latestJoin.joinedAt.getTime() + sevenDaysMs,
-        );
-        throw new BadRequestException(
-          `Join cooldown active. You can join another pod after ${availableAt.toISOString()}.`,
-        );
+        if (account.overheatFlag) {
+          throw new BadRequestException(
+            'Your account is temporarily limited due to rapid pod joins. Please contact support to continue joining pods.',
+          );
+        }
+        shouldMarkOverheat = true;
       }
     }
 
@@ -121,7 +121,9 @@ export class JoinPodHandler
     });
 
     if (existingMembership) {
-      throw new BadRequestException('Account already joined this pod.');
+      throw new BadRequestException(
+        'You already joined this pod plan for this cycle, please join other.',
+      );
     }
 
     if (pod.memberships.length >= plan.maxMembers) {
@@ -136,11 +138,16 @@ export class JoinPodHandler
         joinOrder: pod.memberships.length + 1,
         joinedAt: now,
         goalType: goal,
-        goalNote: goal === PodGoalType.OTHER ? goalNote?.trim() ?? null : null,
+        goalNote:
+          goal === PodGoalType.OTHER ? (goalNote?.trim() ?? null) : null,
         totalContributed: '0.00',
       },
       { partial: true },
     );
+
+    if (shouldMarkOverheat) {
+      account.markOverheat('join_cooldown');
+    }
 
     const em = this.membershipRepository.getEntityManager();
     account.markPodJoined(now);
@@ -183,7 +190,13 @@ export class JoinPodHandler
 
     const loaded = await this.membershipRepository.findOneOrFail(
       { id: membership.id },
-      { populate: ['pod', 'pod.memberships', 'pod.memberships.account'] as const },
+      {
+        populate: [
+          'pod',
+          'pod.memberships',
+          'pod.memberships.account',
+        ] as const,
+      },
     );
 
     const confirmation = buildPodConfirmationDetails(pod as PodEntity);
