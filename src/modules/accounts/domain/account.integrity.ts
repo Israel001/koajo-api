@@ -37,6 +37,7 @@ export const accountChecksumFields = (
   account.stripeBankName ?? '',
   account.stripeBankAccountFirstName ?? '',
   account.stripeBankAccountLastName ?? '',
+  account.stripeBankAccountLast4 ?? '',
   account.requiresFraudReview ? 1 : 0,
   account.fraudReviewReason ?? '',
   account.missedPaymentFlag ? 1 : 0,

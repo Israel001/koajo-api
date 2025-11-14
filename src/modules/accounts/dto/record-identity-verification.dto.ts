@@ -39,4 +39,22 @@ export class RecordIdentityVerificationDto {
   @IsString()
   @IsNotEmpty()
   type!: string;
+
+  @ApiProperty({
+    name: 'first_name',
+    description: 'First name supplied during the verification flow.',
+  })
+  @Expose({ name: 'first_name' })
+  @IsString()
+  @IsNotEmpty()
+  firstName!: string;
+
+  @ApiProperty({
+    name: 'last_name',
+    description: 'Last name supplied during the verification flow.',
+  })
+  @Expose({ name: 'last_name' })
+  @IsString()
+  @IsNotEmpty()
+  lastName!: string;
 }

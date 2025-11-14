@@ -56,6 +56,9 @@ export class UpsertStripeBankAccountHandler
       account.stripeBankAccountLinkedAt = now;
     }
     account.stripeBankAccountUpdatedAt = now;
+    account.stripeBankAccountLast4 = this.normalizeLast4(
+      command.accountLast4,
+    );
 
     const mismatch = this.hasNameMismatch(account);
     if (mismatch && !account.requiresFraudReview) {
@@ -74,6 +77,7 @@ export class UpsertStripeBankAccountHandler
       customer_id: account.stripeBankAccountCustomerId,
       created_at: account.stripeBankAccountLinkedAt.toISOString(),
       updated_at: account.stripeBankAccountUpdatedAt.toISOString(),
+      last4: account.stripeBankAccountLast4 ?? null,
     };
   }
 
@@ -104,5 +108,13 @@ export class UpsertStripeBankAccountHandler
   private normalizeValue(value: string): string | null {
     const trimmed = value.trim();
     return trimmed.length ? trimmed : null;
+  }
+
+  private normalizeLast4(value: string): string | null {
+    const trimmed = value.trim();
+    if (!trimmed.length) {
+      return null;
+    }
+    return trimmed.slice(-4);
   }
 }

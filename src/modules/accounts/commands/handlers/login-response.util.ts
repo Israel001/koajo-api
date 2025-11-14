@@ -49,7 +49,7 @@ export const buildLoginUserResult = (
     customer: account.stripeCustomerId
       ? {
           id: account.stripeCustomerId,
-          ssnLast4: account.stripeCustomerSsnLast4 ?? null,
+          ssnLast4: account.stripeBankAccountLast4 ?? null,
           address: account.stripeCustomerAddress ?? null,
         }
       : null,
@@ -66,6 +66,7 @@ export const buildLoginUserResult = (
           updatedAt: (
             account.stripeBankAccountUpdatedAt ?? account.updatedAt
           ).toISOString(),
+          last4: account.stripeBankAccountLast4 ?? null,
         }
       : null,
   };

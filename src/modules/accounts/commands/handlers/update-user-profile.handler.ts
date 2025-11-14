@@ -164,7 +164,7 @@ export class UpdateUserProfileHandler
 
     return {
       id: account.stripeCustomerId,
-      ssn_last4: account.stripeCustomerSsnLast4 ?? null,
+      ssn_last4: account.stripeBankAccountLast4 ?? null,
       address: account.stripeCustomerAddress ?? null,
     };
   }
@@ -184,6 +184,7 @@ export class UpdateUserProfileHandler
       updated_at: (
         account.stripeBankAccountUpdatedAt ?? account.updatedAt
       ).toISOString(),
+      last4: account.stripeBankAccountLast4 ?? null,
     };
   }
 }

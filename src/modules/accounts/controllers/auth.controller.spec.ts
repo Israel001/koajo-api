@@ -469,6 +469,8 @@ describe('AuthController', () => {
         resultId: 'res_456',
         status: 'verified',
         type: 'document',
+        firstName: 'Jane',
+        lastName: 'Doe',
       };
 
       const expected: RecordIdentityVerificationResult = {
@@ -501,6 +503,8 @@ describe('AuthController', () => {
       expect(command.accountId).toBe('account-1');
       expect(command.identityId).toBe(dto.identityId);
       expect(command.resultId).toBe(dto.resultId);
+      expect(command.firstName).toBe(dto.firstName);
+      expect(command.lastName).toBe(dto.lastName);
     });
   });
 
@@ -572,7 +576,7 @@ describe('AuthController', () => {
 
       const expected: UpsertStripeCustomerResult = {
         id: dto.customerId,
-        ssn_last4: dto.ssnLast4!,
+        ssn_last4: null,
         address: dto.address!,
       };
 
@@ -605,6 +609,7 @@ describe('AuthController', () => {
         bankName: 'Example Bank',
         accountFirstName: 'Jane',
         accountLastName: 'Doe',
+        accountLast4: '9876',
       };
 
       const expected: UpsertStripeBankAccountResult = {
@@ -612,6 +617,7 @@ describe('AuthController', () => {
         customer_id: dto.customerId,
         created_at: new Date('2025-01-01T00:00:00.000Z').toISOString(),
         updated_at: new Date('2025-01-01T00:05:00.000Z').toISOString(),
+        last4: dto.accountLast4,
       };
 
       commandBus.execute.mockResolvedValue(expected);
@@ -630,10 +636,11 @@ describe('AuthController', () => {
       const command = commandBus.execute.mock.calls[0][0] as UpsertStripeBankAccountCommand;
       expect(command.accountId).toBe('account-1');
       expect(command.bankAccountId).toBe(dto.bankAccountId);
-       expect(command.customerId).toBe(dto.customerId);
-       expect(command.bankName).toBe(dto.bankName);
-       expect(command.accountFirstName).toBe(dto.accountFirstName);
-       expect(command.accountLastName).toBe(dto.accountLastName);
+      expect(command.customerId).toBe(dto.customerId);
+      expect(command.bankName).toBe(dto.bankName);
+      expect(command.accountFirstName).toBe(dto.accountFirstName);
+      expect(command.accountLastName).toBe(dto.accountLastName);
+      expect(command.accountLast4).toBe(dto.accountLast4);
     });
   });
 
@@ -692,12 +699,12 @@ describe('AuthController', () => {
         stripeIdentityId: 'iv_123',
         stripeIdentityResultId: 'res_456',
         stripeCustomerId: 'cus_123',
-        stripeCustomerSsnLast4: '1234',
         stripeCustomerAddress: { line1: '123 Road' },
         stripeBankAccountId: 'ba_123',
         stripeBankAccountCustomerId: 'cus_123',
         stripeBankAccountLinkedAt: bankLinkedAt,
         stripeBankAccountUpdatedAt: bankUpdatedAt,
+        stripeBankAccountLast4: '1234',
       });
 
       verificationAttemptRepository.findOne.mockResolvedValue({
@@ -753,6 +760,7 @@ describe('AuthController', () => {
           customer_id: 'cus_123',
           created_at: bankLinkedAt.toISOString(),
           updated_at: bankUpdatedAt.toISOString(),
+          last4: '1234',
         },
       });
 

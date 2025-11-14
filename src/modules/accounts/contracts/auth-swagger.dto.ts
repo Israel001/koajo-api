@@ -231,6 +231,12 @@ class LoginBankAccountSummaryDto implements LoginBankAccountSummary {
 
   @ApiProperty({ description: 'ISO timestamp when the bank account was updated.' })
   updatedAt!: string;
+
+  @ApiProperty({
+    description: 'Last four digits of the linked bank account.',
+    nullable: true,
+  })
+  last4!: string | null;
 }
 
 export class LoginUserResultDto implements LoginUserResult {
@@ -562,6 +568,12 @@ class StripeBankAccountDto implements UpsertStripeBankAccountResult {
     description: 'Timestamp when the bank account link was last updated.',
   })
   updated_at!: string;
+
+  @ApiProperty({
+    description: 'Last four digits of the linked bank account.',
+    nullable: true,
+  })
+  last4!: string | null;
 }
 
 export class RecordIdentityVerificationResultDto

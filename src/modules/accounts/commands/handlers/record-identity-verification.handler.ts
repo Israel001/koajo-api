@@ -6,6 +6,11 @@ import { RecordIdentityVerificationCommand } from '../record-identity-verificati
 import { AccountEntity } from '../../entities/account.entity';
 import { AccountVerificationAttemptEntity } from '../../entities/account-verification-attempt.entity';
 import { RecordIdentityVerificationResult } from '../../contracts/auth-results';
+import { ChecksumService } from '../../../../common/security/checksum.service';
+import {
+  accountChecksumFields,
+  ACCOUNT_CHECKSUM_CONTEXT,
+} from '../../domain/account.integrity';
 
 @Injectable()
 @CommandHandler(RecordIdentityVerificationCommand)
@@ -21,6 +26,7 @@ export class RecordIdentityVerificationHandler
     private readonly accountRepository: EntityRepository<AccountEntity>,
     @InjectRepository(AccountVerificationAttemptEntity)
     private readonly verificationAttemptRepository: EntityRepository<AccountVerificationAttemptEntity>,
+    private readonly checksumService: ChecksumService,
   ) {}
 
   async execute(
@@ -36,6 +42,8 @@ export class RecordIdentityVerificationHandler
 
     const normalizedStatus = command.status.trim().toLowerCase();
     const normalizedType = command.type.trim();
+    const normalizedFirst = command.firstName.trim();
+    const normalizedLast = command.lastName.trim();
 
     const attempt = this.verificationAttemptRepository.create(
       {
@@ -53,10 +61,16 @@ export class RecordIdentityVerificationHandler
       { partial: true },
     );
 
+    account.firstName = normalizedFirst || account.firstName || null;
+    account.lastName = normalizedLast || account.lastName || null;
     account.stripeIdentityId = command.identityId.trim();
     account.stripeIdentityResultId = command.resultId.trim();
     account.stripeVerificationCompleted = this.isSuccessfulStatus(
       normalizedStatus,
+    );
+    account.checksum = this.checksumService.generate(
+      ACCOUNT_CHECKSUM_CONTEXT,
+      ...accountChecksumFields(account),
     );
 
     const em = this.accountRepository.getEntityManager();

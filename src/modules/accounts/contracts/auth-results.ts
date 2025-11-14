@@ -61,6 +61,7 @@ export interface LoginBankAccountSummary {
   customerId: string | null;
   createdAt: string;
   updatedAt: string;
+  last4: string | null;
 }
 
 export interface LoginUserResult {
@@ -139,6 +140,7 @@ export interface CurrentUserResult {
     customer_id: string | null;
     created_at: string;
     updated_at: string;
+    last4: string | null;
   } | null;
 }
 
@@ -172,6 +174,7 @@ export interface UpsertStripeBankAccountResult {
   customer_id: string | null;
   created_at: string;
   updated_at: string;
+  last4: string | null;
 }
 
 export interface DeleteAccountResult {

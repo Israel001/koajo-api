@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsString, Length } from 'class-validator';
 
 export class UpsertStripeBankAccountDto {
   @ApiProperty({
@@ -47,4 +47,13 @@ export class UpsertStripeBankAccountDto {
   @IsString()
   @IsNotEmpty()
   accountLastName!: string;
+
+  @ApiProperty({
+    name: 'account_last4',
+    description: 'Last four digits of the linked bank account.',
+  })
+  @Expose({ name: 'account_last4' })
+  @IsString()
+  @Length(4, 4)
+  accountLast4!: string;
 }

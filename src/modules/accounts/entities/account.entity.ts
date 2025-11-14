@@ -67,9 +67,6 @@ export class AccountEntity {
   @Property({ columnType: 'varchar(128)', nullable: true })
   stripeCustomerId?: string | null;
 
-  @Property({ columnType: 'varchar(4)', nullable: true })
-  stripeCustomerSsnLast4?: string | null;
-
   @Property({ type: 'json', nullable: true })
   stripeCustomerAddress?: Record<string, unknown> | null;
 
@@ -84,6 +81,9 @@ export class AccountEntity {
 
   @Property({ columnType: 'datetime(6)', nullable: true })
   stripeBankAccountUpdatedAt?: Date | null;
+
+  @Property({ columnType: 'varchar(4)', nullable: true })
+  stripeBankAccountLast4?: string | null;
 
   @Property({ columnType: 'tinyint(1)', default: false })
   requiresFraudReview = false;

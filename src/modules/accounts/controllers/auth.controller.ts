@@ -176,7 +176,7 @@ export class AuthController {
       customer: account.stripeCustomerId
         ? {
             id: account.stripeCustomerId,
-            ssn_last4: account.stripeCustomerSsnLast4 ?? null,
+            ssn_last4: account.stripeBankAccountLast4 ?? null,
             address: account.stripeCustomerAddress ?? null,
           }
         : null,
@@ -193,6 +193,7 @@ export class AuthController {
             updated_at: (
               account.stripeBankAccountUpdatedAt ?? account.updatedAt
             ).toISOString(),
+            last4: account.stripeBankAccountLast4 ?? null,
           }
         : null,
     };
@@ -233,6 +234,8 @@ export class AuthController {
         payload.resultId,
         payload.status,
         payload.type,
+        payload.firstName,
+        payload.lastName,
       ),
     );
   }
@@ -312,6 +315,7 @@ export class AuthController {
         payload.bankName,
         payload.accountFirstName,
         payload.accountLastName,
+        payload.accountLast4,
       ),
     );
   }

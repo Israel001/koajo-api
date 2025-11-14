@@ -54,12 +54,12 @@ export class DeleteAccountHandler
     account.stripeIdentityId = null;
     account.stripeIdentityResultId = null;
     account.stripeCustomerId = null;
-    account.stripeCustomerSsnLast4 = null;
     account.stripeCustomerAddress = null;
     account.stripeBankAccountId = null;
     account.stripeBankAccountCustomerId = null;
     account.stripeBankAccountLinkedAt = null;
     account.stripeBankAccountUpdatedAt = null;
+    account.stripeBankAccountLast4 = null;
     account.lastLoginAt = null;
     account.lastPodJoinedAt = null;
     account.inactivityWarningSentAt = null;

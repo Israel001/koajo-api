@@ -29,7 +29,6 @@ export class UpsertStripeCustomerHandler
     }
 
     account.stripeCustomerId = command.stripeCustomerId.trim();
-    account.stripeCustomerSsnLast4 = command.ssnLast4?.trim() ?? null;
     account.stripeCustomerAddress = command.address ?? null;
 
     const em = this.accountRepository.getEntityManager();
@@ -37,7 +36,7 @@ export class UpsertStripeCustomerHandler
 
     return {
       id: account.stripeCustomerId,
-      ssn_last4: account.stripeCustomerSsnLast4 ?? null,
+      ssn_last4: account.stripeBankAccountLast4 ?? null,
       address: account.stripeCustomerAddress ?? null,
     };
   }
