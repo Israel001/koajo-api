@@ -64,6 +64,7 @@ export interface LoginBankAccountSummary {
   createdAt: string;
   updatedAt: string;
   last4: string | null;
+  bankName: string | null;
 }
 
 export interface LoginUserResult {
@@ -143,6 +144,7 @@ export interface CurrentUserResult {
     created_at: string;
     updated_at: string;
     last4: string | null;
+    bank_name: string | null;
   } | null;
 }
 

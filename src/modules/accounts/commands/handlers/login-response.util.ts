@@ -67,6 +67,7 @@ export const buildLoginUserResult = (
             account.stripeBankAccountUpdatedAt ?? account.updatedAt
           ).toISOString(),
           last4: account.stripeBankAccountLast4 ?? null,
+          bankName: account.stripeBankName ?? null,
         }
       : null,
   };

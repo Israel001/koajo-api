@@ -767,6 +767,7 @@ describe('AuthController', () => {
           created_at: bankLinkedAt.toISOString(),
           updated_at: bankUpdatedAt.toISOString(),
           last4: '1234',
+          bank_name: null,
         },
       });
 

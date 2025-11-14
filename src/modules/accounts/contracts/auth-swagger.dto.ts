@@ -250,6 +250,12 @@ class LoginBankAccountSummaryDto implements LoginBankAccountSummary {
     nullable: true,
   })
   last4!: string | null;
+
+  @ApiProperty({
+    description: 'Name of the financial institution associated with the account.',
+    nullable: true,
+  })
+  bankName!: string | null;
 }
 
 export class LoginUserResultDto implements LoginUserResult {
@@ -589,6 +595,12 @@ class StripeBankAccountDto implements UpsertStripeBankAccountResult {
     nullable: true,
   })
   last4!: string | null;
+
+  @ApiProperty({
+    description: 'Bank name associated with the account.',
+    nullable: true,
+  })
+  bank_name!: string | null;
 }
 
 export class RecordIdentityVerificationResultDto

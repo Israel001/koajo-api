@@ -173,6 +173,7 @@ export interface AdminPodMembershipSummary {
   finalOrder: number | null;
   payoutDate: string | null;
   paidOut: boolean;
+  joinedAt: string;
 }
 
 export interface AdminPodDetail extends AdminPodSummary {

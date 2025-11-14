@@ -194,6 +194,7 @@ export class AuthController {
               account.stripeBankAccountUpdatedAt ?? account.updatedAt
             ).toISOString(),
             last4: account.stripeBankAccountLast4 ?? null,
+            bank_name: account.stripeBankName ?? null,
           }
         : null,
     };

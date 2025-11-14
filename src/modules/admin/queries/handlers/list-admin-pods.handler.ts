@@ -36,6 +36,7 @@ export const toAdminPodDetail = (pod: PodEntity): AdminPodDetail => {
         ? membership.payoutDate.toISOString()
         : null,
       paidOut: membership.paidOut,
+      joinedAt: membership.joinedAt.toISOString(),
     }));
 
   return {
