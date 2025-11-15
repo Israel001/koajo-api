@@ -21,6 +21,8 @@ import type {
   LoginIdentityVerification,
   LoginCustomerSummary,
   LoginBankAccountSummary,
+  AccountNotificationsResult,
+  AccountNotificationItem,
 } from './auth-results';
 
 class VerificationExpiryDto {
@@ -638,4 +640,54 @@ export class DeleteAccountResultDto implements DeleteAccountResult {
     description: 'Timestamp when the deletion request was processed.',
   })
   deleted_at!: string;
+}
+
+export class AccountNotificationItemDto implements AccountNotificationItem {
+  @ApiProperty({
+    description: 'Unique identifier for the notification.',
+  })
+  id!: string;
+
+  @ApiProperty({
+    description: 'Short title describing the notification.',
+  })
+  title!: string;
+
+  @ApiProperty({
+    description: 'Body content of the notification.',
+  })
+  body!: string;
+
+  @ApiProperty({
+    description: 'Severity level of the notification.',
+    example: 'info',
+  })
+  severity!: string;
+
+  @ApiProperty({
+    description: 'Optional URL for contextual action.',
+    nullable: true,
+  })
+  action_url!: string | null;
+
+  @ApiProperty({
+    description: 'Timestamp when the notification was read.',
+    nullable: true,
+  })
+  read_at!: string | null;
+
+  @ApiProperty({
+    description: 'Timestamp when the notification was created.',
+  })
+  created_at!: string;
+}
+
+export class AccountNotificationsResultDto
+  implements AccountNotificationsResult
+{
+  @ApiProperty({
+    description: 'Collection of notifications for the authenticated user.',
+    type: () => [AccountNotificationItemDto],
+  })
+  notifications!: AccountNotificationItemDto[];
 }

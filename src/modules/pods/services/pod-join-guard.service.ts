@@ -4,6 +4,8 @@ import { EntityRepository } from '@mikro-orm/mysql';
 import { AccountEntity } from '../../accounts/entities/account.entity';
 import { PodMembershipEntity } from '../entities/pod-membership.entity';
 import { MailService } from '../../../common/notification/mail.service';
+import { InAppNotificationService } from '../../notifications/in-app-notification.service';
+import { InAppNotificationMessages } from '../../notifications/in-app-notification.messages';
 
 const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
 
@@ -13,6 +15,7 @@ export class PodJoinGuardService {
     @InjectRepository(PodMembershipEntity)
     private readonly membershipRepository: EntityRepository<PodMembershipEntity>,
     private readonly mailService: MailService,
+    private readonly inAppNotificationService: InAppNotificationService,
   ) {}
 
   ensureAccountEligible(account: AccountEntity): void {
@@ -61,6 +64,10 @@ export class PodJoinGuardService {
         email: account.email,
         firstName: account.firstName ?? account.email.split('@')[0],
       });
+      await this.inAppNotificationService.createNotification(
+        account,
+        InAppNotificationMessages.rapidJoinerAlert(),
+      );
       return true;
     }
 

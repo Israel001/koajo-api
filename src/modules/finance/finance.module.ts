@@ -16,6 +16,7 @@ import { PodActivityEntity } from '../pods/entities/pod-activity.entity';
 import { PodActivityService } from '../pods/services/pod-activity.service';
 import { JwtAuthGuard } from '../accounts/guards/jwt-auth.guard';
 import { AchievementsModule } from '../achievements/achievements.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { AchievementsModule } from '../achievements/achievements.module';
     ]),
     CqrsModule,
     AchievementsModule,
+    NotificationsModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {

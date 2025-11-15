@@ -15,6 +15,8 @@ import { RecordPayoutResult } from '../../contracts/payment-results';
 import { CompleteMembershipCommand } from '../../../pods/commands/complete-membership.command';
 import { PodActivityService } from '../../../pods/services/pod-activity.service';
 import { PodActivityType } from '../../../pods/pod-activity-type.enum';
+import { InAppNotificationService } from '../../../notifications/in-app-notification.service';
+import { InAppNotificationMessages } from '../../../notifications/in-app-notification.messages';
 
 @Injectable()
 @CommandHandler(RecordPayoutCommand)
@@ -30,6 +32,7 @@ export class RecordPayoutHandler
     private readonly membershipRepository: EntityRepository<PodMembershipEntity>,
     private readonly commandBus: CommandBus,
     private readonly activityService: PodActivityService,
+    private readonly inAppNotificationService: InAppNotificationService,
   ) {}
 
   async execute(
@@ -138,6 +141,13 @@ export class RecordPayoutHandler
 
     const successful = this.isSuccessfulStatus(status);
     let membershipCompleted = membership.paidOut;
+
+    if (successful) {
+      await this.inAppNotificationService.createNotification(
+        account,
+        InAppNotificationMessages.payoutSuccessful(),
+      );
+    }
 
     if (successful && !membershipCompleted) {
       await this.commandBus.execute(

@@ -53,6 +53,7 @@ import type {
   UpsertStripeBankAccountResult,
   DeleteAccountResult,
   LoginSuccessResult,
+  AccountNotificationsResult,
 } from '../contracts/auth-results';
 import {
   LoginSuccessResultDto,
@@ -71,6 +72,7 @@ import {
   UpsertStripeCustomerResultDto,
   UpsertStripeBankAccountResultDto,
   DeleteAccountResultDto,
+  AccountNotificationsResultDto,
 } from '../contracts/auth-swagger.dto';
 import * as LoginDtoModule from '../dto/login.dto';
 import * as ResendVerificationDtoModule from '../dto/resend-verification.dto';
@@ -96,6 +98,7 @@ import { UpsertStripeBankAccountDto } from '../dto/upsert-stripe-bank-account.dt
 import { RefreshTokenDto } from '../dto/refresh-token.dto';
 import { AccountVerificationAttemptEntity } from '../entities/account-verification-attempt.entity';
 import { DeleteAccountCommand } from '../commands/delete-account.command';
+import { AccountNotificationEntity } from '../entities/account-notification.entity';
 
 @ApiTags('auth')
 @Controller({ path: 'auth', version: '1' })
@@ -106,6 +109,8 @@ export class AuthController {
     private readonly accountRepository: EntityRepository<AccountEntity>,
     @InjectRepository(AccountVerificationAttemptEntity)
     private readonly verificationAttemptRepository: EntityRepository<AccountVerificationAttemptEntity>,
+    @InjectRepository(AccountNotificationEntity)
+    private readonly notificationRepository: EntityRepository<AccountNotificationEntity>,
   ) {}
 
   @Get('me')
@@ -197,6 +202,40 @@ export class AuthController {
             bank_name: account.stripeBankName ?? null,
           }
         : null,
+    };
+  }
+
+  @Get('notifications')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('bearer')
+  @ApiOperation({
+    summary: 'List in-app notifications for the authenticated user.',
+  })
+  @ApiOkResponse({
+    description: 'Notification feed for the authenticated user.',
+    type: AccountNotificationsResultDto,
+  })
+  @ApiUnauthorizedResponse({ description: 'Authentication required.' })
+  async listNotifications(
+    @Req() request: AuthenticatedRequest,
+  ): Promise<AccountNotificationsResult> {
+    const notifications = await this.notificationRepository.find(
+      { account: request.user.accountId },
+      { orderBy: { createdAt: 'DESC' } },
+    );
+
+    return {
+      notifications: notifications.map((notification) => ({
+        id: notification.id,
+        title: notification.title,
+        body: notification.body,
+        severity: notification.severity,
+        action_url: notification.actionUrl ?? null,
+        read_at: notification.readAt
+          ? notification.readAt.toISOString()
+          : null,
+        created_at: notification.createdAt.toISOString(),
+      })),
     };
   }
 

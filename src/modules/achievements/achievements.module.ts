@@ -14,6 +14,7 @@ import { PodMembershipEntity } from '../pods/entities/pod-membership.entity';
 import { PodEntity } from '../pods/entities/pod.entity';
 import { PodInviteEntity } from '../pods/entities/pod-invite.entity';
 import { PaymentEntity } from '../finance/entities/payment.entity';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { PaymentEntity } from '../finance/entities/payment.entity';
         };
       },
     }),
+    NotificationsModule,
   ],
   controllers: [AchievementsController],
   providers: [AchievementService, GetAchievementsSummaryHandler, JwtAuthGuard],

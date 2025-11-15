@@ -3,11 +3,16 @@ import {
   ManyToOne,
   PrimaryKey,
   Property,
+  Unique,
 } from '@mikro-orm/core';
 import { randomUUID } from 'crypto';
 import { AccountEntity } from './account.entity';
 
 @Entity({ tableName: 'account_notifications' })
+@Unique({
+  name: 'account_notification_context_unique',
+  properties: ['account', 'context'],
+})
 export class AccountNotificationEntity {
   @PrimaryKey({ columnType: 'char(36)' })
   id: string = randomUUID();
@@ -26,6 +31,9 @@ export class AccountNotificationEntity {
 
   @Property({ columnType: 'varchar(512)', nullable: true })
   actionUrl?: string | null;
+
+  @Property({ columnType: 'varchar(150)', nullable: true })
+  context?: string | null;
 
   @Property({ columnType: 'datetime(6)', nullable: true })
   readAt?: Date | null;

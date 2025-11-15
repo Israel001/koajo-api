@@ -44,12 +44,14 @@ import type {
 import { AccountEntity } from '../entities/account.entity';
 import { AccountVerificationAttemptEntity } from '../entities/account-verification-attempt.entity';
 import type { AuthenticatedRequest } from '../guards/jwt-auth.guard';
+import { AccountNotificationEntity } from '../entities/account-notification.entity';
 
 describe('AuthController', () => {
   let controller: AuthController;
   let commandBus: { execute: jest.Mock };
   let accountRepository: { findOne: jest.Mock };
   let verificationAttemptRepository: { findOne: jest.Mock };
+  let notificationRepository: { find: jest.Mock };
 
   beforeEach(async () => {
     commandBus = {
@@ -60,6 +62,9 @@ describe('AuthController', () => {
     } as any;
     verificationAttemptRepository = {
       findOne: jest.fn(),
+    } as any;
+    notificationRepository = {
+      find: jest.fn(),
     } as any;
     const mockGuard = {
       canActivate: jest.fn(() => true),
@@ -79,6 +84,10 @@ describe('AuthController', () => {
         {
           provide: getRepositoryToken(AccountVerificationAttemptEntity),
           useValue: verificationAttemptRepository,
+        },
+        {
+          provide: getRepositoryToken(AccountNotificationEntity),
+          useValue: notificationRepository,
         },
         {
           provide: JwtAuthGuard,
@@ -223,6 +232,47 @@ describe('AuthController', () => {
       const command =
         commandBus.execute.mock.calls[0][0] as ResendEmailVerificationCommand;
       expect(command.redirectBaseUrl).toBeNull();
+    });
+  });
+
+  describe('listNotifications', () => {
+    it('returns notifications for the authenticated user', async () => {
+      const request = {
+        user: { accountId: 'account-123' },
+      } as AuthenticatedRequest;
+
+      const items = [
+        {
+          id: 'notif-1',
+          title: 'Joined a pod',
+          body: 'Body',
+          severity: 'info',
+          actionUrl: 'https://app.koajo.test/pods',
+          readAt: null,
+          createdAt: new Date('2024-02-10T00:00:00.000Z'),
+        },
+      ];
+
+      notificationRepository.find.mockResolvedValue(items);
+
+      await expect(controller.listNotifications(request)).resolves.toEqual({
+        notifications: [
+          {
+            id: 'notif-1',
+            title: 'Joined a pod',
+            body: 'Body',
+            severity: 'info',
+            action_url: 'https://app.koajo.test/pods',
+            read_at: null,
+            created_at: '2024-02-10T00:00:00.000Z',
+          },
+        ],
+      });
+
+      expect(notificationRepository.find).toHaveBeenCalledWith(
+        { account: request.user.accountId },
+        { orderBy: { createdAt: 'DESC' } },
+      );
     });
   });
 

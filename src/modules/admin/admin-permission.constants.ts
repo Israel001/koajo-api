@@ -10,6 +10,7 @@ export const ADMIN_PERMISSION_EDIT_USER_DETAILS = 'admin.users.edit';
 export const ADMIN_PERMISSION_TOGGLE_USER_STATUS = 'admin.users.toggle-status';
 export const ADMIN_PERMISSION_MANAGE_USER_NOTIFICATIONS =
   'admin.users.notifications.manage';
+export const ADMIN_PERMISSION_DELETE_USERS = 'admin.users.delete';
 export const ADMIN_PERMISSION_VIEW_POD_PLANS = 'admin.pod-plans.view';
 export const ADMIN_PERMISSION_REFRESH_POD_PLANS = 'admin.pod-plans.refresh';
 export const ADMIN_PERMISSION_VIEW_PODS = 'admin.pods.view';
@@ -49,6 +50,12 @@ export const ADMIN_PERMISSION_DEFINITIONS: AdminPermissionDefinition[] = [
     name: 'Manage User Notification Preferences',
     description:
       'Adjust email and transaction notification preferences on behalf of customers.',
+  },
+  {
+    code: ADMIN_PERMISSION_DELETE_USERS,
+    name: 'Delete Users',
+    description:
+      'Permanently delete or anonymize customer accounts from the platform.',
   },
   {
     code: ADMIN_PERMISSION_VIEW_POD_PLANS,

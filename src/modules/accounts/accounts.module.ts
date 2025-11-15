@@ -14,6 +14,7 @@ import { PasswordResetService } from './services/password-reset.service';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { AccountInactivityScheduler } from './account-inactivity.scheduler';
+import { AccountNotificationEntity } from './entities/account-notification.entity';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { AccountInactivityScheduler } from './account-inactivity.scheduler';
       AccountEmailVerificationEntity,
       AccountPasswordResetEntity,
       AccountVerificationAttemptEntity,
+      AccountNotificationEntity,
     ]),
     NotificationsModule,
     JwtModule.registerAsync({

@@ -27,6 +27,7 @@ import {
   ADMIN_PERMISSION_TOGGLE_USER_STATUS,
   ADMIN_PERMISSION_MANAGE_USER_NOTIFICATIONS,
   ADMIN_PERMISSION_VIEW_USERS,
+  ADMIN_PERMISSION_DELETE_USERS,
 } from '../admin-permission.constants';
 import { AdminListQueryDto } from '../dto/list-query.dto';
 import { UpdateNotificationPreferencesDto } from '../../accounts/dto/update-notification-preferences.dto';
@@ -55,11 +56,19 @@ import {
 } from '../contracts/admin-swagger.dto';
 import { ListAccountVerificationAttemptsQuery } from '../queries/list-account-verification-attempts.query';
 import { UpdateUserProfileCommand } from '../../accounts/commands/update-user-profile.command';
-import { UpdateUserProfileResult } from '../../accounts/contracts/auth-results';
-import { UpdateUserProfileResultDto } from '../../accounts/contracts/auth-swagger.dto';
+import {
+  DeleteAccountResult,
+  UpdateUserProfileResult,
+} from '../../accounts/contracts/auth-results';
+import {
+  DeleteAccountResultDto,
+  UpdateUserProfileResultDto,
+} from '../../accounts/contracts/auth-swagger.dto';
 import { UpdateAccountStatusCommand } from '../../accounts/commands/update-account-status.command';
 import { UpdateAccountStatusDto } from '../dto/update-account-status.dto';
 import { AdminAccountPodsQueryDto } from '../dto/account-pods-query.dto';
+import { DeleteAccountCommand } from '../../accounts/commands/delete-account.command';
+import { ADMIN_PERMISSION_DELETE_USERS } from '../admin-permission.constants';
 
 @ApiTags('admin-accounts')
 @Controller({ path: 'admin/accounts', version: '1' })
@@ -245,6 +254,19 @@ export class AdminAccountsController {
   ): Promise<{ removed: boolean }> {
     await this.commandBus.execute(new RemoveAccountBankCommand(accountId));
     return { removed: true };
+  }
+
+  @Delete(':accountId')
+  @ApiOperation({ summary: 'Delete a customer account' })
+  @ApiOkResponse({
+    description: 'Account deleted.',
+    type: DeleteAccountResultDto,
+  })
+  @RequireAdminPermissions(ADMIN_PERMISSION_DELETE_USERS)
+  async deleteAccount(
+    @Param('accountId') accountId: string,
+  ): Promise<DeleteAccountResult> {
+    return this.commandBus.execute(new DeleteAccountCommand(accountId));
   }
 
   @Get(':accountId/achievements')

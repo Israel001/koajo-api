@@ -16,6 +16,8 @@ import { AchievementService } from '../../../achievements/achievements.service';
 import { isSuccessfulPaymentStatus } from '../../../achievements/achievement.helpers';
 import { PodActivityService } from '../../../pods/services/pod-activity.service';
 import { PodActivityType } from '../../../pods/pod-activity-type.enum';
+import { InAppNotificationService } from '../../../notifications/in-app-notification.service';
+import { InAppNotificationMessages } from '../../../notifications/in-app-notification.messages';
 
 @Injectable()
 @CommandHandler(RecordPaymentCommand)
@@ -31,6 +33,7 @@ export class RecordPaymentHandler
     private readonly membershipRepository: EntityRepository<PodMembershipEntity>,
     private readonly achievementService: AchievementService,
     private readonly activityService: PodActivityService,
+    private readonly inAppNotificationService: InAppNotificationService,
   ) {}
 
   async execute(
@@ -138,8 +141,16 @@ export class RecordPaymentHandler
       await this.achievementService.handleSuccessfulPayment({
         account,
       });
+      await this.inAppNotificationService.createNotification(
+        account,
+        InAppNotificationMessages.contributionSuccessful(),
+      );
     } else {
       account.flagMissedPayment(`payment_status:${status}`);
+      await this.inAppNotificationService.createNotification(
+        account,
+        InAppNotificationMessages.contributionFailed(),
+      );
     }
 
     return {

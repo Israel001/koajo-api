@@ -21,6 +21,8 @@ import { PodActivityType } from '../../pod-activity-type.enum';
 import { MailService } from '../../../../common/notification/mail.service';
 import { buildPodConfirmationDetails } from '../../pod-confirmation.util';
 import { PodJoinGuardService } from '../../services/pod-join-guard.service';
+import { InAppNotificationService } from '../../../notifications/in-app-notification.service';
+import { InAppNotificationMessages } from '../../../notifications/in-app-notification.messages';
 
 @CommandHandler(JoinPodCommand)
 export class JoinPodHandler
@@ -39,6 +41,7 @@ export class JoinPodHandler
     private readonly activityService: PodActivityService,
     private readonly joinGuard: PodJoinGuardService,
     private readonly mailService: MailService,
+    private readonly inAppNotificationService: InAppNotificationService,
   ) {}
 
   async execute(command: JoinPodCommand): Promise<MembershipWithPod> {
@@ -147,6 +150,10 @@ export class JoinPodHandler
 
     if (shouldMarkOverheat) {
       account.markOverheat('join_cooldown');
+      await this.inAppNotificationService.createNotification(
+        account,
+        InAppNotificationMessages.rapidJoinerAlert(),
+      );
     }
 
     const em = this.membershipRepository.getEntityManager();
@@ -208,6 +215,11 @@ export class JoinPodHandler
       podCycle: confirmation.podCycle,
       isCustom: confirmation.isCustom,
     });
+
+    await this.inAppNotificationService.createNotification(
+      account,
+      InAppNotificationMessages.joinedPod(),
+    );
 
     return loaded as MembershipWithPod;
   }

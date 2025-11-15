@@ -11,6 +11,8 @@ import { PodStatus } from '../../pod-status.enum';
 import { computeCustomPodChecksum } from '../../custom-pod-integrity.util';
 import { PodActivityService } from '../../services/pod-activity.service';
 import { PodActivityType } from '../../pod-activity-type.enum';
+import { InAppNotificationService } from '../../../notifications/in-app-notification.service';
+import { InAppNotificationMessages } from '../../../notifications/in-app-notification.messages';
 
 @CommandHandler(CompleteMembershipCommand)
 export class CompleteMembershipHandler
@@ -22,6 +24,7 @@ export class CompleteMembershipHandler
     private readonly achievementService: AchievementService,
     private readonly checksumService: ChecksumService,
     private readonly activityService: PodActivityService,
+    private readonly inAppNotificationService: InAppNotificationService,
   ) {}
 
   async execute(command: CompleteMembershipCommand): Promise<void> {
@@ -52,7 +55,7 @@ export class CompleteMembershipHandler
     membership.totalContributed = target;
 
     const em = this.membershipRepository.getEntityManager();
-    await membership.pod.memberships.init();
+    await membership.pod.memberships.init({ populate: ['account'] });
 
     const allPaid = membership.pod.memberships
       .getItems()
@@ -107,6 +110,16 @@ export class CompleteMembershipHandler
           completedAt: membership.pod.completedAt?.toISOString() ?? null,
         },
       });
+
+      const recipients = membership.pod.memberships
+        .getItems()
+        .filter((item) => !item.isSystemBot && item.account)
+        .map((item) => ({
+          account: item.account!,
+          ...InAppNotificationMessages.podCycleCompleted(),
+        }));
+
+      await this.inAppNotificationService.createMany(recipients);
     }
   }
 

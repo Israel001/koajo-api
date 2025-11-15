@@ -38,6 +38,8 @@ import { PodActivityType } from '../../pod-activity-type.enum';
 import { PodJoinGuardService } from '../../services/pod-join-guard.service';
 import { MailService } from '../../../../common/notification/mail.service';
 import { buildPodConfirmationDetails } from '../../pod-confirmation.util';
+import { InAppNotificationService } from '../../../notifications/in-app-notification.service';
+import { InAppNotificationMessages } from '../../../notifications/in-app-notification.messages';
 
 @Injectable()
 @CommandHandler(AcceptCustomPodInviteCommand)
@@ -58,6 +60,7 @@ export class AcceptCustomPodInviteHandler
     private readonly activityService: PodActivityService,
     private readonly joinGuard: PodJoinGuardService,
     private readonly mailService: MailService,
+    private readonly inAppNotificationService: InAppNotificationService,
   ) {}
 
   async execute(
@@ -258,6 +261,11 @@ export class AcceptCustomPodInviteHandler
       podCycle: confirmation.podCycle,
       isCustom: confirmation.isCustom,
     });
+
+    await this.inAppNotificationService.createNotification(
+      account,
+      InAppNotificationMessages.joinedPod(),
+    );
 
     return createdMembership;
   }

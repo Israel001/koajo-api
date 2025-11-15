@@ -185,3 +185,17 @@ export interface DeleteAccountResult {
   success: boolean;
   deleted_at: string;
 }
+
+export interface AccountNotificationItem {
+  id: string;
+  title: string;
+  body: string;
+  severity: string;
+  action_url: string | null;
+  read_at: string | null;
+  created_at: string;
+}
+
+export interface AccountNotificationsResult {
+  notifications: AccountNotificationItem[];
+}

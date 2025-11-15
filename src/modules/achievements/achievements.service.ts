@@ -19,6 +19,8 @@ import {
   sumSuccessfulContributions,
   WEALTH_BUILDER_THRESHOLD_UNITS,
 } from './achievement.helpers';
+import { InAppNotificationService } from '../notifications/in-app-notification.service';
+import { InAppNotificationMessages } from '../notifications/in-app-notification.messages';
 
 @Injectable()
 export class AchievementService {
@@ -31,6 +33,7 @@ export class AchievementService {
     private readonly podMembershipRepository: EntityRepository<PodMembershipEntity>,
     @InjectRepository(PaymentEntity)
     private readonly paymentRepository: EntityRepository<PaymentEntity>,
+    private readonly inAppNotificationService: InAppNotificationService,
   ) {}
 
   async handlePodJoin(options: {
@@ -193,6 +196,11 @@ export class AchievementService {
 
     await this.accountAchievementRepository.getEntityManager().persistAndFlush(
       entity,
+    );
+
+    await this.inAppNotificationService.createNotification(
+      account,
+      InAppNotificationMessages.achievementEarned(),
     );
 
     return true;

@@ -19,6 +19,8 @@ import { PodInviteEntity } from './entities/pod-invite.entity';
 import { PodActivityEntity } from './entities/pod-activity.entity';
 import { PodActivityService } from './services/pod-activity.service';
 import { PodJoinGuardService } from './services/pod-join-guard.service';
+import { PaymentEntity } from '../finance/entities/payment.entity';
+import { ContributionNotificationScheduler } from './contribution-notification.scheduler';
 
 @Module({
   imports: [
@@ -29,6 +31,7 @@ import { PodJoinGuardService } from './services/pod-join-guard.service';
       PodInviteEntity,
       AccountEntity,
       PodActivityEntity,
+      PaymentEntity,
     ]),
     CqrsModule,
     AchievementsModule,
@@ -55,6 +58,7 @@ import { PodJoinGuardService } from './services/pod-join-guard.service';
     PodJoinGuardService,
     JwtAuthGuard,
     PodsScheduler,
+    ContributionNotificationScheduler,
     ...PodCommandHandlers,
     ...PodQueryHandlers,
   ],

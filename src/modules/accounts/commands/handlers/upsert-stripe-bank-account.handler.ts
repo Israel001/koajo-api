@@ -6,6 +6,8 @@ import { UpsertStripeBankAccountCommand } from '../upsert-stripe-bank-account.co
 import { AccountEntity } from '../../entities/account.entity';
 import { UpsertStripeBankAccountResult } from '../../contracts/auth-results';
 import { MailService } from '../../../../common/notification/mail.service';
+import { InAppNotificationService } from '../../../notifications/in-app-notification.service';
+import { InAppNotificationMessages } from '../../../notifications/in-app-notification.messages';
 
 @Injectable()
 @CommandHandler(UpsertStripeBankAccountCommand)
@@ -20,6 +22,7 @@ export class UpsertStripeBankAccountHandler
     @InjectRepository(AccountEntity)
     private readonly accountRepository: EntityRepository<AccountEntity>,
     private readonly mailService: MailService,
+    private readonly inAppNotificationService: InAppNotificationService,
   ) {}
 
   async execute(
@@ -71,6 +74,11 @@ export class UpsertStripeBankAccountHandler
 
     const em = this.accountRepository.getEntityManager();
     await em.persistAndFlush(account);
+
+    await this.inAppNotificationService.createNotification(
+      account,
+      InAppNotificationMessages.bankLinked(),
+    );
 
     return {
       id: account.stripeBankAccountId,

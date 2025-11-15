@@ -5,6 +5,8 @@ import { EntityRepository } from '@mikro-orm/mysql';
 import { RemoveAccountBankCommand } from '../remove-account-bank.command';
 import { AccountEntity } from '../../entities/account.entity';
 import { MailService } from '../../../../common/notification/mail.service';
+import { InAppNotificationService } from '../../../notifications/in-app-notification.service';
+import { InAppNotificationMessages } from '../../../notifications/in-app-notification.messages';
 
 @Injectable()
 @CommandHandler(RemoveAccountBankCommand)
@@ -15,6 +17,7 @@ export class RemoveAccountBankHandler
     @InjectRepository(AccountEntity)
     private readonly accountRepository: EntityRepository<AccountEntity>,
     private readonly mailService: MailService,
+    private readonly inAppNotificationService: InAppNotificationService,
   ) {}
 
   async execute(
@@ -45,6 +48,11 @@ export class RemoveAccountBankHandler
       firstName: account.firstName ?? null,
       removedAt,
     });
+
+    await this.inAppNotificationService.createNotification(
+      account,
+      InAppNotificationMessages.bankRemoved(),
+    );
 
     return account;
   }

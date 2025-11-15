@@ -8,6 +8,7 @@ import { UpdateNotificationPreferencesCommand } from '../../accounts/commands/up
 import { UpdateAccountFlagsCommand } from '../../accounts/commands/update-account-flags.command';
 import { UpdateAccountStatusCommand } from '../../accounts/commands/update-account-status.command';
 import { RemoveAccountBankCommand } from '../../accounts/commands/remove-account-bank.command';
+import { DeleteAccountCommand } from '../../accounts/commands/delete-account.command';
 import { ListAccountPodsQuery } from '../../pods/queries/list-account-pods.query';
 import { PodStatus } from '../../pods/pod-status.enum';
 import { PodType } from '../../pods/pod-type.enum';
@@ -157,6 +158,18 @@ describe('AdminAccountsController', () => {
     expect(result).toEqual({ removed: true });
     expect(commandBus.execute).toHaveBeenCalledWith(
       expect.any(RemoveAccountBankCommand),
+    );
+  });
+
+  it('deletes a customer account', async () => {
+    const expected = { success: true, deleted_at: new Date().toISOString() };
+    commandBus.execute.mockResolvedValue(expected);
+
+    const result = await controller.deleteAccount('acc-1');
+
+    expect(result).toBe(expected);
+    expect(commandBus.execute).toHaveBeenCalledWith(
+      expect.any(DeleteAccountCommand),
     );
   });
 

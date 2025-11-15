@@ -4,11 +4,12 @@ import { EntityRepository } from '@mikro-orm/mysql';
 import { AccountNotificationEntity } from '../accounts/entities/account-notification.entity';
 import type { AccountEntity } from '../accounts/entities/account.entity';
 
-interface NotificationPayload {
+export interface InAppNotificationPayload {
   title: string;
   body: string;
   severity: string;
   actionUrl?: string | null;
+  context?: string | null;
 }
 
 @Injectable()
@@ -20,7 +21,7 @@ export class InAppNotificationService {
 
   async createNotification(
     account: AccountEntity,
-    payload: NotificationPayload,
+    payload: InAppNotificationPayload,
   ): Promise<void> {
     await this.createMany([
       {
@@ -30,8 +31,28 @@ export class InAppNotificationService {
     ]);
   }
 
+  async createIfNotExists(
+    account: AccountEntity,
+    payload: InAppNotificationPayload,
+    context: string,
+  ): Promise<void> {
+    const existing = await this.notificationRepository.findOne({
+      account,
+      context,
+    });
+
+    if (existing) {
+      return;
+    }
+
+    await this.createNotification(account, {
+      ...payload,
+      context,
+    });
+  }
+
   async createMany(
-    items: Array<NotificationPayload & { account: AccountEntity }>,
+    items: Array<InAppNotificationPayload & { account: AccountEntity }>,
   ): Promise<void> {
     if (!items.length) {
       return;
@@ -47,6 +68,7 @@ export class InAppNotificationService {
           body: item.body,
           severity: item.severity,
           actionUrl: item.actionUrl ?? null,
+          context: item.context ?? null,
         },
         { partial: true },
       );
