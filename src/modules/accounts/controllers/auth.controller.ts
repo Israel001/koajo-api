@@ -10,6 +10,7 @@ import {
   Delete,
   Req,
   UseGuards,
+  Param,
 } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { InjectRepository } from '@mikro-orm/nestjs';
