@@ -74,11 +74,12 @@ export class ProcessContributionNotificationsHandler
       }
 
       const pod = membership.pod;
-      if (!pod || pod.startDate === null) {
+      const podStartDate = pod?.startDate ?? null;
+      if (!pod || !podStartDate) {
         continue;
       }
 
-      if (pod.startDate > windowStart || membership.joinedAt > windowStart) {
+      if (podStartDate > windowStart || membership.joinedAt > windowStart) {
         continue;
       }
 

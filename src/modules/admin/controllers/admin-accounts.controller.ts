@@ -68,7 +68,6 @@ import { UpdateAccountStatusCommand } from '../../accounts/commands/update-accou
 import { UpdateAccountStatusDto } from '../dto/update-account-status.dto';
 import { AdminAccountPodsQueryDto } from '../dto/account-pods-query.dto';
 import { DeleteAccountCommand } from '../../accounts/commands/delete-account.command';
-import { ADMIN_PERMISSION_DELETE_USERS } from '../admin-permission.constants';
 
 @ApiTags('admin-accounts')
 @Controller({ path: 'admin/accounts', version: '1' })
