@@ -143,19 +143,19 @@ export class CreateAdminAnnouncementHandler
           }),
         );
       }
-    } else if (command.channel === AnnouncementChannel.IN_APP) {
-      const notifications = uniqueRecipients.map((account) => ({
-        account,
-        title: trimmedTitle,
-        body: this.composePlainMessage(account, trimmedMessage),
-        severity: command.severity,
-        actionUrl: normalizedActionUrl,
-      }));
-
-      tasks.push(
-        this.inAppNotificationService.createMany(notifications),
-      );
     }
+
+    const notifications = uniqueRecipients.map((account) => ({
+      account,
+      title: trimmedTitle,
+      body: this.composePlainMessage(account, trimmedMessage),
+      severity: command.severity,
+      actionUrl: normalizedActionUrl,
+    }));
+
+    tasks.push(
+      this.inAppNotificationService.createMany(notifications),
+    );
 
     this.dispatchNotificationTasks(tasks);
 

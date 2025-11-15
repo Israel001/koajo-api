@@ -25,6 +25,7 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
   ApiNotFoundResponse,
+  ApiNoContentResponse,
   getSchemaPath,
 } from '@nestjs/swagger';
 import { LoginCommand } from '../commands/login.command';
@@ -237,6 +238,65 @@ export class AuthController {
         created_at: notification.createdAt.toISOString(),
       })),
     };
+  }
+
+  @Patch('notifications/:notificationId/read')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('bearer')
+  @ApiOperation({
+    summary: 'Mark a specific in-app notification as read.',
+  })
+  @ApiOkResponse({
+    description: 'Notification marked as read.',
+    schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string' },
+        read_at: { type: 'string', format: 'date-time' },
+      },
+    },
+  })
+  @ApiNotFoundResponse({ description: 'Notification not found.' })
+  @ApiUnauthorizedResponse({ description: 'Authentication required.' })
+  async markNotificationRead(
+    @Req() request: AuthenticatedRequest,
+    @Param('notificationId') notificationId: string,
+  ): Promise<{ id: string; read_at: string }> {
+    const notification = await this.notificationRepository.findOne({
+      id: notificationId,
+      account: request.user.accountId,
+    });
+
+    if (!notification) {
+      throw new NotFoundException('Notification not found.');
+    }
+
+    const now = new Date();
+    notification.readAt = now;
+    await this.notificationRepository.getEntityManager().flush();
+
+    return { id: notification.id, read_at: now.toISOString() };
+  }
+
+  @Patch('notifications/read-all')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('bearer')
+  @ApiOperation({
+    summary: 'Mark all in-app notifications as read for the authenticated user.',
+  })
+  @ApiNoContentResponse({ description: 'All notifications marked as read.' })
+  @ApiUnauthorizedResponse({ description: 'Authentication required.' })
+  async markAllNotificationsRead(
+    @Req() request: AuthenticatedRequest,
+  ): Promise<void> {
+    const now = new Date();
+    await this.notificationRepository
+      .getEntityManager()
+      .nativeUpdate(
+        AccountNotificationEntity,
+        { account: request.user.accountId, readAt: null },
+        { readAt: now },
+      );
   }
 
   private serializeDateOnly(

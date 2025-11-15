@@ -4,19 +4,24 @@ import { CreateAdminAnnouncementCommand } from '../create-admin-announcement.com
 import { AnnouncementChannel } from '../../announcement-channel.enum';
 import { AnnouncementSeverity } from '../../announcement-severity.enum';
 
-const buildCommand = (overrides: Partial<CreateAdminAnnouncementCommand> = {}): CreateAdminAnnouncementCommand =>
-  new CreateAdminAnnouncementCommand(
-    overrides.adminId ?? 'admin-1',
+const buildCommand = (overrides: Partial<CreateAdminAnnouncementCommand> = {}): CreateAdminAnnouncementCommand => {
+  const adminId =
+    overrides.adminId !== undefined ? overrides.adminId : 'admin-1';
+  const sendToAll =
+    overrides.sendToAll !== undefined ? overrides.sendToAll : false;
+  return new CreateAdminAnnouncementCommand(
+    adminId as any,
     overrides.channel ?? AnnouncementChannel.EMAIL,
     overrides.name ?? ' Feature Launch ',
     overrides.notificationTitle ?? ' New Features ',
     overrides.message ?? ' Check out the latest updates. ',
     overrides.severity ?? AnnouncementSeverity.INFO,
-    overrides.sendToAll ?? false,
+    sendToAll,
     overrides.accountIds ?? ['acc-1'],
     overrides.actionUrl ?? null,
     overrides.imageUrl ?? null,
   );
+};
 
 describe('CreateAdminAnnouncementHandler', () => {
   let handler: CreateAdminAnnouncementHandler;
@@ -103,22 +108,14 @@ describe('CreateAdminAnnouncementHandler', () => {
     } as any;
 
     adminRepository.findOne.mockResolvedValue(admin);
-    accountRepository.find.mockResolvedValue([account, account]);
+    accountRepository.find.mockResolvedValue([account]);
 
     const createdAt = new Date();
-    const announcement = {
+    announcementRepository.create.mockImplementation((payload) => ({
       id: 'announcement-1',
-      name: '',
-      channel: AnnouncementChannel.EMAIL,
-      severity: AnnouncementSeverity.INFO,
-      notificationTitle: '',
-      message: '',
-      actionUrl: null,
-      imageUrl: null,
-      sendToAll: false,
       createdAt,
-    };
-    announcementRepository.create.mockReturnValue(announcement);
+      ...payload,
+    }));
 
     const command = buildCommand();
 
@@ -137,6 +134,15 @@ describe('CreateAdminAnnouncementHandler', () => {
     expect(entityManager.persist).toHaveBeenCalled();
     expect(entityManager.flush).toHaveBeenCalledTimes(1);
     expect(mailService.sendAnnouncementEmail).toHaveBeenCalledTimes(1);
+    expect(inAppNotificationService.createMany).toHaveBeenCalledTimes(1);
+
+    const notifications = inAppNotificationService.createMany.mock.calls[0][0];
+    expect(notifications).toHaveLength(1);
+    expect(notifications[0]).toMatchObject({
+      account,
+      title: 'New Features',
+      severity: AnnouncementSeverity.INFO,
+    });
 
     const mailCallArgs = mailService.sendAnnouncementEmail.mock.calls[0][0];
     expect(mailCallArgs.account).toBe(account);
@@ -163,19 +169,13 @@ describe('CreateAdminAnnouncementHandler', () => {
 
     accountRepository.find.mockResolvedValue([account]);
     // Ensure we can introspect payload created.
-    const announcement = {
+    announcementRepository.create.mockImplementation((payload) => ({
       id: 'announcement-3',
-      name: '',
-      channel: AnnouncementChannel.EMAIL,
-      severity: AnnouncementSeverity.INFO,
-      notificationTitle: '',
-      message: '',
-      sendToAll: false,
       createdAt: new Date(),
-    };
-    announcementRepository.create.mockReturnValue(announcement);
+      ...payload,
+    }));
 
-    const command = buildCommand({ adminId: null });
+    const command = buildCommand({ adminId: null as any });
 
     await handler.execute(command);
 
@@ -204,19 +204,11 @@ describe('CreateAdminAnnouncementHandler', () => {
     accountRepository.findAll.mockResolvedValue(accounts);
 
     const createdAt = new Date();
-    const announcement = {
+    announcementRepository.create.mockImplementation((payload) => ({
       id: 'announcement-2',
-      name: '',
-      channel: AnnouncementChannel.IN_APP,
-      severity: AnnouncementSeverity.WARNING,
-      notificationTitle: '',
-      message: '',
-      actionUrl: null,
-      imageUrl: null,
-      sendToAll: true,
       createdAt,
-    };
-    announcementRepository.create.mockReturnValue(announcement);
+      ...payload,
+    }));
 
     const command = buildCommand({
       channel: AnnouncementChannel.IN_APP,

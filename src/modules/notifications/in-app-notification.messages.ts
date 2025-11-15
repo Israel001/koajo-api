@@ -21,7 +21,7 @@ export const InAppNotificationMessages: Record<string, MessageFactory> = {
   contributionFailed: () => ({
     title: 'Contribution failed',
     body: 'Your Koajo pod contribution payment failed',
-    severity: 'danger',
+    severity: 'error',
   }),
   payoutSuccessful: () => ({
     title: 'Payout successful',
