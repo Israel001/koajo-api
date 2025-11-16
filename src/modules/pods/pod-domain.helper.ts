@@ -224,6 +224,7 @@ export class PodDomainHelper {
         pod.status = PodStatus.GRACE;
         pod.startDate = scheduledStart;
         pod.graceEndsAt = addDays(scheduledStart, POD_GRACE_PERIOD_DAYS);
+        pod.nextContributionDate = pod.startDate;
         this.applyChecksum(pod);
         await this.podRepository.getEntityManager().flush();
         this.invalidateOpenPodsCache();
@@ -311,6 +312,10 @@ export class PodDomainHelper {
       member.finalOrder = index + 1;
       member.payoutDate = schedule[index] ?? null;
     });
+
+    if (!pod.nextContributionDate) {
+      pod.nextContributionDate = pod.startDate ?? null;
+    }
 
     this.applyChecksum(pod);
     await membershipManager.flush();

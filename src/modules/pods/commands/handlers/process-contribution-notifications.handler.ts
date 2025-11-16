@@ -6,7 +6,13 @@ import { PodMembershipEntity } from '../../entities/pod-membership.entity';
 import { CustomPodCadence } from '../../custom-pod-cadence.enum';
 import { PodStatus } from '../../pod-status.enum';
 import { PodType } from '../../pod-type.enum';
-import { addDays, isWithinContributionWindow, resolveContributionWindowStart } from '../../pod.utils';
+import {
+  addDays,
+  isWithinContributionWindow,
+  nextContributionWindowStart,
+  resolveContributionWindowStart,
+  startOfDay,
+} from '../../pod.utils';
 import { PaymentEntity } from '../../../finance/entities/payment.entity';
 import { isSuccessfulPaymentStatus } from '../../../achievements/achievement.helpers';
 import { InAppNotificationService } from '../../../notifications/in-app-notification.service';
@@ -83,13 +89,28 @@ export class ProcessContributionNotificationsHandler
         continue;
       }
 
+      const today = startOfDay(reference);
+
+      if (!pod.nextContributionDate || pod.nextContributionDate < today) {
+        pod.nextContributionDate = today;
+      }
+
       const context = `contribution_due:${membership.id}:${windowStart.toISOString()}`;
       await this.inAppNotificationService.createIfNotExists(
         account,
         InAppNotificationMessages.contributionDue(),
         context,
       );
+
+      if (reference >= windowEnd && !chargedMemberships.has(membership.id)) {
+        account.flagMissedPayment(
+          `contribution_missed:${windowStart.toISOString()}`,
+        );
+        this.advanceNextContributionDate(pod);
+      }
     }
+
+    await this.membershipRepository.getEntityManager().flush();
   }
 
   private buildCriteria(cadence: CustomPodCadence) {
@@ -126,5 +147,22 @@ export class ProcessContributionNotificationsHandler
         },
       ],
     };
+  }
+
+  private advanceNextContributionDate(pod: PodMembershipEntity['pod']): void {
+    if (!pod) {
+      return;
+    }
+    const cadence =
+      pod.type === PodType.CUSTOM
+        ? (pod.cadence ?? CustomPodCadence.BI_WEEKLY)
+        : CustomPodCadence.BI_WEEKLY;
+
+    const current = pod.nextContributionDate ?? pod.startDate;
+    if (!current) {
+      return;
+    }
+
+    pod.nextContributionDate = nextContributionWindowStart(current, cadence);
   }
 }

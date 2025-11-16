@@ -162,6 +162,22 @@ export const computeNextPayoutAnchor = (
   return computeNextPayoutAnchor(nextWindow, cadence);
 };
 
+export const nextContributionWindowStart = (
+  currentWindowStart: Date,
+  cadence: CustomPodCadence,
+): Date => {
+  const base = startOfDay(currentWindowStart);
+
+  if (cadence === CustomPodCadence.MONTHLY) {
+    const nextMonthSeed = addDays(base, 32);
+    return resolveContributionWindowStart(nextMonthSeed, cadence);
+  }
+
+  // bi-weekly / semi-monthly cadence
+  const nextSeed = addDays(base, 17);
+  return resolveContributionWindowStart(nextSeed, cadence);
+};
+
 export const generateCustomPayoutSchedule = (
   cadence: CustomPodCadence,
   contributionStart: Date,

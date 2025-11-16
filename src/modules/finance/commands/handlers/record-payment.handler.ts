@@ -18,6 +18,9 @@ import { PodActivityService } from '../../../pods/services/pod-activity.service'
 import { PodActivityType } from '../../../pods/pod-activity-type.enum';
 import { InAppNotificationService } from '../../../notifications/in-app-notification.service';
 import { InAppNotificationMessages } from '../../../notifications/in-app-notification.messages';
+import { CustomPodCadence } from '../../../pods/custom-pod-cadence.enum';
+import { nextContributionWindowStart } from '../../../pods/pod.utils';
+import { PodType } from '../../../pods/pod-type.enum';
 
 @Injectable()
 @CommandHandler(RecordPaymentCommand)
@@ -145,6 +148,7 @@ export class RecordPaymentHandler
         account,
         InAppNotificationMessages.contributionSuccessful(),
       );
+      this.advanceNextContributionDate(pod);
     } else {
       account.flagMissedPayment(`payment_status:${status}`);
       await this.inAppNotificationService.createNotification(
@@ -177,5 +181,24 @@ export class RecordPaymentHandler
 
   private formatMinor(minorUnits: number): string {
     return (minorUnits / 100).toFixed(2);
+  }
+
+  private advanceNextContributionDate(
+    pod: PodMembershipEntity['pod'],
+  ): void {
+    if (!pod) {
+      return;
+    }
+    const cadence =
+      pod.type === PodType.CUSTOM
+        ? pod.cadence ?? CustomPodCadence.BI_WEEKLY
+        : CustomPodCadence.BI_WEEKLY;
+
+    const current = pod.nextContributionDate ?? pod.startDate;
+    if (!current) {
+      return;
+    }
+
+    pod.nextContributionDate = nextContributionWindowStart(current, cadence);
   }
 }

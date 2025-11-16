@@ -45,6 +45,12 @@ import { ListPodActivitiesQuery } from './queries/list-pod-activities.query';
 import { ListAccountPodActivitiesQuery } from './queries/list-account-pod-activities.query';
 import { PodActivityListResultDto } from './dto/pod-activity.dto';
 import { PodActivityQueryDto } from './dto/pod-activity-query.dto';
+import { CustomPodCadence } from './custom-pod-cadence.enum';
+import {
+  isWithinContributionWindow,
+  resolveContributionWindowStart,
+  startOfDay,
+} from './pod.utils';
 
 @ApiTags('pods')
 @UseGuards(JwtAuthGuard)
@@ -246,7 +252,7 @@ export class PodsController {
     dto.behindYou = null;
     dto.goalType = null;
     dto.goalNote = null;
-    dto.nextContributionDate = pod.nextContributionDate?.toISOString() ?? null;
+    dto.nextContributionDate = this.computeNextContributionDate(pod)?.toISOString() ?? null;
     const targetValue = this.calculateContributionTarget(pod);
     dto.totalContributionTarget = targetValue;
     dto.totalContributed = '0.00';
@@ -358,5 +364,25 @@ export class PodsController {
     }
 
     return new Date(upcoming[0]).toISOString();
+  }
+
+  private computeNextContributionDate(pod: PodWithMembers): Date | null {
+    if (pod.nextContributionDate) {
+      return pod.nextContributionDate;
+    }
+
+    const cadence =
+      pod.type === PodType.CUSTOM
+        ? pod.cadence ?? CustomPodCadence.BI_WEEKLY
+        : CustomPodCadence.BI_WEEKLY;
+
+    const today = startOfDay(new Date());
+    const windowStart = resolveContributionWindowStart(today, cadence);
+
+    if (isWithinContributionWindow(today, cadence)) {
+      return today;
+    }
+
+    return windowStart;
   }
 }
