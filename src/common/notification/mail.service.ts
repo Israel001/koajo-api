@@ -1,7 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import nodemailer, { Transporter } from 'nodemailer';
-import type { SendMailOptions } from 'nodemailer';
+import sgMail from '@sendgrid/mail';
+import type { MailDataRequired } from '@sendgrid/mail';
+import { promises as fs } from 'fs';
+import { basename } from 'path';
 import { NotificationTemplateService } from '../../modules/notifications/notification-template.service';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { EntityRepository } from '@mikro-orm/mysql';
@@ -26,7 +28,14 @@ interface TrackedEmailSendOptions {
   subject: string;
   html: string;
   text?: string;
-  attachments?: SendMailOptions['attachments'];
+  attachments?: Array<{
+    filename: string;
+    path?: string;
+    content?: Buffer | string;
+    type?: string;
+    disposition?: string;
+    contentId?: string;
+  }>;
   template?: string | null;
   category: EmailLogCategory;
   reason?: string | null;
@@ -36,7 +45,6 @@ interface TrackedEmailSendOptions {
 @Injectable()
 export class MailService {
   private readonly logger = new Logger(MailService.name);
-  private readonly transporter: Transporter;
   private readonly defaultFrom: string;
 
   constructor(
@@ -49,24 +57,13 @@ export class MailService {
   ) {
     const mailConfig = this.configService.get('mail', { infer: true })!;
 
-    const requiresAuth = Boolean(mailConfig.user && mailConfig.pass);
-
-    this.transporter = nodemailer.createTransport({
-      host: mailConfig.host,
-      port: mailConfig.port,
-      secure: mailConfig.secure,
-      auth: requiresAuth
-        ? {
-            user: mailConfig.user,
-            pass: mailConfig.pass,
-          }
-        : undefined,
-      logger: true,
-      debug: true,
-      connectionTimeout: 10_000,
-      greetingTimeout: 10_000,
-      socketTimeout: 20_000,
-    });
+    if (!mailConfig.sendgridApiKey) {
+      this.logger.warn(
+        'SENDGRID_API_KEY is not set; email delivery will fail until configured.',
+      );
+    } else {
+      sgMail.setApiKey(mailConfig.sendgridApiKey);
+    }
 
     this.defaultFrom = mailConfig.defaultFrom;
   }
@@ -228,7 +225,10 @@ export class MailService {
 
     let textBody: string | undefined;
     try {
-      textBody = htmlBody.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+      textBody = htmlBody
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
     } catch {
       textBody = undefined;
     }
@@ -248,15 +248,16 @@ export class MailService {
       );
     } catch (error) {
       this.logger.error(
-        `Failed to send welcome email to ${email}: ${
-          (error as Error).message
-        }`,
+        `Failed to send welcome email to ${email}: ${(error as Error).message}`,
       );
       throw error;
     }
   }
 
-  async sendPasswordChangedEmail(email: string, firstname: string): Promise<void> {
+  async sendPasswordChangedEmail(
+    email: string,
+    firstname: string,
+  ): Promise<void> {
     if (!(await this.shouldSendEmail(email, 'system'))) {
       return;
     }
@@ -282,7 +283,10 @@ export class MailService {
 
     let textBody: string | undefined;
     try {
-      textBody = htmlBody.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+      textBody = htmlBody
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
     } catch {
       textBody = undefined;
     }
@@ -354,7 +358,10 @@ export class MailService {
 
     let textBody: string | undefined;
     try {
-      textBody = htmlBody.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+      textBody = htmlBody
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
     } catch {
       textBody = undefined;
     }
@@ -409,15 +416,16 @@ export class MailService {
       ...(options.variables ?? {}),
     };
 
-    const derivedName =
-      options.name?.trim().length
-        ? options.name.trim()
-        : (typeof templateVariables.name === 'string' &&
-            templateVariables.name.trim().length
-            ? (templateVariables.name as string).trim()
-            : `${templateVariables.firstname !== undefined ? String(templateVariables.firstname) : ''} ${
-                templateVariables.lastname !== undefined ? String(templateVariables.lastname) : ''
-              }`.trim()) || email.split('@')[0];
+    const derivedName = options.name?.trim().length
+      ? options.name.trim()
+      : (typeof templateVariables.name === 'string' &&
+        templateVariables.name.trim().length
+          ? (templateVariables.name as string).trim()
+          : `${templateVariables.firstname !== undefined ? String(templateVariables.firstname) : ''} ${
+              templateVariables.lastname !== undefined
+                ? String(templateVariables.lastname)
+                : ''
+            }`.trim()) || email.split('@')[0];
 
     if (
       typeof templateVariables.name !== 'string' ||
@@ -467,7 +475,10 @@ export class MailService {
 
     let textBody: string | undefined;
     try {
-      textBody = htmlBody.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+      textBody = htmlBody
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
     } catch {
       textBody = undefined;
     }
@@ -655,7 +666,10 @@ export class MailService {
     let textBody = options.text;
     if (!textBody) {
       try {
-        textBody = options.html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+        textBody = options.html
+          .replace(/<[^>]+>/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
       } catch {
         textBody = undefined;
       }
@@ -703,9 +717,12 @@ export class MailService {
     const from = this.defaultFrom;
     const subject = 'You were invited to a Koajo custom pod';
 
-    const rawBaseUrl = this.configService.get<string>('app.customPodInviteUrl', {
-      infer: true,
-    });
+    const rawBaseUrl = this.configService.get<string>(
+      'app.customPodInviteUrl',
+      {
+        infer: true,
+      },
+    );
 
     const fallbackBase = 'https://app.koajo.local/custom-pods/accept';
     const preferredOrigin =
@@ -714,7 +731,9 @@ export class MailService {
         : null;
     const baseUrl =
       preferredOrigin ??
-      (rawBaseUrl && rawBaseUrl.trim().length ? rawBaseUrl.trim() : fallbackBase);
+      (rawBaseUrl && rawBaseUrl.trim().length
+        ? rawBaseUrl.trim()
+        : fallbackBase);
 
     let inviteLink = `${baseUrl}?token=${encodeURIComponent(options.token)}&podId=${encodeURIComponent(options.podId)}`;
     try {
@@ -759,7 +778,10 @@ export class MailService {
 
     let textBody: string | undefined;
     try {
-      textBody = htmlBody.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+      textBody = htmlBody
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
     } catch {
       textBody = undefined;
     }
@@ -818,9 +840,9 @@ export class MailService {
       );
     } catch (error) {
       this.logger.warn(
-        `Falling back to default pod confirmation template (${template}): ${(
-          error as Error
-        ).message}`,
+        `Falling back to default pod confirmation template (${template}): ${
+          (error as Error).message
+        }`,
       );
       htmlBody = `
         <p>Hi ${options.firstName},</p>
@@ -850,7 +872,10 @@ export class MailService {
 
     let htmlBody: string;
     try {
-      htmlBody = await this.notificationTemplateService.render(templateCode, {});
+      htmlBody = await this.notificationTemplateService.render(
+        templateCode,
+        {},
+      );
     } catch (error) {
       this.logger.warn(
         `Falling back to default 60-day inactivity template: ${(error as Error).message}`,
@@ -863,7 +888,10 @@ export class MailService {
 
     let textBody: string | undefined;
     try {
-      textBody = htmlBody.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+      textBody = htmlBody
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
     } catch {
       textBody = undefined;
     }
@@ -889,7 +917,10 @@ export class MailService {
     }
   }
 
-  async sendAccountClosureNotice(email: string, currentDate: Date): Promise<void> {
+  async sendAccountClosureNotice(
+    email: string,
+    currentDate: Date,
+  ): Promise<void> {
     if (!(await this.shouldSendEmail(email, 'system'))) {
       return;
     }
@@ -902,7 +933,10 @@ export class MailService {
 
     let htmlBody: string;
     try {
-      htmlBody = await this.notificationTemplateService.render(templateCode, variables);
+      htmlBody = await this.notificationTemplateService.render(
+        templateCode,
+        variables,
+      );
     } catch (error) {
       this.logger.warn(
         `Falling back to default account closure template: ${(error as Error).message}`,
@@ -916,7 +950,10 @@ export class MailService {
 
     let textBody: string | undefined;
     try {
-      textBody = htmlBody.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+      textBody = htmlBody
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
     } catch {
       textBody = undefined;
     }
@@ -997,20 +1034,85 @@ export class MailService {
     });
 
     try {
-      const info = await this.transporter.sendMail({
+      const payload: MailDataRequired = {
         to: options.to,
         from: options.from ?? this.defaultFrom,
         subject: options.subject,
         html: options.html,
         text: options.text,
-        attachments: options.attachments,
-      });
-      await this.markEmailLogSent(log, info?.messageId);
-      return info;
+        attachments: options.attachments
+          ? await this.normalizeAttachments(options.attachments)
+          : undefined,
+      };
+
+      const [response] = await sgMail.send(payload);
+      const messageId =
+        (response.headers['x-message-id'] as string | undefined) ??
+        (response.headers['x-message-id'] as string | undefined) ??
+        null;
+      await this.markEmailLogSent(log, messageId);
+      return { messageId };
     } catch (error) {
       await this.markEmailLogFailed(log, error as Error);
       throw error;
     }
+  }
+
+  private async normalizeAttachments(
+    attachments: NonNullable<TrackedEmailSendOptions['attachments']>,
+  ): Promise<MailDataRequired['attachments']> {
+    const normalized: MailDataRequired['attachments'] = [];
+
+    for (const attachment of attachments) {
+      if (attachment.content) {
+        normalized.push({
+          content: this.toBase64(attachment.content),
+          filename: attachment.filename,
+          type: attachment.type,
+          disposition: attachment.disposition,
+          contentId: attachment.contentId,
+        });
+        continue;
+      }
+
+      if (!attachment.path) {
+        this.logger.warn(
+          `Skipping attachment ${attachment.filename}: no content or path provided.`,
+        );
+        continue;
+      }
+
+      if (attachment.path.startsWith('http')) {
+        this.logger.warn(
+          `Skipping remote attachment ${attachment.path}: SendGrid requires inline content.`,
+        );
+        continue;
+      }
+
+      try {
+        const file = await fs.readFile(attachment.path);
+        normalized.push({
+          content: file.toString('base64'),
+          filename: attachment.filename || basename(attachment.path),
+          type: attachment.type,
+          disposition: attachment.disposition,
+          contentId: attachment.contentId,
+        });
+      } catch (error) {
+        this.logger.warn(
+          `Failed to load attachment ${attachment.path}: ${(error as Error).message}`,
+        );
+      }
+    }
+
+    return normalized.length ? normalized : undefined;
+  }
+
+  private toBase64(content: Buffer | string): string {
+    if (Buffer.isBuffer(content)) {
+      return content.toString('base64');
+    }
+    return Buffer.from(content, 'utf8').toString('base64');
   }
 
   private async createEmailLog(details: {
@@ -1118,7 +1220,10 @@ export class MailService {
 
       let textBody: string | undefined;
       try {
-        textBody = htmlBody.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+        textBody = htmlBody
+          .replace(/<[^>]+>/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
       } catch {
         textBody = undefined;
       }
