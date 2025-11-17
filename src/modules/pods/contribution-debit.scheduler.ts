@@ -26,9 +26,9 @@ import {
 import { RecordPaymentCommand } from '../finance/commands/record-payment.command';
 import { PodType } from './pod-type.enum';
 
-// const RUN_INTERVAL_MS = 24 * 60 * 60 * 1000; // daily
+const RUN_INTERVAL_MS = 24 * 60 * 60 * 1000; // daily
 
-const RUN_INTERVAL_MS = 60000; // every minute
+// const RUN_INTERVAL_MS = 60000; // every minute
 
 @Injectable()
 export class ContributionDebitScheduler
