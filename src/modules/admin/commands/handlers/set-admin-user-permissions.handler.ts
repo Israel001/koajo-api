@@ -20,8 +20,7 @@ import { AdminAccessService } from '../../services/admin-access.service';
 @Injectable()
 @CommandHandler(SetAdminUserPermissionsCommand)
 export class SetAdminUserPermissionsHandler
-  implements
-    ICommandHandler<SetAdminUserPermissionsCommand, AdminUserDto>
+  implements ICommandHandler<SetAdminUserPermissionsCommand, AdminUserDto>
 {
   constructor(
     @InjectRepository(AdminUserEntity)
@@ -43,7 +42,9 @@ export class SetAdminUserPermissionsHandler
     }
 
     if (command.requester.adminId === command.adminId) {
-      throw new ForbiddenException('Admins cannot modify their own permissions.');
+      throw new ForbiddenException(
+        'Admins cannot modify their own permissions.',
+      );
     }
 
     const admin = await this.adminRepository.findOne(command.adminId, {
@@ -61,47 +62,47 @@ export class SetAdminUserPermissionsHandler
     const allowSource = command.payload.allow ?? [];
     const denySource = command.payload.deny ?? [];
 
-    const allowCodes = new Set(
-      allowSource.map((code) => code.trim()).filter(Boolean),
+    const allowIds = new Set(
+      allowSource.map((id) => id.trim()).filter(Boolean),
     );
-    const denyCodes = new Set(
-      denySource.map((code) => code.trim()).filter(Boolean),
-    );
+    const denyIds = new Set(denySource.map((id) => id.trim()).filter(Boolean));
 
-    for (const code of allowCodes) {
-      if (denyCodes.has(code)) {
+    for (const id of allowIds) {
+      if (denyIds.has(id)) {
         throw new BadRequestException(
-          `Permission code "${code}" cannot be both allowed and denied.`,
+          `Permission "${id}" cannot be both allowed and denied.`,
         );
       }
     }
 
-    const allowPermissions = allowCodes.size
-      ? await this.permissionRepository.find({ code: { $in: [...allowCodes] } })
+    const allowPermissions = allowIds.size
+      ? await this.permissionRepository.find({ id: { $in: [...allowIds] } })
       : [];
 
-    if (allowPermissions.length !== allowCodes.size) {
-      const found = new Set(allowPermissions.map((perm) => perm.code));
-      const missing = [...allowCodes].filter((code) => !found.has(code));
+    if (allowPermissions.length !== allowIds.size) {
+      const found = new Set(allowPermissions.map((perm) => perm.id));
+      const missing = [...allowIds].filter((id) => !found.has(id));
       throw new NotFoundException(
         `The following permissions could not be found: ${missing.join(', ')}`,
       );
     }
 
-    const denyPermissions = denyCodes.size
-      ? await this.permissionRepository.find({ code: { $in: [...denyCodes] } })
+    const denyPermissions = denyIds.size
+      ? await this.permissionRepository.find({ id: { $in: [...denyIds] } })
       : [];
 
-    if (denyPermissions.length !== denyCodes.size) {
-      const found = new Set(denyPermissions.map((perm) => perm.code));
-      const missing = [...denyCodes].filter((code) => !found.has(code));
+    if (denyPermissions.length !== denyIds.size) {
+      const found = new Set(denyPermissions.map((perm) => perm.id));
+      const missing = [...denyIds].filter((id) => !found.has(id));
       throw new NotFoundException(
         `The following permissions targeted for revocation were not found: ${missing.join(', ')}`,
       );
     }
 
     admin.directPermissions.removeAll();
-    allowPermissions.forEach((permission) => admin.directPermissions.add(permission));
+    allowPermissions.forEach((permission) =>
+      admin.directPermissions.add(permission),
+    );
 
     const em = this.adminRepository.getEntityManager();
 
