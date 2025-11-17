@@ -92,44 +92,40 @@ export class CreateAdminUserHandler
       );
     }
 
-    const allowCodes = new Set(
-      (allowPermissions ?? [])
-        .map((code) => code.trim())
-        .filter((code) => code.length),
+    const allowIds = new Set(
+      (allowPermissions ?? []).map((id) => id.trim()).filter((id) => id.length),
     );
-    const denyCodes = new Set(
-      (denyPermissions ?? [])
-        .map((code) => code.trim())
-        .filter((code) => code.length),
+    const denyIds = new Set(
+      (denyPermissions ?? []).map((id) => id.trim()).filter((id) => id.length),
     );
 
-    for (const code of allowCodes) {
-      if (denyCodes.has(code)) {
+    for (const id of allowIds) {
+      if (denyIds.has(id)) {
         throw new BadRequestException(
-          `Permission code "${code}" cannot be both explicitly allowed and denied.`,
+          `Permission "${id}" cannot be both explicitly allowed and denied.`,
         );
       }
     }
 
-    const allowPermissionEntities = allowCodes.size
-      ? await this.permissionRepository.find({ code: { $in: [...allowCodes] } })
+    const allowPermissionEntities = allowIds.size
+      ? await this.permissionRepository.find({ id: { $in: [...allowIds] } })
       : [];
 
-    if (allowPermissionEntities.length !== allowCodes.size) {
-      const found = new Set(allowPermissionEntities.map((perm) => perm.code));
-      const missing = [...allowCodes].filter((code) => !found.has(code));
+    if (allowPermissionEntities.length !== allowIds.size) {
+      const found = new Set(allowPermissionEntities.map((perm) => perm.id));
+      const missing = [...allowIds].filter((id) => !found.has(id));
       throw new NotFoundException(
         `The following permissions targeted for explicit inclusion were not found: ${missing.join(', ')}`,
       );
     }
 
-    const denyPermissionEntities = denyCodes.size
-      ? await this.permissionRepository.find({ code: { $in: [...denyCodes] } })
+    const denyPermissionEntities = denyIds.size
+      ? await this.permissionRepository.find({ id: { $in: [...denyIds] } })
       : [];
 
-    if (denyPermissionEntities.length !== denyCodes.size) {
-      const found = new Set(denyPermissionEntities.map((perm) => perm.code));
-      const missing = [...denyCodes].filter((code) => !found.has(code));
+    if (denyPermissionEntities.length !== denyIds.size) {
+      const found = new Set(denyPermissionEntities.map((perm) => perm.id));
+      const missing = [...denyIds].filter((id) => !found.has(id));
       throw new NotFoundException(
         `The following permissions targeted for removal were not found: ${missing.join(', ')}`,
       );

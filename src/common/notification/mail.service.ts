@@ -328,11 +328,19 @@ export class MailService {
     const firstname =
       options.firstName?.trim() ||
       (options.email ? options.email.split('@')[0] : 'there');
-    const dateTimeLabel = options.removedAt.toLocaleString('en-US', {
-      dateStyle: 'long',
-      timeStyle: 'short',
-      timeZoneName: 'short',
-    });
+    let dateTimeLabel: string;
+    try {
+      dateTimeLabel = new Intl.DateTimeFormat('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZoneName: 'short',
+      }).format(options.removedAt);
+    } catch {
+      dateTimeLabel = options.removedAt.toISOString();
+    }
 
     const replacements = {
       firstName: firstname,

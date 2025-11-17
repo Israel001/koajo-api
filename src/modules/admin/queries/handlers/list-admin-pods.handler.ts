@@ -57,16 +57,31 @@ export class ListAdminPodsHandler
   async execute(query: ListAdminPodsQuery): Promise<AdminPodsListResult> {
     const limit = query.limit ?? 50;
     const offset = query.offset ?? 0;
+    const qb = this.podRepository.createQueryBuilder('pod');
 
-    const [pods, total] = await this.podRepository.findAndCount(
-      {},
-      {
-        limit,
-        offset,
-        orderBy: { createdAt: 'DESC' },
-        populate: ['memberships', 'creator'] as const,
-      },
-    );
+    if (query.status) {
+      qb.andWhere({ status: query.status });
+    }
+
+    if (query.search) {
+      const term = `%${query.search.trim()}%`;
+      qb.andWhere({
+        $or: [
+          { id: { $like: term } },
+          { planCode: { $like: term } },
+          { name: { $like: term } },
+          { amount: { $like: term } as any },
+          { maxMembers: { $like: term } as any },
+          { lifecycleWeeks: { $like: term } as any },
+          { status: { $like: term } },
+        ],
+      } as any);
+    }
+
+    qb.orderBy({ createdAt: 'DESC' }).limit(limit).offset(offset);
+
+    const [pods, total] = await qb.getResultAndCount();
+    await this.podRepository.populate(pods, ['memberships', 'creator']);
 
     return {
       total,

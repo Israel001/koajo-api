@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put, UseGuards, Req } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, UseGuards, Req } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
   ApiBearerAuth,
@@ -16,6 +16,9 @@ import { CreateAdminRoleCommand } from '../commands/create-admin-role.command';
 import { ListAdminRolesQuery } from '../queries/list-admin-roles.query';
 import { SetRolePermissionsDto } from '../dto/set-role-permissions.dto';
 import { SetAdminRolePermissionsCommand } from '../commands/set-admin-role-permissions.command';
+import { UpdateAdminRoleDto } from '../dto/update-admin-role.dto';
+import { UpdateAdminRoleCommand } from '../commands/update-admin-role.command';
+import { DeleteAdminRoleCommand } from '../commands/delete-admin-role.command';
 import type { AdminRoleSummary } from '../contracts/admin-results';
 import { AdminRoleSummaryDto } from '../contracts/admin-swagger.dto';
 import { ADMIN_PERMISSION_EDIT_ROLES } from '../admin-permission.constants';
@@ -62,6 +65,39 @@ export class AdminRolesController {
         },
       ),
     );
+  }
+
+  @Patch(':roleId')
+  @ApiOperation({ summary: 'Update the name or description of a role' })
+  @ApiOkResponse({ type: AdminRoleSummaryDto, description: 'Updated admin role.' })
+  @RequireAdminPermissions(ADMIN_PERMISSION_EDIT_ROLES)
+  async update(
+    @Param('roleId') roleId: string,
+    @Body() payload: UpdateAdminRoleDto,
+  ): Promise<AdminRoleSummary> {
+    return this.commandBus.execute(
+      new UpdateAdminRoleCommand(
+        roleId,
+        payload.name ?? null,
+        typeof payload.description === 'undefined'
+          ? null
+          : payload.description ?? null,
+      ),
+    );
+  }
+
+  @Delete(':roleId')
+  @ApiOperation({ summary: 'Delete a role if it is not assigned to any user' })
+  @ApiOkResponse({
+    description: 'Role deleted.',
+    schema: {
+      type: 'object',
+      properties: { deleted: { type: 'boolean' } },
+    },
+  })
+  @RequireAdminPermissions(ADMIN_PERMISSION_EDIT_ROLES)
+  async delete(@Param('roleId') roleId: string): Promise<{ deleted: boolean }> {
+    return this.commandBus.execute(new DeleteAdminRoleCommand(roleId));
   }
 
   @Put(':roleId/permissions')

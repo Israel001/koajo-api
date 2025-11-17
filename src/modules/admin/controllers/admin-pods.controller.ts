@@ -8,7 +8,7 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { AdminListQueryDto } from '../dto/list-query.dto';
+import { AdminPodsQueryDto } from '../dto/pods-query.dto';
 import { AdminPodActivityQueryDto } from '../dto/pod-activity-query.dto';
 import { AdminJwtGuard } from '../guards/admin-jwt.guard';
 import { AdminPermissionsGuard, RequireAdminPermissions } from '../guards/admin-permissions.guard';
@@ -53,9 +53,14 @@ export class AdminPodsController {
   @ApiOperation({ summary: 'List pods' })
   @ApiOkResponse({ description: 'Pods fetched.' })
   @RequireAdminPermissions(ADMIN_PERMISSION_VIEW_PODS)
-  async list(@Query() query: AdminListQueryDto): Promise<AdminPodsListResult> {
+  async list(@Query() query: AdminPodsQueryDto): Promise<AdminPodsListResult> {
     return this.queryBus.execute(
-      new ListAdminPodsQuery(query.limit, query.offset),
+      new ListAdminPodsQuery(
+        query.limit,
+        query.offset,
+        query.search ?? null,
+        query.status ?? null,
+      ),
     );
   }
 

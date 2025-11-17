@@ -26,11 +26,11 @@ export const computeNextStartDate = (from: Date): Date => {
   const month = reference.getUTCMonth();
   const year = reference.getUTCFullYear();
 
-  if (day <= 1) {
+  if (day <= 3) {
     return new Date(Date.UTC(year, month, 1, 0, 0, 0, 0));
   }
 
-  if (day <= 16) {
+  if (day <= 18) {
     return new Date(Date.UTC(year, month, 16, 0, 0, 0, 0));
   }
 
