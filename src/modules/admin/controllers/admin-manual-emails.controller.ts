@@ -126,7 +126,7 @@ export class AdminManualEmailsController {
         .map((item) => item.trim())
         .filter((item) => item.length);
       if (items.length) {
-        normalized.reasonsList = items.map((item) => `<li>${item}</li>`).join('');
+        normalized.reasons = items.map((item) => `<li>${item}</li>`).join('');
       }
     }
 
