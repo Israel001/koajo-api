@@ -4,12 +4,12 @@ import { EntityRepository } from '@mikro-orm/mysql';
 import { NotFoundException } from '@nestjs/common';
 import { GetAdminAccountQuery } from '../get-admin-account.query';
 import { AccountEntity } from '../../../accounts/entities/account.entity';
-import { AdminAccountDetail } from '../../contracts/admin-results';
+import { AdminAccountDetailWithBank } from '../../contracts/admin-results';
 import { toAdminAccountDetail } from './list-admin-accounts.handler';
 
 @QueryHandler(GetAdminAccountQuery)
 export class GetAdminAccountHandler
-  implements IQueryHandler<GetAdminAccountQuery, AdminAccountDetail>
+  implements IQueryHandler<GetAdminAccountQuery, AdminAccountDetailWithBank>
 {
   constructor(
     @InjectRepository(AccountEntity)
@@ -20,7 +20,7 @@ export class GetAdminAccountHandler
 
   private readonly accountRepository: EntityRepository<AccountEntity>;
 
-  async execute(query: GetAdminAccountQuery): Promise<AdminAccountDetail> {
+  async execute(query: GetAdminAccountQuery): Promise<AdminAccountDetailWithBank> {
     const account = await this.accountRepository.findOne({ id: query.accountId });
 
     if (!account) {

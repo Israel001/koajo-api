@@ -124,7 +124,7 @@ export class AdminAccountsController {
   @RequireAdminPermissions(ADMIN_PERMISSION_VIEW_USERS)
   async getOne(
     @Param('accountId') accountId: string,
-  ): Promise<AdminAccountDetail> {
+  ): Promise<AdminAccountDetail & { bankAccount: unknown | null }> {
     return this.queryBus.execute(new GetAdminAccountQuery(accountId));
   }
 

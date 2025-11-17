@@ -20,8 +20,10 @@ import { PodActivityEntity } from './entities/pod-activity.entity';
 import { PodActivityService } from './services/pod-activity.service';
 import { PodJoinGuardService } from './services/pod-join-guard.service';
 import { InternalPodsController } from './controllers/internal-pods.controller';
+import { InternalStripeWebhookController } from './controllers/internal-stripe-webhook.controller';
 import { PaymentEntity } from '../finance/entities/payment.entity';
 import { ContributionNotificationScheduler } from './contribution-notification.scheduler';
+import { ContributionDebitScheduler } from './contribution-debit.scheduler';
 
 @Module({
   imports: [
@@ -52,7 +54,7 @@ import { ContributionNotificationScheduler } from './contribution-notification.s
       },
     }),
   ],
-  controllers: [PodsController, InternalPodsController],
+  controllers: [PodsController, InternalPodsController, InternalStripeWebhookController],
   providers: [
     PodDomainHelper,
     PodActivityService,
@@ -60,6 +62,7 @@ import { ContributionNotificationScheduler } from './contribution-notification.s
     JwtAuthGuard,
     PodsScheduler,
     ContributionNotificationScheduler,
+    ContributionDebitScheduler,
     ...PodCommandHandlers,
     ...PodQueryHandlers,
   ],

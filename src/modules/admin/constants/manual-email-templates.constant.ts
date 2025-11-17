@@ -51,7 +51,14 @@ export const MANUAL_EMAIL_TEMPLATES: ManualEmailTemplateDefinition[] = [
     subject: 'Update on your Koajo payout',
     description:
       'Explains that a customer payout has been delayed and provides the affected date.',
-    variables: [{ key: 'date', label: 'Scheduled payout date', required: true }],
+    variables: [
+      { key: 'date', label: 'Scheduled payout date', required: true },
+      {
+        key: 'reasons',
+        label: 'Comma-separated payout delay reasons (will render as bullet list)',
+        required: false,
+      },
+    ],
   },
   {
     code: 'missed_payout',

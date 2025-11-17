@@ -4,14 +4,15 @@ import { EntityRepository } from '@mikro-orm/mysql';
 import { AccountEntity } from '../../../accounts/entities/account.entity';
 import { ListAdminAccountsQuery } from '../list-admin-accounts.query';
 import {
-  AdminAccountDetail,
+  AdminAccountDetailWithBank,
   AdminAccountsListResult,
   AdminKycStatus,
+  AdminAccountDetail,
 } from '../../contracts/admin-results';
 
 export const toAdminAccountDetail = (
   account: AccountEntity,
-): AdminAccountDetail => ({
+): AdminAccountDetailWithBank => ({
   id: account.id,
   email: account.email,
   phoneNumber: account.phoneNumber,
@@ -30,6 +31,24 @@ export const toAdminAccountDetail = (
   missedPaymentReason: account.missedPaymentReason ?? null,
   overheatFlag: account.overheatFlag,
   overheatReason: account.overheatReason ?? null,
+  bankAccount: account.stripeBankAccountId
+    ? {
+        bankName: account.stripeBankName ?? null,
+        paymentMethodId: account.stripePaymentMethodId ?? null,
+        accountLast4: account.stripeBankAccountLast4 ?? null,
+        customerId:
+          account.stripeBankAccountCustomerId ??
+          account.stripeCustomerId ??
+          null,
+        bankAccountId: account.stripeBankAccountId ?? null,
+        linkedAt: account.stripeBankAccountLinkedAt
+          ? account.stripeBankAccountLinkedAt.toISOString()
+          : null,
+        updatedAt: account.stripeBankAccountUpdatedAt
+          ? account.stripeBankAccountUpdatedAt.toISOString()
+          : null,
+      }
+    : null,
 });
 
 const deriveKycStatus = (account: AccountEntity): AdminKycStatus => {

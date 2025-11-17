@@ -99,6 +99,19 @@ export interface AdminAccountsListResult {
 }
 
 export interface AdminAccountDetail extends AdminAccountListItem {}
+export interface AdminAccountBankDetails {
+  bankName: string | null;
+  paymentMethodId: string | null;
+  accountLast4: string | null;
+  customerId: string | null;
+  bankAccountId: string | null;
+  linkedAt: string | null;
+  updatedAt: string | null;
+}
+
+export interface AdminAccountDetailWithBank extends AdminAccountListItem {
+  bankAccount: AdminAccountBankDetails | null;
+}
 
 export interface AdminAccountPodMembership {
   membershipId: string;

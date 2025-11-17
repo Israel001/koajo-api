@@ -1200,7 +1200,7 @@ export class MailService {
     subject: string;
     recipients: Array<{
       email: string;
-      variables?: Record<string, string | number>;
+      variables?: Record<string, string | number | string[]>;
     }>;
     reason?: string;
   }): Promise<number> {
@@ -1215,7 +1215,7 @@ export class MailService {
       try {
         htmlBody = await this.notificationTemplateService.render(
           options.templateCode,
-          recipient.variables ?? {},
+          (recipient.variables ?? {}) as Record<string, string | number>,
         );
       } catch (error) {
         this.logger.error(

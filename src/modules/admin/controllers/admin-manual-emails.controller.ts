@@ -76,7 +76,7 @@ export class AdminManualEmailsController {
         );
       }
 
-      const variables = recipient.variables ?? {};
+      const variables = this.normalizeVariables(recipient.variables ?? {});
       for (const variable of template.variables) {
         const value = variables[variable.key];
         if (
@@ -113,5 +113,23 @@ export class AdminManualEmailsController {
       requested: sanitizedRecipients.length,
       sent,
     };
+  }
+
+  private normalizeVariables(
+    variables: Record<string, string | number>,
+  ): Record<string, string | number> {
+    const normalized: Record<string, string | number> = { ...variables };
+
+    if (variables.reasons && typeof variables.reasons === 'string') {
+      const items = variables.reasons
+        .split(',')
+        .map((item) => item.trim())
+        .filter((item) => item.length);
+      if (items.length) {
+        normalized.reasonsList = items.map((item) => `<li>${item}</li>`).join('');
+      }
+    }
+
+    return normalized;
   }
 }

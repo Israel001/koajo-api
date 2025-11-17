@@ -12,7 +12,13 @@ import { EntityRepository } from '@mikro-orm/mysql';
 import { PodMembershipEntity } from '../entities/pod-membership.entity';
 import { PodEntity } from '../entities/pod.entity';
 import { PodStatus } from '../pod-status.enum';
-import { addDays, startOfDay } from '../pod.utils';
+import {
+  addDays,
+  isWithinContributionWindow,
+  resolveContributionWindowStart,
+  startOfDay,
+} from '../pod.utils';
+import { CustomPodCadence } from '../custom-pod-cadence.enum';
 
 interface DueContributionItem {
   podId: string;
@@ -61,34 +67,56 @@ export class InternalPodsController {
     const memberships = await this.membershipRepository.find(
       {
         account: { $ne: null },
-        pod: {
-          nextContributionDate: {
-            $gte: start,
-            $lt: end,
-          },
-        },
       },
       { populate: ['pod', 'account'] as const },
     );
 
+    const windowStart = start;
+    const windowEnd = end;
+
     return memberships
-      .filter((membership) => membership.pod?.nextContributionDate)
       .map((membership) => {
         const pod = membership.pod!;
         const account = membership.account!;
+        const effectiveNext =
+          pod.nextContributionDate ??
+          this.computeFallbackNextContributionDate(pod, windowStart);
+
         return {
           podId: pod.id,
           planCode: pod.planCode,
           amount: pod.amount,
           status: pod.status,
           graceEndsAt: pod.graceEndsAt?.toISOString() ?? null,
-          nextContributionDate: pod.nextContributionDate?.toISOString() ?? null,
+          nextContributionDate: effectiveNext?.toISOString() ?? null,
           membershipId: membership.id,
           user: {
             stripeCustomerId: account.stripeCustomerId ?? null,
             stripePaymentMethodId: account.stripePaymentMethodId ?? null,
           },
         } as DueContributionItem;
+      })
+      .filter((item) => {
+        if (!item.nextContributionDate) {
+          return false;
+        }
+        const asDate = new Date(item.nextContributionDate);
+        return asDate >= windowStart && asDate < windowEnd;
       });
+  }
+
+  private computeFallbackNextContributionDate(
+    pod: PodEntity,
+    reference: Date,
+  ): Date | null {
+    const cadence =
+      pod.cadence ?? CustomPodCadence.BI_WEEKLY;
+    const today = startOfDay(reference);
+
+    if (isWithinContributionWindow(today, cadence)) {
+      return today;
+    }
+
+    return resolveContributionWindowStart(today, cadence);
   }
 }

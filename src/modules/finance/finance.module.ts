@@ -4,6 +4,7 @@ import { CqrsModule } from '@nestjs/cqrs';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PaymentsController } from './controllers/payments.controller';
+import { StripeWebhookController } from './controllers/stripe-webhook.controller';
 import { PayoutsController } from './controllers/payouts.controller';
 import { PaymentEntity } from './entities/payment.entity';
 import { PayoutEntity } from './entities/payout.entity';
@@ -47,7 +48,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
       },
     }),
   ],
-  controllers: [PaymentsController, PayoutsController],
+  controllers: [PaymentsController, PayoutsController, StripeWebhookController],
   providers: [...FinanceCommandHandlers, JwtAuthGuard, PodActivityService],
 })
 export class FinanceModule {}
