@@ -7,5 +7,6 @@ export class UpsertStripeBankAccountCommand {
     public readonly accountFirstName: string,
     public readonly accountLastName: string,
     public readonly accountLast4: string,
+    public readonly paymentMethodId: string,
   ) {}
 }

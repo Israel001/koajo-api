@@ -76,6 +76,9 @@ export class AccountEntity {
   @Property({ columnType: 'varchar(128)', nullable: true })
   stripeBankAccountCustomerId?: string | null;
 
+  @Property({ columnType: 'varchar(128)', nullable: true })
+  stripePaymentMethodId?: string | null;
+
   @Property({ columnType: 'datetime(6)', nullable: true })
   stripeBankAccountLinkedAt?: Date | null;
 

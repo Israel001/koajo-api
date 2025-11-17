@@ -56,4 +56,13 @@ export class UpsertStripeBankAccountDto {
   @IsString()
   @Length(4, 4)
   accountLast4!: string;
+
+  @ApiProperty({
+    name: 'payment_method_id',
+    description: 'Stripe payment method identifier to use for debits.',
+  })
+  @Expose({ name: 'payment_method_id' })
+  @IsString()
+  @IsNotEmpty()
+  paymentMethodId!: string;
 }

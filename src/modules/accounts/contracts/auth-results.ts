@@ -179,6 +179,7 @@ export interface UpsertStripeBankAccountResult {
   created_at: string;
   updated_at: string;
   last4: string | null;
+  payment_method_id?: string | null;
 }
 
 export interface DeleteAccountResult {

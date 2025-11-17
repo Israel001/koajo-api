@@ -3,9 +3,11 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { EntityRepository } from '@mikro-orm/mysql';
+import Stripe from 'stripe';
 import { RecordPaymentCommand } from '../record-payment.command';
 import { PaymentEntity } from '../../entities/payment.entity';
 import { TransactionEntity } from '../../entities/transaction.entity';
@@ -37,11 +39,10 @@ export class RecordPaymentHandler
     private readonly achievementService: AchievementService,
     private readonly activityService: PodActivityService,
     private readonly inAppNotificationService: InAppNotificationService,
+    private readonly configService: ConfigService,
   ) {}
 
-  async execute(
-    command: RecordPaymentCommand,
-  ): Promise<RecordPaymentResult> {
+  async execute(command: RecordPaymentCommand): Promise<RecordPaymentResult> {
     const stripeReference = command.stripeReference.trim();
     const currency = command.currency.trim().toUpperCase();
     const status = command.status.trim().toLowerCase();
@@ -68,25 +69,32 @@ export class RecordPaymentHandler
     );
 
     if (!membership || !membership.account) {
-      throw new NotFoundException(
-        'Pod membership not found for this account.',
-      );
+      throw new NotFoundException('Pod membership not found for this account.');
     }
 
     const pod = membership.pod;
     const account = membership.account;
 
-    const amountCents = this.toMinorUnits(command.amount);
     const expectedCents = this.toMinorUnits(pod.amount);
+    const verified = await this.verifyStripePayment(stripeReference);
 
-    if (amountCents !== expectedCents) {
+    if (verified.amount_cents !== expectedCents) {
       throw new BadRequestException(
         `Payment amount mismatch. Expected ${this.formatMinor(expectedCents)}.`,
       );
     }
 
+    if (verified.currency !== currency) {
+      throw new BadRequestException(
+        `Payment currency mismatch. Expected ${currency}.`,
+      );
+    }
+
+    const normalizedStatus = verified.status.toLowerCase();
+
     const incrementedTotal =
-      this.toMinorUnits(membership.totalContributed ?? '0') + amountCents;
+      this.toMinorUnits(membership.totalContributed ?? '0') +
+      verified.amount_cents;
 
     membership.totalContributed = this.formatMinor(incrementedTotal);
 
@@ -96,9 +104,9 @@ export class RecordPaymentHandler
         pod,
         membership,
         stripeReference,
-        amount: this.formatMinor(amountCents),
+        amount: this.formatMinor(verified.amount_cents),
         currency,
-        status,
+        status: verified.status,
         description,
       },
       { partial: true },
@@ -114,7 +122,7 @@ export class RecordPaymentHandler
         stripeReference,
         amount: payment.amount,
         currency,
-        status,
+        status: verified.status,
         description,
       },
       { partial: true },
@@ -135,12 +143,12 @@ export class RecordPaymentHandler
         paymentId: payment.id,
         amount: payment.amount,
         currency,
-        status,
+        status: verified.status,
         stripeReference,
       },
     });
 
-    if (isSuccessfulPaymentStatus(status)) {
+    if (isSuccessfulPaymentStatus(normalizedStatus)) {
       await this.achievementService.handleSuccessfulPayment({
         account,
       });
@@ -171,8 +179,7 @@ export class RecordPaymentHandler
   }
 
   private toMinorUnits(value: number | string): number {
-    const amount =
-      typeof value === 'number' ? value : Number.parseFloat(value);
+    const amount = typeof value === 'number' ? value : Number.parseFloat(value);
     if (Number.isNaN(amount)) {
       throw new BadRequestException('Invalid amount provided.');
     }
@@ -183,15 +190,13 @@ export class RecordPaymentHandler
     return (minorUnits / 100).toFixed(2);
   }
 
-  private advanceNextContributionDate(
-    pod: PodMembershipEntity['pod'],
-  ): void {
+  private advanceNextContributionDate(pod: PodMembershipEntity['pod']): void {
     if (!pod) {
       return;
     }
     const cadence =
       pod.type === PodType.CUSTOM
-        ? pod.cadence ?? CustomPodCadence.BI_WEEKLY
+        ? (pod.cadence ?? CustomPodCadence.BI_WEEKLY)
         : CustomPodCadence.BI_WEEKLY;
 
     const current = pod.nextContributionDate ?? pod.startDate;
@@ -200,5 +205,46 @@ export class RecordPaymentHandler
     }
 
     pod.nextContributionDate = nextContributionWindowStart(current, cadence);
+  }
+
+  private getStripeClient(): Stripe {
+    const secret =
+      this.configService.get<string>('stripe.secretKey', { infer: true }) ?? '';
+    const apiVersion =
+      this.configService.get<string>('stripe.apiVersion', { infer: true }) ??
+      '2024-06-20';
+
+    if (!secret.trim()) {
+      throw new BadRequestException('Stripe secret key is not configured.');
+    }
+
+    return new Stripe(secret, {
+      apiVersion: apiVersion as Stripe.LatestApiVersion,
+    });
+  }
+
+  private async verifyStripePayment(
+    stripeReference: string,
+  ): Promise<{ amount_cents: number; currency: string; status: string }> {
+    const stripe = this.getStripeClient();
+    try {
+      const intent = await stripe.paymentIntents.retrieve(stripeReference, {
+        expand: ['latest_charge'],
+      });
+
+      const amount = intent.amount_received ?? intent.amount ?? 0;
+      const currency = (intent.currency ?? '').toUpperCase();
+      const status = intent.status ?? 'unknown';
+
+      return {
+        amount_cents: amount,
+        currency,
+        status,
+      };
+    } catch (error) {
+      throw new NotFoundException(
+        `Stripe payment reference ${stripeReference} could not be verified.`,
+      );
+    }
   }
 }

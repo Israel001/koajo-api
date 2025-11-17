@@ -19,6 +19,7 @@ import { PodInviteEntity } from './entities/pod-invite.entity';
 import { PodActivityEntity } from './entities/pod-activity.entity';
 import { PodActivityService } from './services/pod-activity.service';
 import { PodJoinGuardService } from './services/pod-join-guard.service';
+import { InternalPodsController } from './controllers/internal-pods.controller';
 import { PaymentEntity } from '../finance/entities/payment.entity';
 import { ContributionNotificationScheduler } from './contribution-notification.scheduler';
 
@@ -51,7 +52,7 @@ import { ContributionNotificationScheduler } from './contribution-notification.s
       },
     }),
   ],
-  controllers: [PodsController],
+  controllers: [PodsController, InternalPodsController],
   providers: [
     PodDomainHelper,
     PodActivityService,

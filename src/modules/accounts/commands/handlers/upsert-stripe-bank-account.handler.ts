@@ -55,6 +55,9 @@ export class UpsertStripeBankAccountHandler
     account.stripeBankAccountLastName = this.normalizeValue(
       command.accountLastName,
     );
+    account.stripePaymentMethodId = this.normalizeValue(
+      command.paymentMethodId,
+    );
     if (!account.stripeBankAccountLinkedAt) {
       account.stripeBankAccountLinkedAt = now;
     }
@@ -86,6 +89,7 @@ export class UpsertStripeBankAccountHandler
       created_at: account.stripeBankAccountLinkedAt.toISOString(),
       updated_at: account.stripeBankAccountUpdatedAt.toISOString(),
       last4: account.stripeBankAccountLast4 ?? null,
+      payment_method_id: account.stripePaymentMethodId ?? null,
     };
   }
 
