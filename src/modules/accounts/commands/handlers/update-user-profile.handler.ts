@@ -121,6 +121,14 @@ export class UpdateUserProfileHandler
       date_of_birth: account.dateOfBirth
         ? account.dateOfBirth.toISOString().slice(0, 10)
         : null,
+      dob: account.dateOfBirth
+        ? account.dateOfBirth.toISOString().slice(0, 10)
+        : null,
+      line1: (account.address as any)?.line1 ?? null,
+      city: (account.address as any)?.city ?? null,
+      state: (account.address as any)?.state ?? null,
+      postal_code: (account.address as any)?.postal_code ?? null,
+      country: (account.address as any)?.country ?? null,
       avatar_url: account.avatarUrl ?? null,
       is_active: account.isActive,
       emailNotificationsEnabled: account.emailNotificationsEnabled,

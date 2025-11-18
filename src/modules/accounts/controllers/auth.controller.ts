@@ -12,6 +12,7 @@ import {
   UseGuards,
   Param,
 } from '@nestjs/common';
+import { format } from 'date-fns';
 import { CommandBus } from '@nestjs/cqrs';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { EntityRepository } from '@mikro-orm/mysql';
@@ -29,6 +30,7 @@ import {
   ApiNoContentResponse,
   getSchemaPath,
 } from '@nestjs/swagger';
+import { parse } from 'date-fns';
 import { LoginCommand } from '../commands/login.command';
 import { RegisterAccountCommand } from '../commands/register-account.command';
 import { ResendEmailVerificationCommand } from '../commands/resend-email-verification.command';
@@ -204,6 +206,14 @@ export class AuthController {
             bank_name: account.stripeBankName ?? null,
           }
         : null,
+      dob: account.dateOfBirth
+        ? format(account.dateOfBirth, 'MM-dd-yyyy')
+        : null,
+      line1: (account.address as any)?.line1 ?? null,
+      city: (account.address as any)?.city ?? null,
+      state: (account.address as any)?.state ?? null,
+      postal_code: (account.address as any)?.postal_code ?? null,
+      country: (account.address as any)?.country ?? null,
     };
   }
 
@@ -454,6 +464,24 @@ export class AuthController {
     @Body() payload: SignupDtoModule.SignupDto,
     @Req() request: Request,
   ): Promise<SignupResult> {
+    const parsedDob =
+      payload.dob && payload.dob.trim().length
+        ? parse(payload.dob.trim(), 'MM-dd-yyyy', new Date())
+        : null;
+    const address =
+      payload.line1 &&
+      payload.city &&
+      payload.state &&
+      payload.postal_code &&
+      payload.country
+        ? {
+            line1: payload.line1,
+            city: payload.city,
+            state: payload.state,
+            postal_code: payload.postal_code,
+            country: payload.country,
+          }
+        : null;
     return this.commandBus.execute(
       new RegisterAccountCommand(
         payload.email,
@@ -462,6 +490,8 @@ export class AuthController {
         payload.avatarUrl ?? null,
         payload.first_name,
         payload.last_name,
+        parsedDob,
+        address,
         {
           ipAddress: request.ip,
           userAgent: request.headers['user-agent'],

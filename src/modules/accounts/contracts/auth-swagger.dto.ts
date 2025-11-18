@@ -305,6 +305,28 @@ export class LoginUserResultDto implements LoginUserResult {
   })
   dateOfBirth!: string | null;
 
+  @ApiProperty({
+    description: 'Date of birth in mm-dd-yyyy format.',
+    nullable: true,
+    example: '01-15-1990',
+  })
+  dob!: string | null;
+
+  @ApiProperty({ description: 'Address line 1.', nullable: true })
+  line1!: string | null;
+
+  @ApiProperty({ description: 'City.', nullable: true })
+  city!: string | null;
+
+  @ApiProperty({ description: 'State or province.', nullable: true })
+  state!: string | null;
+
+  @ApiProperty({ description: 'Postal or ZIP code.', nullable: true })
+  postal_code!: string | null;
+
+  @ApiProperty({ description: 'Country code (ISO alpha-2).', nullable: true })
+  country!: string | null;
+
   @ApiProperty({ description: 'Avatar identifier or URL.', nullable: true })
   avatarId!: string | null;
 
@@ -434,6 +456,28 @@ export class CurrentUserResultDto implements CurrentUserResult {
     example: '1990-01-01',
   })
   date_of_birth!: string | null;
+
+  @ApiProperty({
+    description: 'Date of birth in mm-dd-yyyy format.',
+    nullable: true,
+    example: '01-15-1990',
+  })
+  dob!: string | null;
+
+  @ApiProperty({ description: 'Address line 1.', nullable: true })
+  line1!: string | null;
+
+  @ApiProperty({ description: 'City.', nullable: true })
+  city!: string | null;
+
+  @ApiProperty({ description: 'State or province.', nullable: true })
+  state!: string | null;
+
+  @ApiProperty({ description: 'Postal or ZIP code.', nullable: true })
+  postal_code!: string | null;
+
+  @ApiProperty({ description: 'Country code (ISO alpha-2).', nullable: true })
+  country!: string | null;
 
   @ApiProperty({
     description: 'URL of the selected avatar image, if available.',

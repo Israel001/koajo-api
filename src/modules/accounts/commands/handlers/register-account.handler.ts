@@ -54,6 +54,8 @@ export class RegisterAccountHandler
         avatarUrl: command.avatarUrl ?? null,
         firstName: command.firstName?.trim() || null,
         lastName: command.lastName?.trim() || null,
+        dateOfBirth: command.dateOfBirth ?? null,
+        address: command.address ?? null,
       },
       { partial: true },
     );

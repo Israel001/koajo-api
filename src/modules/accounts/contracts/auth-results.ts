@@ -119,6 +119,12 @@ export interface CurrentUserResult {
   email_verified: boolean;
   agreed_to_terms: boolean;
   date_of_birth: string | null;
+  dob: string | null;
+  line1: string | null;
+  city: string | null;
+  state: string | null;
+  postal_code: string | null;
+  country: string | null;
   avatar_url: string | null;
   is_active: boolean;
   emailNotificationsEnabled: boolean;

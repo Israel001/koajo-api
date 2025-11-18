@@ -70,6 +70,9 @@ export class AccountEntity {
   @Property({ type: 'json', nullable: true })
   stripeCustomerAddress?: Record<string, unknown> | null;
 
+  @Property({ type: 'json', nullable: true })
+  address?: Record<string, unknown> | null;
+
   @Property({ columnType: 'varchar(128)', nullable: true })
   stripeBankAccountId?: string | null;
 
