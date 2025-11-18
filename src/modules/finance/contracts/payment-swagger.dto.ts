@@ -1,6 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { RecordPaymentResult, RecordPayoutResult } from './payment-results';
-import type { PaymentListResult, PaymentSummary } from './payment-summary';
+import type {
+  PaymentListResult,
+  PaymentSummary,
+  PayoutListResult,
+  PayoutSummary,
+  TransactionListResult,
+  TransactionSummary,
+} from './payment-summary';
 
 export class RecordPaymentResultDto implements RecordPaymentResult {
   @ApiProperty({
@@ -197,4 +204,111 @@ export class PaymentListResultDto implements PaymentListResult {
     type: [PaymentSummaryDto],
   })
   items!: PaymentSummaryDto[];
+}
+
+export class PayoutSummaryDto implements PayoutSummary {
+  @ApiProperty({ description: 'Recorded payout identifier.' })
+  id!: string;
+
+  @ApiProperty({ description: 'Pod membership identifier for the recipient.' })
+  membershipId!: string;
+
+  @ApiProperty({ description: 'Pod identifier associated with the payout.' })
+  podId!: string;
+
+  @ApiProperty({ description: 'Friendly pod name if available.', nullable: true })
+  podName!: string | null;
+
+  @ApiProperty({ description: 'Pod plan code associated with the payout.' })
+  podPlanCode!: string;
+
+  @ApiProperty({ description: 'Payout amount in major currency units.' })
+  amount!: string;
+
+  @ApiProperty({ description: 'Fee deducted from the payout.' })
+  fee!: string;
+
+  @ApiProperty({ description: 'Currency code for the payout.' })
+  currency!: string;
+
+  @ApiProperty({ description: 'Status string for the recorded payout.' })
+  status!: string;
+
+  @ApiProperty({ description: 'Stripe reference identifier for the payout.' })
+  stripeReference!: string;
+
+  @ApiProperty({ description: 'Description attached to the payout, if any.', nullable: true })
+  description!: string | null;
+
+  @ApiProperty({ description: 'ISO 8601 timestamp when the payout was recorded.' })
+  recordedAt!: string;
+
+  @ApiProperty({ description: 'ISO 8601 payout date for the membership, if available.', nullable: true })
+  payoutDate!: string | null;
+}
+
+export class PayoutListResultDto implements PayoutListResult {
+  @ApiProperty({ description: 'Total number of payouts that match the query.' })
+  total!: number;
+
+  @ApiProperty({
+    description: 'Payouts for the requested page.',
+    type: [PayoutSummaryDto],
+  })
+  items!: PayoutSummaryDto[];
+}
+
+export class TransactionSummaryDto implements TransactionSummary {
+  @ApiProperty({ description: 'Transaction identifier.' })
+  id!: string;
+
+  @ApiProperty({ description: 'Transaction type.', enum: ['payment', 'payout'] })
+  type!: 'payment' | 'payout';
+
+  @ApiProperty({ description: 'Pod membership identifier for the transaction.' })
+  membershipId!: string;
+
+  @ApiProperty({ description: 'Pod identifier associated with the transaction.' })
+  podId!: string;
+
+  @ApiProperty({ description: 'Friendly pod name if available.', nullable: true })
+  podName!: string | null;
+
+  @ApiProperty({ description: 'Pod plan code associated with the transaction.' })
+  podPlanCode!: string;
+
+  @ApiProperty({ description: 'Transaction amount in major currency units.' })
+  amount!: string;
+
+  @ApiProperty({ description: 'Fee applied to the transaction, if any.', nullable: true })
+  fee!: string | null;
+
+  @ApiProperty({ description: 'Currency code for the transaction.' })
+  currency!: string;
+
+  @ApiProperty({ description: 'Status string for the recorded transaction.' })
+  status!: string;
+
+  @ApiProperty({ description: 'Stripe reference identifier for the transaction.' })
+  stripeReference!: string;
+
+  @ApiProperty({ description: 'Description attached to the transaction, if any.', nullable: true })
+  description!: string | null;
+
+  @ApiProperty({ description: 'ISO 8601 timestamp when the transaction was recorded.' })
+  recordedAt!: string;
+
+  @ApiProperty({ description: 'ISO 8601 payout date for the membership, if available.', nullable: true })
+  payoutDate!: string | null;
+}
+
+export class TransactionListResultDto implements TransactionListResult {
+  @ApiProperty({ description: 'Total number of transactions that match the query.' })
+  total!: number;
+
+  @ApiProperty({
+    description: 'Transactions for the requested page.',
+    type: [TransactionSummaryDto],
+  })
+  items!: TransactionSummaryDto[];
 }

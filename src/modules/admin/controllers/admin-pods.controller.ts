@@ -43,6 +43,9 @@ import { ListAdminPayoutsQuery } from '../queries/list-admin-payouts.query';
 import { SwapPayoutPositionDto } from '../dto/swap-payout-position.dto';
 import { SwapPodPayoutPositionCommand } from '../../pods/commands/swap-pod-payout-position.command';
 import { SwapPayoutPositionResultDto } from '../contracts/admin-swagger.dto';
+import { TriggerPayoutDto } from '../dto/trigger-payout.dto';
+import { InitiatePayoutCommand } from '../../finance/commands/initiate-payout.command';
+import { ADMIN_PERMISSION_TRIGGER_PAYOUTS } from '../admin-permission.constants';
 
 @ApiTags('admin-pods')
 @Controller({ path: 'admin/pods', version: '1' })
@@ -168,6 +171,39 @@ export class AdminPodsController {
         payload.firstMembershipId,
         payload.secondMembershipId,
       ),
+    );
+  }
+
+  @Post(':podId/payouts/trigger')
+  @ApiOperation({
+    summary: 'Manually trigger a payout for a pod member (ignores account flags).',
+  })
+  @ApiOkResponse({
+    description: 'Payout initiated.',
+    schema: {
+      type: 'object',
+      properties: {
+        payoutId: { type: 'string' },
+        status: { type: 'string' },
+        stripeReference: { type: 'string' },
+        amount: { type: 'string' },
+        fee: { type: 'string' },
+      },
+    },
+  })
+  @RequireAdminPermissions(ADMIN_PERMISSION_TRIGGER_PAYOUTS)
+  async triggerPayout(
+    @Param('podId') podId: string,
+    @Body() payload: TriggerPayoutDto,
+  ): Promise<{
+    payoutId: string;
+    status: string;
+    stripeReference: string;
+    amount: string;
+    fee: string;
+  }> {
+    return this.commandBus.execute(
+      new InitiatePayoutCommand(payload.membershipId, true, 'admin-trigger'),
     );
   }
 

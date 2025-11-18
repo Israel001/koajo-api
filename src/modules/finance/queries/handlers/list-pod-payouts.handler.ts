@@ -2,23 +2,23 @@ import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { EntityRepository } from '@mikro-orm/mysql';
 import { NotFoundException } from '@nestjs/common';
-import type { PaymentListResult } from '../../contracts/payment-summary';
-import { ListPodPaymentsQuery } from '../list-pod-payments.query';
+import type { PayoutListResult } from '../../contracts/payment-summary';
+import { ListPodPayoutsQuery } from '../list-pod-payouts.query';
+import { PayoutEntity } from '../../entities/payout.entity';
 import { PodMembershipEntity } from '../../../pods/entities/pod-membership.entity';
-import { PaymentEntity } from '../../entities/payment.entity';
 
-@QueryHandler(ListPodPaymentsQuery)
-export class ListPodPaymentsHandler
-  implements IQueryHandler<ListPodPaymentsQuery, PaymentListResult>
+@QueryHandler(ListPodPayoutsQuery)
+export class ListPodPayoutsHandler
+  implements IQueryHandler<ListPodPayoutsQuery, PayoutListResult>
 {
   constructor(
     @InjectRepository(PodMembershipEntity)
     private readonly membershipRepository: EntityRepository<PodMembershipEntity>,
-    @InjectRepository(PaymentEntity)
-    private readonly paymentRepository: EntityRepository<PaymentEntity>,
+    @InjectRepository(PayoutEntity)
+    private readonly payoutRepository: EntityRepository<PayoutEntity>,
   ) {}
 
-  async execute(query: ListPodPaymentsQuery): Promise<PaymentListResult> {
+  async execute(query: ListPodPayoutsQuery): Promise<PayoutListResult> {
     const membership = await this.membershipRepository.findOne({
       pod: query.podId,
       account: query.accountId,
@@ -37,9 +37,9 @@ export class ListPodPaymentsHandler
     }
     const now = new Date();
     if (query.timeframe === 'past') {
-      where.createdAt = { $lt: now };
+      where.membership = { payoutDate: { $lt: now } } as any;
     } else if (query.timeframe === 'upcoming') {
-      where.createdAt = { $gte: now };
+      where.membership = { payoutDate: { $gte: now } } as any;
     }
     if (query.from) {
       where.createdAt = { ...(where.createdAt ?? {}), $gte: new Date(query.from) };
@@ -50,7 +50,7 @@ export class ListPodPaymentsHandler
     const orderBy =
       query.sort === 'asc' ? { createdAt: 'ASC' } : { createdAt: 'DESC' };
 
-    const [payments, total] = await this.paymentRepository.findAndCount(where, {
+    const [payouts, total] = await this.payoutRepository.findAndCount(where, {
       populate: ['pod', 'membership'] as const,
       orderBy,
       limit,
@@ -59,18 +59,22 @@ export class ListPodPaymentsHandler
 
     return {
       total,
-      items: payments.map((payment) => ({
-        id: payment.id,
-        membershipId: payment.membership.id,
-        podId: payment.pod.id,
-        podName: payment.pod.name ?? null,
-        podPlanCode: payment.pod.planCode,
-        amount: payment.amount,
-        currency: payment.currency,
-        status: payment.status,
-        stripeReference: payment.stripeReference,
-        description: payment.description ?? null,
-        recordedAt: payment.createdAt.toISOString(),
+      items: payouts.map((payout) => ({
+        id: payout.id,
+        membershipId: payout.membership.id,
+        podId: payout.pod.id,
+        podName: payout.pod.name ?? null,
+        podPlanCode: payout.pod.planCode,
+        amount: payout.amount,
+        fee: payout.fee,
+        currency: payout.currency,
+        status: payout.status,
+        stripeReference: payout.stripeReference,
+        description: payout.description ?? null,
+        recordedAt: payout.createdAt.toISOString(),
+        payoutDate: payout.membership.payoutDate
+          ? payout.membership.payoutDate.toISOString()
+          : null,
       })),
     };
   }

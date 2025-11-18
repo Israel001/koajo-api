@@ -20,15 +20,32 @@ export class ListAccountPaymentsHandler
     const limit = Math.min(Math.max(query.limit, 1), 100);
     const offset = Math.max(query.offset ?? 0, 0);
 
-    const [payments, total] = await this.paymentRepository.findAndCount(
-      { account: query.accountId },
-      {
-        populate: ['pod', 'membership'] as const,
-        orderBy: { createdAt: 'DESC' },
-        limit,
-        offset,
-      },
-    );
+    const where: any = { account: query.accountId };
+    if (query.status) {
+      where.status = query.status;
+    }
+    const now = new Date();
+    if (query.timeframe === 'past') {
+      where.createdAt = { $lt: now };
+    } else if (query.timeframe === 'upcoming') {
+      where.createdAt = { $gte: now };
+    }
+    if (query.from) {
+      where.createdAt = { ...(where.createdAt ?? {}), $gte: new Date(query.from) };
+    }
+    if (query.to) {
+      where.createdAt = { ...(where.createdAt ?? {}), $lte: new Date(query.to) };
+    }
+
+    const orderBy =
+      query.sort === 'asc' ? { createdAt: 'ASC' } : { createdAt: 'DESC' };
+
+    const [payments, total] = await this.paymentRepository.findAndCount(where, {
+      populate: ['pod', 'membership'] as const,
+      orderBy,
+      limit,
+      offset,
+    });
 
     return {
       total,

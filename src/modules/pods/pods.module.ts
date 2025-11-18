@@ -22,8 +22,11 @@ import { PodJoinGuardService } from './services/pod-join-guard.service';
 import { InternalPodsController } from './controllers/internal-pods.controller';
 import { InternalStripeWebhookController } from './controllers/internal-stripe-webhook.controller';
 import { PaymentEntity } from '../finance/entities/payment.entity';
+import { PayoutEntity } from '../finance/entities/payout.entity';
+import { TransactionEntity } from '../finance/entities/transaction.entity';
 import { ContributionNotificationScheduler } from './contribution-notification.scheduler';
 import { ContributionDebitScheduler } from './contribution-debit.scheduler';
+import { PayoutCreditScheduler } from './payout-credit.scheduler';
 
 @Module({
   imports: [
@@ -35,6 +38,8 @@ import { ContributionDebitScheduler } from './contribution-debit.scheduler';
       AccountEntity,
       PodActivityEntity,
       PaymentEntity,
+      PayoutEntity,
+      TransactionEntity,
     ]),
     CqrsModule,
     AchievementsModule,
@@ -63,6 +68,7 @@ import { ContributionDebitScheduler } from './contribution-debit.scheduler';
     PodsScheduler,
     ContributionNotificationScheduler,
     ContributionDebitScheduler,
+    PayoutCreditScheduler,
     ...PodCommandHandlers,
     ...PodQueryHandlers,
   ],

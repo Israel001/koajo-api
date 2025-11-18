@@ -1,4 +1,4 @@
-export class ListAccountPaymentsQuery {
+export class ListAccountPayoutsQuery {
   constructor(
     public readonly accountId: string,
     public readonly limit: number,

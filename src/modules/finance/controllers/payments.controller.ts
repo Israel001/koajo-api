@@ -8,6 +8,7 @@ import {
   Post,
   Query,
   Req,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -33,6 +34,7 @@ import {
 import { ListAccountPaymentsQuery } from '../queries/list-account-payments.query';
 import { ListPodPaymentsQuery } from '../queries/list-pod-payments.query';
 import type { PaymentListResult } from '../contracts/payment-summary';
+import type { Response } from 'express';
 
 @ApiTags('payments')
 @UseGuards(JwtAuthGuard)
@@ -59,7 +61,16 @@ export class PaymentsController {
     const limit = query.limit ?? 50;
     const offset = query.offset ?? 0;
     return this.queryBus.execute(
-      new ListAccountPaymentsQuery(request.user.accountId, limit, offset),
+      new ListAccountPaymentsQuery(
+        request.user.accountId,
+        limit,
+        offset,
+        query.status ?? null,
+        query.timeframe ?? null,
+        query.from ?? null,
+        query.to ?? null,
+        query.sort ?? null,
+      ),
     );
   }
 
@@ -83,8 +94,60 @@ export class PaymentsController {
     const limit = query.limit ?? 50;
     const offset = query.offset ?? 0;
     return this.queryBus.execute(
-      new ListPodPaymentsQuery(podId, request.user.accountId, limit, offset),
+      new ListPodPaymentsQuery(
+        podId,
+        request.user.accountId,
+        limit,
+        offset,
+        query.status ?? null,
+        query.timeframe ?? null,
+        query.from ?? null,
+        query.to ?? null,
+        query.sort ?? null,
+      ),
     );
+  }
+
+  @Get('export')
+  @ApiOperation({
+    summary: 'Download payments made by the authenticated user as CSV.',
+  })
+  @ApiOkResponse({ description: 'CSV export of payments.' })
+  async exportPayments(
+    @Req() request: AuthenticatedRequest,
+    @Query() query: PaymentQueryDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<string> {
+    const result = await this.listPayments(request, query);
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename=\"payments.csv\"',
+    );
+    return this.toPaymentsCsv(result);
+  }
+
+  @Get('pods/:podId/export')
+  @ApiOperation({
+    summary: 'Download payments within a specific pod as CSV.',
+  })
+  @ApiOkResponse({ description: 'CSV export of pod payments.' })
+  @ApiNotFoundResponse({
+    description: 'Pod not found or not accessible to the authenticated user.',
+  })
+  async exportPodPayments(
+    @Param('podId') podId: string,
+    @Req() request: AuthenticatedRequest,
+    @Query() query: PaymentQueryDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<string> {
+    const result = await this.listPodPayments(podId, request, query);
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename=\"payments_${podId}.csv\"`,
+    );
+    return this.toPaymentsCsv(result);
   }
 
   @Post()
@@ -117,5 +180,47 @@ export class PaymentsController {
         payload.description ?? null,
       ),
     );
+  }
+
+  private toPaymentsCsv(result: PaymentListResult): string {
+    const headers = [
+      'id',
+      'membershipId',
+      'podId',
+      'podName',
+      'podPlanCode',
+      'amount',
+      'currency',
+      'status',
+      'stripeReference',
+      'description',
+      'recordedAt',
+    ];
+    const escape = (value: unknown) => {
+      const str = value ?? '';
+      const s = String(str);
+      if (s.includes('\"') || s.includes(',') || s.includes('\n')) {
+        return `\"${s.replace(/\"/g, '\"\"')}\"`;
+      }
+      return s;
+    };
+    const rows = result.items.map((item) =>
+      [
+        item.id,
+        item.membershipId,
+        item.podId,
+        item.podName ?? '',
+        item.podPlanCode,
+        item.amount,
+        item.currency,
+        item.status,
+        item.stripeReference,
+        item.description ?? '',
+        item.recordedAt,
+      ]
+        .map(escape)
+        .join(','),
+    );
+    return [headers.join(','), ...rows].join('\n');
   }
 }

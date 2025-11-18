@@ -65,6 +65,8 @@ export interface LoginBankAccountSummary {
   updatedAt: string;
   last4: string | null;
   bankName: string | null;
+  paymentMethodId: string | null;
+  connectedAccountId: string | null;
 }
 
 export interface LoginUserResult {
@@ -180,6 +182,7 @@ export interface UpsertStripeBankAccountResult {
   updated_at: string;
   last4: string | null;
   payment_method_id?: string | null;
+  connected_account_id?: string | null;
 }
 
 export interface DeleteAccountResult {

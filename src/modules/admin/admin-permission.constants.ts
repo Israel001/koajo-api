@@ -22,6 +22,7 @@ export const ADMIN_PERMISSION_ASSIGN_ADMIN_ROLES = 'admin.team.assign-roles';
 export const ADMIN_PERMISSION_EDIT_ROLES = 'admin.roles.edit';
 export const ADMIN_PERMISSION_CREATE_ANNOUNCEMENTS =
   'admin.announcements.create';
+export const ADMIN_PERMISSION_TRIGGER_PAYOUTS = 'admin.payouts.trigger';
 
 export const ADMIN_PERMISSION_DEFINITIONS: AdminPermissionDefinition[] = [
   {
@@ -110,5 +111,11 @@ export const ADMIN_PERMISSION_DEFINITIONS: AdminPermissionDefinition[] = [
     code: ADMIN_PERMISSION_CREATE_ANNOUNCEMENTS,
     name: 'Create Platform Announcements',
     description: 'Publish announcements visible to platform users.',
+  },
+  {
+    code: ADMIN_PERMISSION_TRIGGER_PAYOUTS,
+    name: 'Trigger Payouts Manually',
+    description:
+      'Initiate payouts manually for pod members when automatic payouts are unavailable.',
   },
 ];

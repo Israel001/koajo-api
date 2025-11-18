@@ -65,4 +65,14 @@ export class UpsertStripeBankAccountDto {
   @IsString()
   @IsNotEmpty()
   paymentMethodId!: string;
+
+  @ApiProperty({
+    name: 'connected_account_id',
+    description: 'Stripe connected account identifier (acct_*).',
+    required: false,
+  })
+  @Expose({ name: 'connected_account_id' })
+  @IsString()
+  @IsNotEmpty({ message: 'connected_account_id is required when provided.' })
+  connectedAccountId?: string;
 }

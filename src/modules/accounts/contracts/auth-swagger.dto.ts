@@ -258,6 +258,18 @@ class LoginBankAccountSummaryDto implements LoginBankAccountSummary {
     nullable: true,
   })
   bankName!: string | null;
+
+  @ApiProperty({
+    description: 'Stripe payment method identifier linked for debits.',
+    nullable: true,
+  })
+  paymentMethodId!: string | null;
+
+  @ApiProperty({
+    description: 'Stripe connected account identifier (acct_*), if provided.',
+    nullable: true,
+  })
+  connectedAccountId!: string | null;
 }
 
 export class LoginUserResultDto implements LoginUserResult {
@@ -603,6 +615,18 @@ class StripeBankAccountDto implements UpsertStripeBankAccountResult {
     nullable: true,
   })
   bank_name!: string | null;
+
+  @ApiProperty({
+    description: 'Stripe payment method identifier linked for debits.',
+    nullable: true,
+  })
+  payment_method_id?: string | null;
+
+  @ApiProperty({
+    description: 'Stripe connected account identifier (acct_*), if provided.',
+    nullable: true,
+  })
+  connected_account_id?: string | null;
 }
 
 export class RecordIdentityVerificationResultDto

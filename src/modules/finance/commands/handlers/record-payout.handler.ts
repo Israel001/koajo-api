@@ -142,20 +142,6 @@ export class RecordPayoutHandler
     const successful = this.isSuccessfulStatus(status);
     let membershipCompleted = membership.paidOut;
 
-    if (successful) {
-      await this.inAppNotificationService.createNotification(
-        account,
-        InAppNotificationMessages.payoutSuccessful(),
-      );
-    }
-
-    if (successful && !membershipCompleted) {
-      await this.commandBus.execute(
-        new CompleteMembershipCommand(membership.id),
-      );
-      membershipCompleted = true;
-    }
-
     return {
       payoutId: payout.id,
       transactionId: transaction.id,

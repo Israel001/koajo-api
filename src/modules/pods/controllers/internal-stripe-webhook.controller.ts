@@ -21,6 +21,11 @@ import { addDays, startOfDay } from '../pod.utils';
 import { CustomPodCadence } from '../custom-pod-cadence.enum';
 import { PodType } from '../pod-type.enum';
 import { nextContributionWindowStart } from '../pod.utils';
+import { PayoutEntity } from '../../finance/entities/payout.entity';
+import { TransactionEntity } from '../../finance/entities/transaction.entity';
+import { CompleteMembershipCommand } from '../commands/complete-membership.command';
+import { TransactionType } from '../../finance/transaction-type.enum';
+import { RecordPayoutCommand } from '../../finance/commands/record-payout.command';
 
 @Controller({ path: 'pods/stripe/webhook', version: '1' })
 export class InternalStripeWebhookController {
@@ -33,6 +38,10 @@ export class InternalStripeWebhookController {
     private readonly membershipRepository: EntityRepository<PodMembershipEntity>,
     @InjectRepository(AccountEntity)
     private readonly accountRepository: EntityRepository<AccountEntity>,
+    @InjectRepository(PayoutEntity)
+    private readonly payoutRepository: EntityRepository<PayoutEntity>,
+    @InjectRepository(TransactionEntity)
+    private readonly transactionRepository: EntityRepository<TransactionEntity>,
   ) {}
 
   @Post()
@@ -71,10 +80,16 @@ export class InternalStripeWebhookController {
 
     if (
       event.type === 'payment_intent.succeeded' ||
-      event.type === 'payment_intent.payment_failed'
+      event.type === 'payment_intent.payment_failed' ||
+      event.type === 'payment_intent.canceled'
     ) {
       const intent = event.data.object as Stripe.PaymentIntent;
-      await this.handlePaymentIntent(intent);
+      const metadataType = (intent.metadata?.type ?? '').toLowerCase();
+      if (metadataType === 'payout') {
+        await this.handlePayoutIntent(intent);
+      } else {
+        await this.handlePaymentIntent(intent);
+      }
     }
   }
 
@@ -141,6 +156,72 @@ export class InternalStripeWebhookController {
     pod.nextContributionDate = addDays(startOfDay(new Date()), 1);
     await this.accountRepository.getEntityManager().flush();
     await this.podRepository.getEntityManager().flush();
+  }
+
+  private async handlePayoutIntent(intent: Stripe.PaymentIntent): Promise<void> {
+    const metadata = intent.metadata ?? {};
+    const podId = metadata.podId ?? metadata.pod_id;
+    const membershipId = metadata.membershipId ?? metadata.membership_id;
+    const accountId = metadata.accountId ?? metadata.account_id;
+
+    if (!podId || !membershipId || !accountId) {
+      throw new BadRequestException('Payout intent missing metadata.');
+    }
+
+    const existing = await this.payoutRepository.findOne(
+      { stripeReference: intent.id },
+      { populate: ['membership'] as const },
+    );
+
+    if (existing) {
+      existing.status = intent.status;
+      existing.description =
+        intent.description ?? existing.description ?? null;
+      const txn = await this.transactionRepository.findOne({
+        stripeReference: intent.id,
+        type: TransactionType.PAYOUT,
+      });
+      if (txn) {
+        txn.status = intent.status;
+        txn.description = intent.description ?? txn.description ?? null;
+      }
+      await this.payoutRepository.getEntityManager().flush();
+
+      if (intent.status === 'succeeded' && existing.membership && !existing.membership.paidOut) {
+        await this.commandBus.execute(
+          new CompleteMembershipCommand(existing.membership.id),
+        );
+      }
+      return;
+    }
+
+    const feeCents = metadata.feeCents ? Number(metadata.feeCents) : 0;
+    const amountCents = intent.amount_received ?? intent.amount ?? 0;
+    const fee = (feeCents / 100).toFixed(2);
+    const amount = (amountCents / 100).toFixed(2);
+
+    await this.commandBus.execute(
+      new RecordPayoutCommand(
+        accountId,
+        podId,
+        intent.id,
+        Number(amount),
+        Number(fee),
+        intent.currency ?? 'usd',
+        intent.status,
+        intent.description ?? 'payout-webhook',
+      ),
+    );
+
+    try {
+      if (intent.status === 'succeeded') {
+        await this.commandBus.execute(
+          new CompleteMembershipCommand(membershipId),
+        );
+      }
+    } catch {
+      // ignore completion failure
+    }
   }
 
   private getStripeClient(): Stripe {

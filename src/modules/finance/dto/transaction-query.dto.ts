@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsInt, IsIn, IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
 const toInt = ({ value }: { value: unknown }): number | undefined => {
   if (typeof value === 'string' && value.trim() !== '') {
@@ -12,9 +12,9 @@ const toInt = ({ value }: { value: unknown }): number | undefined => {
   return undefined;
 };
 
-export class PaymentQueryDto {
+export class TransactionQueryDto {
   @ApiPropertyOptional({
-    description: 'Maximum number of payments to return.',
+    description: 'Maximum number of transactions to return.',
     default: 50,
     minimum: 1,
     maximum: 100,
@@ -27,7 +27,7 @@ export class PaymentQueryDto {
   limit?: number;
 
   @ApiPropertyOptional({
-    description: 'Number of payments to skip before collecting the result set.',
+    description: 'Number of transactions to skip before collecting the result set.',
     default: 0,
     minimum: 0,
   })
@@ -38,7 +38,16 @@ export class PaymentQueryDto {
   offset?: number;
 
   @ApiPropertyOptional({
-    description: 'Filter by payment status.',
+    description: 'Filter by transaction type.',
+    enum: ['payments', 'payouts', 'all'],
+    default: 'all',
+  })
+  @IsOptional()
+  @IsIn(['payments', 'payouts', 'all'])
+  type?: 'payments' | 'payouts' | 'all';
+
+  @ApiPropertyOptional({
+    description: 'Filter by status.',
     example: 'succeeded',
   })
   @IsOptional()
@@ -46,7 +55,7 @@ export class PaymentQueryDto {
   status?: string;
 
   @ApiPropertyOptional({
-    description: 'Filter payments by timeframe. Applies to recorded timestamp.',
+    description: 'Filter by timeframe based on recorded timestamp (payments) or payout date (payouts).',
     enum: ['past', 'upcoming'],
   })
   @IsOptional()
@@ -54,7 +63,7 @@ export class PaymentQueryDto {
   timeframe?: 'past' | 'upcoming';
 
   @ApiPropertyOptional({
-    description: 'Only include payments recorded on or after this ISO date.',
+    description: 'Only include transactions recorded on or after this ISO date.',
     example: '2025-01-01T00:00:00Z',
   })
   @IsOptional()
@@ -62,7 +71,7 @@ export class PaymentQueryDto {
   from?: string;
 
   @ApiPropertyOptional({
-    description: 'Only include payments recorded on or before this ISO date.',
+    description: 'Only include transactions recorded on or before this ISO date.',
     example: '2025-01-31T23:59:59Z',
   })
   @IsOptional()

@@ -68,6 +68,8 @@ export const buildLoginUserResult = (
           ).toISOString(),
           last4: account.stripeBankAccountLast4 ?? null,
           bankName: account.stripeBankName ?? null,
+          paymentMethodId: account.stripePaymentMethodId ?? null,
+          connectedAccountId: account.stripeConnectedAccountId ?? null,
         }
       : null,
   };
