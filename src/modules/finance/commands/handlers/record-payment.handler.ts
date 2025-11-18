@@ -52,7 +52,8 @@ export class RecordPaymentHandler
       stripeReference,
     });
 
-    if (existingPayment) {
+    const pendingStatuses = new Set(['processing', 'requires_action']);
+    if (existingPayment && !pendingStatuses.has(existingPayment.status)) {
       throw new BadRequestException(
         'Payment already recorded for this Stripe reference.',
       );
@@ -98,19 +99,22 @@ export class RecordPaymentHandler
 
     membership.totalContributed = this.formatMinor(incrementedTotal);
 
-    const payment = this.paymentRepository.create(
-      {
-        account,
-        pod,
-        membership,
-        stripeReference,
-        amount: this.formatMinor(verified.amount_cents),
-        currency,
-        status: verified.status,
-        description,
-      },
-      { partial: true },
-    );
+    const payment =
+      existingPayment ??
+      this.paymentRepository.create(
+        {
+          account,
+          pod,
+          membership,
+          stripeReference,
+        },
+        { partial: true },
+      );
+
+    payment.amount = this.formatMinor(verified.amount_cents);
+    payment.currency = currency;
+    payment.status = verified.status;
+    payment.description = description;
 
     const transaction = this.transactionRepository.create(
       {

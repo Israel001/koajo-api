@@ -26,9 +26,8 @@ import {
 import { RecordPaymentCommand } from '../finance/commands/record-payment.command';
 import { PodType } from './pod-type.enum';
 
-const RUN_INTERVAL_MS = 24 * 60 * 60 * 1000; // daily
-
-// const RUN_INTERVAL_MS = 60000; // every minute
+// const RUN_INTERVAL_MS = 24 * 60 * 60 * 1000; // daily fallback
+// const RUN_INTERVAL_MS = 60000; // every minute (debug)
 
 @Injectable()
 export class ContributionDebitScheduler
@@ -74,20 +73,39 @@ export class ContributionDebitScheduler
   }
 
   onModuleInit() {
-    this.timer = setInterval(() => {
-      void this.execute().catch((error) =>
-        this.logger.error(
-          `Contribution debit scheduler failed: ${(error as Error).message}`,
-        ),
-      );
-    }, RUN_INTERVAL_MS);
-    // For debugging at higher frequency, replace RUN_INTERVAL_MS above with 60_000.
+    this.scheduleNextRun();
   }
 
   onModuleDestroy() {
     if (this.timer) {
-      clearInterval(this.timer);
+      clearTimeout(this.timer);
     }
+  }
+
+  private scheduleNextRun(reference: Date = new Date()): void {
+    const now = reference;
+    const target = new Date(now);
+    target.setUTCHours(10, 0, 0, 0); // 10 AM UTC
+
+    if (target <= now) {
+      target.setUTCDate(target.getUTCDate() + 1);
+    }
+
+    const delay = Math.max(target.getTime() - now.getTime(), 1_000);
+
+    if (this.timer) {
+      clearTimeout(this.timer);
+    }
+
+    this.timer = setTimeout(() => {
+      void this.execute()
+        .catch((error) =>
+          this.logger.error(
+            `Contribution debit scheduler failed: ${(error as Error).message}`,
+          ),
+        )
+        .finally(() => this.scheduleNextRun(new Date()));
+    }, delay);
   }
 
   private async execute(): Promise<void> {
@@ -119,7 +137,7 @@ export class ContributionDebitScheduler
 
       const cadence =
         pod.type === PodType.CUSTOM
-          ? pod.cadence ?? CustomPodCadence.BI_WEEKLY
+          ? (pod.cadence ?? CustomPodCadence.BI_WEEKLY)
           : CustomPodCadence.BI_WEEKLY;
 
       const nextDate =
@@ -146,6 +164,14 @@ export class ContributionDebitScheduler
       });
 
       if (hasSuccess) {
+        continue;
+      }
+
+      const hasPending = await this.paymentRepository.count({
+        membership,
+        status: { $in: ['processing', 'requires_action'] },
+      });
+      if (hasPending) {
         continue;
       }
 
@@ -230,6 +256,7 @@ export class ContributionDebitScheduler
         this.logger.debug(
           `PaymentIntent ${intent.id} for account ${account.id} is ${intent.status}; awaiting final status.`,
         );
+        await this.recordPendingPayment(intent, pod, membership, account);
         return;
       }
 
@@ -270,6 +297,36 @@ export class ContributionDebitScheduler
     const current =
       pod.nextContributionDate ?? pod.startDate ?? startOfDay(new Date());
     pod.nextContributionDate = nextContributionWindowStart(current, cadence);
+  }
+
+  private async recordPendingPayment(
+    intent: Stripe.PaymentIntent,
+    pod: PodEntity,
+    membership: PodMembershipEntity,
+    account: AccountEntity,
+  ): Promise<void> {
+    let payment = await this.paymentRepository.findOne({
+      stripeReference: intent.id,
+    });
+
+    if (!payment) {
+      payment = this.paymentRepository.create(
+        {
+          account,
+          pod,
+          membership,
+          stripeReference: intent.id,
+        },
+        { partial: true },
+      );
+    }
+
+    payment.amount = (pod.amount ?? 0).toFixed(2);
+    payment.currency = (intent.currency ?? this.currency).toUpperCase();
+    payment.status = intent.status;
+    payment.description = intent.description ?? 'auto-debit';
+
+    await this.paymentRepository.getEntityManager().persistAndFlush(payment);
   }
 
   private logStripeError(error: unknown): void {
