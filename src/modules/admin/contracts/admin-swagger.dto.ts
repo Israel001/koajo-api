@@ -34,6 +34,12 @@ import type {
   AdminAccountVerificationsListResult,
   AdminPodActivity,
   AdminPodActivityActor,
+  AdminPodInviteListResult,
+  AdminPodInviteSummary,
+  AdminPaymentListResult,
+  AdminPaymentSummary,
+  AdminPayoutListResult,
+  AdminPayoutSummary,
 } from './admin-results';
 import { AnnouncementChannel } from '../announcement-channel.enum';
 import { AnnouncementSeverity } from '../announcement-severity.enum';
@@ -584,6 +590,156 @@ export class AdminPodStatisticsDto implements AdminPodStatistics {
 
   @ApiProperty({ description: 'Total pods that have not yet completed their lifecycle.' })
   totalIncompletePods!: number;
+}
+
+export class AdminPodInviteSummaryDto implements AdminPodInviteSummary {
+  @ApiProperty({ description: 'Unique identifier for the invite.' })
+  id!: string;
+
+  @ApiProperty({ description: 'Identifier for the pod the invite belongs to.' })
+  podId!: string;
+
+  @ApiProperty({ description: 'Plan code of the pod.' })
+  podPlanCode!: string;
+
+  @ApiProperty({ description: 'Name of the pod, if available.', nullable: true })
+  podName!: string | null;
+
+  @ApiProperty({ description: 'Email address the invite was sent to.' })
+  email!: string;
+
+  @ApiProperty({ description: 'Order of the invite within the pod.' })
+  inviteOrder!: number;
+
+  @ApiProperty({ description: 'ISO timestamp when the invite was created.' })
+  invitedAt!: string;
+
+  @ApiProperty({ description: 'ISO timestamp when the invite was accepted, if any.', nullable: true })
+  acceptedAt!: string | null;
+
+  @ApiProperty({ description: 'Account linked to the invite, if available.', nullable: true })
+  accountId!: string | null;
+}
+
+export class AdminPodInviteListResultDto implements AdminPodInviteListResult {
+  @ApiProperty({ description: 'Total number of pending invites.' })
+  total!: number;
+
+  @ApiProperty({
+    description: 'Pending invites for the requested page.',
+    type: [AdminPodInviteSummaryDto],
+  })
+  items!: AdminPodInviteSummaryDto[];
+}
+
+export class AdminPaymentSummaryDto implements AdminPaymentSummary {
+  @ApiProperty({ description: 'Payment identifier.' })
+  id!: string;
+
+  @ApiProperty({ description: 'Pod membership identifier.' })
+  membershipId!: string;
+
+  @ApiProperty({ description: 'Pod identifier.' })
+  podId!: string;
+
+  @ApiProperty({ description: 'Pod plan code.' })
+  podPlanCode!: string;
+
+  @ApiProperty({ description: 'Pod name.', nullable: true })
+  podName!: string | null;
+
+  @ApiProperty({ description: 'Payment amount.' })
+  amount!: string;
+
+  @ApiProperty({ description: 'Currency code.' })
+  currency!: string;
+
+  @ApiProperty({ description: 'Payment status.' })
+  status!: string;
+
+  @ApiProperty({ description: 'Stripe reference for the payment.' })
+  stripeReference!: string;
+
+  @ApiProperty({ description: 'Payment description.', nullable: true })
+  description!: string | null;
+
+  @ApiProperty({ description: 'Timestamp when the payment was recorded.' })
+  recordedAt!: string;
+}
+
+export class AdminPaymentListResultDto implements AdminPaymentListResult {
+  @ApiProperty({ description: 'Total number of payments.' })
+  total!: number;
+
+  @ApiProperty({
+    description: 'Payments for the requested page.',
+    type: [AdminPaymentSummaryDto],
+  })
+  items!: AdminPaymentSummaryDto[];
+}
+
+export class AdminPayoutSummaryDto implements AdminPayoutSummary {
+  @ApiProperty({ description: 'Payout identifier.' })
+  id!: string;
+
+  @ApiProperty({ description: 'Pod membership identifier.' })
+  membershipId!: string;
+
+  @ApiProperty({ description: 'Pod identifier.' })
+  podId!: string;
+
+  @ApiProperty({ description: 'Pod plan code.' })
+  podPlanCode!: string;
+
+  @ApiProperty({ description: 'Pod name.', nullable: true })
+  podName!: string | null;
+
+  @ApiProperty({ description: 'Payout amount.' })
+  amount!: string;
+
+  @ApiProperty({ description: 'Payout fee.' })
+  fee!: string;
+
+  @ApiProperty({ description: 'Currency code.' })
+  currency!: string;
+
+  @ApiProperty({ description: 'Payout status.' })
+  status!: string;
+
+  @ApiProperty({ description: 'Stripe reference for the payout.' })
+  stripeReference!: string;
+
+  @ApiProperty({ description: 'Payout description.', nullable: true })
+  description!: string | null;
+
+  @ApiProperty({ description: 'Timestamp when the payout was recorded.' })
+  recordedAt!: string;
+}
+
+export class AdminPayoutListResultDto implements AdminPayoutListResult {
+  @ApiProperty({ description: 'Total number of payouts.' })
+  total!: number;
+
+  @ApiProperty({
+    description: 'Payouts for the requested page.',
+    type: [AdminPayoutSummaryDto],
+  })
+  items!: AdminPayoutSummaryDto[];
+}
+
+export class SwapPayoutPositionResultDto {
+  @ApiProperty({ description: 'Pod identifier.' })
+  podId!: string;
+
+  @ApiProperty({
+    description: 'Swapped payout slots.',
+    type: () => [Object],
+  })
+  swaps!: Array<{
+    membershipId: string;
+    finalOrder: number | null;
+    payoutDate: string | null;
+  }>;
 }
 
 export class AdminAnnouncementResultDto implements AdminAnnouncementResult {

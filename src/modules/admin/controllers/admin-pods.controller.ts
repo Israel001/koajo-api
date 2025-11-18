@@ -18,14 +18,31 @@ import {
   AdminPodsListResult,
   AdminPodActivity,
   AdminPodStatistics,
+  AdminPodInviteListResult,
+  AdminAccountsListResult,
+  AdminPayoutListResult,
 } from '../contracts/admin-results';
 import { ListAdminPodsQuery } from '../queries/list-admin-pods.query';
 import { GetAdminPodQuery } from '../queries/get-admin-pod.query';
 import { ListAdminPodActivitiesQuery } from '../queries/list-admin-pod-activities.query';
-import { AdminPodActivityDto, AdminPodStatisticsDto } from '../contracts/admin-swagger.dto';
+import {
+  AdminPodActivityDto,
+  AdminPodInviteListResultDto,
+  AdminPodStatisticsDto,
+  AdminPayoutListResultDto,
+} from '../contracts/admin-swagger.dto';
 import { GetAdminPodStatsQuery } from '../queries/get-admin-pod-stats.query';
 import { MarkPodPayoutDto } from '../dto/mark-pod-payout.dto';
 import { MarkPodMembershipPaidCommand } from '../../pods/commands/mark-pod-membership-paid.command';
+import { ListPendingPodInvitesQuery } from '../queries/list-pending-pod-invites.query';
+import { AdminListQueryDto } from '../dto/list-query.dto';
+import { ListAdminAccountsQuery } from '../queries/list-admin-accounts.query';
+import { PodStatus } from '../../pods/pod-status.enum';
+import { AdminPayoutQueryDto } from '../dto/admin-payout-query.dto';
+import { ListAdminPayoutsQuery } from '../queries/list-admin-payouts.query';
+import { SwapPayoutPositionDto } from '../dto/swap-payout-position.dto';
+import { SwapPodPayoutPositionCommand } from '../../pods/commands/swap-pod-payout-position.command';
+import { SwapPayoutPositionResultDto } from '../contracts/admin-swagger.dto';
 
 @ApiTags('admin-pods')
 @Controller({ path: 'admin/pods', version: '1' })
@@ -47,6 +64,111 @@ export class AdminPodsController {
   @RequireAdminPermissions(ADMIN_PERMISSION_VIEW_PODS)
   async stats(): Promise<AdminPodStatistics> {
     return this.queryBus.execute(new GetAdminPodStatsQuery());
+  }
+
+  @Get('incomplete')
+  @ApiOperation({ summary: 'List pods that have not been completed' })
+  @ApiOkResponse({ description: 'Incomplete pods fetched.' })
+  @RequireAdminPermissions(ADMIN_PERMISSION_VIEW_PODS)
+  async listIncomplete(
+    @Query() query: AdminPodsQueryDto,
+  ): Promise<AdminPodsListResult> {
+    return this.queryBus.execute(
+      new ListAdminPodsQuery(
+        query.limit,
+        query.offset,
+        query.search ?? null,
+        null,
+        true,
+      ),
+    );
+  }
+
+  @Get('open')
+  @ApiOperation({ summary: 'List pods that are currently open' })
+  @ApiOkResponse({ description: 'Open pods fetched.' })
+  @RequireAdminPermissions(ADMIN_PERMISSION_VIEW_PODS)
+  async listOpen(
+    @Query() query: AdminPodsQueryDto,
+  ): Promise<AdminPodsListResult> {
+    return this.queryBus.execute(
+      new ListAdminPodsQuery(
+        query.limit,
+        query.offset,
+        query.search ?? null,
+        PodStatus.OPEN,
+      ),
+    );
+  }
+
+  @Get('pending-invites')
+  @ApiOperation({ summary: 'List pending pod invitations' })
+  @ApiOkResponse({
+    description: 'Pending pod invites fetched.',
+    type: AdminPodInviteListResultDto,
+  })
+  @RequireAdminPermissions(ADMIN_PERMISSION_VIEW_PODS)
+  async listPendingInvites(
+    @Query() query: AdminListQueryDto,
+  ): Promise<AdminPodInviteListResult> {
+    const limit = query.limit ?? 50;
+    const offset = query.offset ?? 0;
+    return this.queryBus.execute(
+      new ListPendingPodInvitesQuery(limit, offset),
+    );
+  }
+
+  @Get('members')
+  @ApiOperation({ summary: 'List members counted in pod statistics' })
+  @ApiOkResponse({
+    description: 'Members fetched.',
+  })
+  @RequireAdminPermissions(ADMIN_PERMISSION_VIEW_PODS)
+  async listMembers(
+    @Query() query: AdminListQueryDto,
+  ): Promise<AdminAccountsListResult> {
+    return this.queryBus.execute(
+      new ListAdminAccountsQuery(query.limit, query.offset, query.search),
+    );
+  }
+
+  @Get('payouts')
+  @ApiOperation({ summary: 'List all payouts with timeframe filters' })
+  @ApiOkResponse({
+    description: 'Payouts fetched.',
+    type: AdminPayoutListResultDto,
+  })
+  @RequireAdminPermissions(ADMIN_PERMISSION_VIEW_PODS)
+  async listPayouts(
+    @Query() query: AdminPayoutQueryDto,
+  ): Promise<AdminPayoutListResult> {
+    return this.queryBus.execute(
+      new ListAdminPayoutsQuery(
+        query.limit,
+        query.offset,
+        query.timeframe ?? null,
+      ),
+    );
+  }
+
+  @Post(':podId/swap-payouts')
+  @ApiOperation({ summary: 'Swap payout positions for two members in a custom pod' })
+  @ApiOkResponse({
+    description: 'Payout positions swapped.',
+    type: SwapPayoutPositionResultDto,
+  })
+  @RequireAdminPermissions(ADMIN_PERMISSION_VIEW_PODS)
+  async swapPayouts(
+    @Param('podId') podId: string,
+    @Body() payload: SwapPayoutPositionDto,
+  ): Promise<SwapPayoutPositionResultDto> {
+    return this.commandBus.execute(
+      new SwapPodPayoutPositionCommand(
+        podId,
+        payload.firstMembershipId,
+        payload.secondMembershipId,
+      ),
+    );
   }
 
   @Get()

@@ -5,11 +5,13 @@ import { PodEntity } from '../../../pods/entities/pod.entity';
 import { ListAdminPodsQuery } from '../list-admin-pods.query';
 import {
   AdminPodDetail,
+  AdminPodInviteSummary,
   AdminPodMembershipSummary,
   AdminPodSummary,
   AdminPodsListResult,
 } from '../../contracts/admin-results';
 import { toAdminAccountDetail } from './list-admin-accounts.handler';
+import { PodStatus } from '../../../pods/pod-status.enum';
 
 export const toAdminPodSummary = (pod: PodEntity): AdminPodSummary => ({
   id: pod.id,
@@ -23,9 +25,14 @@ export const toAdminPodSummary = (pod: PodEntity): AdminPodSummary => ({
   createdAt: pod.createdAt.toISOString(),
 });
 
-export const toAdminPodDetail = (pod: PodEntity): AdminPodDetail => {
+export const toAdminPodDetail = (
+  pod: PodEntity,
+  pendingInvites: AdminPodInviteSummary[] = [],
+): AdminPodDetail => {
   const memberships: AdminPodMembershipSummary[] = pod.memberships
     .getItems()
+    .slice()
+    .sort((a, b) => (a.finalOrder ?? a.joinOrder) - (b.finalOrder ?? b.joinOrder))
     .map((membership) => ({
       id: membership.id,
       accountId: membership.account?.id ?? null,
@@ -42,6 +49,7 @@ export const toAdminPodDetail = (pod: PodEntity): AdminPodDetail => {
   return {
     ...toAdminPodSummary(pod),
     memberships,
+    pendingInvites,
   };
 };
 
@@ -58,6 +66,10 @@ export class ListAdminPodsHandler
     const limit = query.limit ?? 50;
     const offset = query.offset ?? 0;
     const qb = this.podRepository.createQueryBuilder('pod');
+
+    if (query.incompleteOnly) {
+      qb.andWhere({ status: { $ne: PodStatus.COMPLETED } });
+    }
 
     if (query.status) {
       qb.andWhere({ status: query.status });

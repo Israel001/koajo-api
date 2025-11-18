@@ -5,6 +5,7 @@ import { CreateCustomPodHandler } from './create-custom-pod.handler';
 import { AcceptCustomPodInviteHandler } from './accept-custom-pod-invite.handler';
 import { MarkPodMembershipPaidHandler } from './mark-pod-membership-paid.handler';
 import { ProcessContributionNotificationsHandler } from './process-contribution-notifications.handler';
+import { SwapPodPayoutPositionHandler } from './swap-pod-payout-position.handler';
 
 export const PodCommandHandlers = [
   JoinPodHandler,
@@ -14,6 +15,7 @@ export const PodCommandHandlers = [
   AcceptCustomPodInviteHandler,
   MarkPodMembershipPaidHandler,
   ProcessContributionNotificationsHandler,
+  SwapPodPayoutPositionHandler,
 ];
 
 export { JoinPodHandler } from './join-pod.handler';
@@ -23,3 +25,4 @@ export { CreateCustomPodHandler } from './create-custom-pod.handler';
 export { AcceptCustomPodInviteHandler } from './accept-custom-pod-invite.handler';
 export { MarkPodMembershipPaidHandler } from './mark-pod-membership-paid.handler';
 export { ProcessContributionNotificationsHandler } from './process-contribution-notifications.handler';
+export { SwapPodPayoutPositionHandler } from './swap-pod-payout-position.handler';

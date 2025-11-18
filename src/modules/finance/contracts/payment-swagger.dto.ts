@@ -1,66 +1,200 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  RecordPaymentResult,
-  RecordPayoutResult,
-} from './payment-results';
+import { RecordPaymentResult, RecordPayoutResult } from './payment-results';
+import type { PaymentListResult, PaymentSummary } from './payment-summary';
 
 export class RecordPaymentResultDto implements RecordPaymentResult {
-  @ApiProperty({ description: 'Recorded payment identifier.', example: 'paym_123' })
+  @ApiProperty({
+    description: 'Recorded payment identifier.',
+    example: 'paym_123',
+  })
   paymentId!: string;
 
-  @ApiProperty({ description: 'Transaction identifier linked to this payment.', example: 'txn_456' })
+  @ApiProperty({
+    description: 'Transaction identifier linked to this payment.',
+    example: 'txn_456',
+  })
   transactionId!: string;
 
-  @ApiProperty({ description: 'Pod membership identifier for the contributor.', example: 'membership-uuid' })
+  @ApiProperty({
+    description: 'Pod membership identifier for the contributor.',
+    example: 'membership-uuid',
+  })
   membershipId!: string;
 
-  @ApiProperty({ description: 'Pod identifier associated with the payment.', example: 'pod-uuid' })
+  @ApiProperty({
+    description: 'Pod identifier associated with the payment.',
+    example: 'pod-uuid',
+  })
   podId!: string;
 
-  @ApiProperty({ description: 'Payment amount in major currency units.', example: '5000.00' })
+  @ApiProperty({
+    description: 'Payment amount in major currency units.',
+    example: '5000.00',
+  })
   amount!: string;
 
-  @ApiProperty({ description: 'Currency code for the payment.', example: 'NGN' })
+  @ApiProperty({
+    description: 'Currency code for the payment.',
+    example: 'NGN',
+  })
   currency!: string;
 
-  @ApiProperty({ description: 'Status string for the recorded payment.', example: 'succeeded' })
+  @ApiProperty({
+    description: 'Status string for the recorded payment.',
+    example: 'succeeded',
+  })
   status!: string;
 
-  @ApiProperty({ description: 'Stripe reference identifier for the payment.', example: 'pi_1QB2m4Fo222Y9bAd3S' })
+  @ApiProperty({
+    description: 'Stripe reference identifier for the payment.',
+    example: 'pi_1QB2m4Fo222Y9bAd3S',
+  })
   stripeReference!: string;
 
-  @ApiProperty({ description: 'Total contribution accumulated for the membership after this payment.', example: '5000.00' })
+  @ApiProperty({
+    description:
+      'Total contribution accumulated for the membership after this payment.',
+    example: '5000.00',
+  })
   totalContributed!: string;
 }
 
 export class RecordPayoutResultDto implements RecordPayoutResult {
-  @ApiProperty({ description: 'Recorded payout identifier.', example: 'pout_123' })
+  @ApiProperty({
+    description: 'Recorded payout identifier.',
+    example: 'pout_123',
+  })
   payoutId!: string;
 
-  @ApiProperty({ description: 'Transaction identifier linked to this payout.', example: 'txn_789' })
+  @ApiProperty({
+    description: 'Transaction identifier linked to this payout.',
+    example: 'txn_789',
+  })
   transactionId!: string;
 
-  @ApiProperty({ description: 'Pod membership identifier for the recipient.', example: 'membership-uuid' })
+  @ApiProperty({
+    description: 'Pod membership identifier for the recipient.',
+    example: 'membership-uuid',
+  })
   membershipId!: string;
 
-  @ApiProperty({ description: 'Pod identifier associated with the payout.', example: 'pod-uuid' })
+  @ApiProperty({
+    description: 'Pod identifier associated with the payout.',
+    example: 'pod-uuid',
+  })
   podId!: string;
 
-  @ApiProperty({ description: 'Payout amount in major currency units.', example: '5000.00' })
+  @ApiProperty({
+    description: 'Payout amount in major currency units.',
+    example: '5000.00',
+  })
   amount!: string;
 
   @ApiProperty({ description: 'Currency code for the payout.', example: 'NGN' })
   currency!: string;
 
-  @ApiProperty({ description: 'Status string for the recorded payout.', example: 'paid' })
+  @ApiProperty({
+    description: 'Status string for the recorded payout.',
+    example: 'paid',
+  })
   status!: string;
 
-  @ApiProperty({ description: 'Stripe reference identifier for the payout.', example: 'po_1QB2m4Fo222Y9bAd3S' })
+  @ApiProperty({
+    description: 'Stripe reference identifier for the payout.',
+    example: 'po_1QB2m4Fo222Y9bAd3S',
+  })
   stripeReference!: string;
 
-  @ApiProperty({ description: 'Fee deducted from the payout.', example: '100.00' })
+  @ApiProperty({
+    description: 'Fee deducted from the payout.',
+    example: '100.00',
+  })
   fee!: string;
 
-  @ApiProperty({ description: 'Indicates whether the membership was marked as completed due to this payout.', example: true })
+  @ApiProperty({
+    description:
+      'Indicates whether the membership was marked as completed due to this payout.',
+    example: true,
+  })
   membershipCompleted!: boolean;
+}
+
+export class PaymentSummaryDto implements PaymentSummary {
+  @ApiProperty({
+    description: 'Recorded payment identifier.',
+    example: 'paym_123',
+  })
+  id!: string;
+
+  @ApiProperty({
+    description: 'Pod membership identifier for the contributor.',
+    example: 'membership-uuid',
+  })
+  membershipId!: string;
+
+  @ApiProperty({
+    description: 'Pod identifier associated with the payment.',
+    example: 'pod-uuid',
+  })
+  podId!: string;
+
+  @ApiProperty({
+    description: 'Friendly pod name if available.',
+    nullable: true,
+  })
+  podName!: string | null;
+
+  @ApiProperty({
+    description: 'Pod plan code associated with the payment.',
+    example: 'SAVER_WEEKLY',
+  })
+  podPlanCode!: string;
+
+  @ApiProperty({
+    description: 'Payment amount in major currency units.',
+    example: '5000.00',
+  })
+  amount!: string;
+
+  @ApiProperty({
+    description: 'Currency code for the payment.',
+    example: 'NGN',
+  })
+  currency!: string;
+
+  @ApiProperty({
+    description: 'Status string for the recorded payment.',
+    example: 'succeeded',
+  })
+  status!: string;
+
+  @ApiProperty({
+    description: 'Stripe reference identifier for the payment.',
+    example: 'pi_1QB2m4Fo222Y9bAd3S',
+  })
+  stripeReference!: string;
+
+  @ApiProperty({
+    description: 'Description attached to the payment, if any.',
+    nullable: true,
+  })
+  description!: string | null;
+
+  @ApiProperty({
+    description: 'ISO 8601 timestamp when the payment was recorded.',
+  })
+  recordedAt!: string;
+}
+
+export class PaymentListResultDto implements PaymentListResult {
+  @ApiProperty({
+    description: 'Total number of payments that match the query.',
+  })
+  total!: number;
+
+  @ApiProperty({
+    description: 'Payments for the requested page.',
+    type: [PaymentSummaryDto],
+  })
+  items!: PaymentSummaryDto[];
 }

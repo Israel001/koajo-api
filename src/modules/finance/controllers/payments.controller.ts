@@ -1,9 +1,12 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -12,27 +15,83 @@ import {
   ApiBearerAuth,
   ApiCreatedResponse,
   ApiNotFoundResponse,
+  ApiOkResponse,
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
-import { CommandBus } from '@nestjs/cqrs';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { JwtAuthGuard } from '../../accounts/guards/jwt-auth.guard';
 import type { AuthenticatedRequest } from '../../accounts/guards/jwt-auth.guard';
 import { CreatePaymentDto } from '../dto/create-payment.dto';
 import { RecordPaymentCommand } from '../commands/record-payment.command';
+import { PaymentQueryDto } from '../dto/payment-query.dto';
 import { RecordPaymentResult } from '../contracts/payment-results';
-import { RecordPaymentResultDto } from '../contracts/payment-swagger.dto';
+import {
+  PaymentListResultDto,
+  RecordPaymentResultDto,
+} from '../contracts/payment-swagger.dto';
+import { ListAccountPaymentsQuery } from '../queries/list-account-payments.query';
+import { ListPodPaymentsQuery } from '../queries/list-pod-payments.query';
+import type { PaymentListResult } from '../contracts/payment-summary';
 
 @ApiTags('payments')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('bearer')
 @Controller({ path: 'payments', version: '1' })
 export class PaymentsController {
-  constructor(private readonly commandBus: CommandBus) {}
+  constructor(
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
+  ) {}
+
+  @Get()
+  @ApiOperation({
+    summary: 'List payments made by the authenticated user across all pods.',
+  })
+  @ApiOkResponse({
+    description: 'Paginated list of payments for the authenticated user.',
+    type: PaymentListResultDto,
+  })
+  async listPayments(
+    @Req() request: AuthenticatedRequest,
+    @Query() query: PaymentQueryDto,
+  ): Promise<PaymentListResult> {
+    const limit = query.limit ?? 50;
+    const offset = query.offset ?? 0;
+    return this.queryBus.execute(
+      new ListAccountPaymentsQuery(request.user.accountId, limit, offset),
+    );
+  }
+
+  @Get('pods/:podId')
+  @ApiOperation({
+    summary:
+      'List payments made by the authenticated user within a specific pod.',
+  })
+  @ApiOkResponse({
+    description: 'Paginated list of payments for the selected pod.',
+    type: PaymentListResultDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'Pod not found or not accessible to the authenticated user.',
+  })
+  async listPodPayments(
+    @Param('podId') podId: string,
+    @Req() request: AuthenticatedRequest,
+    @Query() query: PaymentQueryDto,
+  ): Promise<PaymentListResult> {
+    const limit = query.limit ?? 50;
+    const offset = query.offset ?? 0;
+    return this.queryBus.execute(
+      new ListPodPaymentsQuery(podId, request.user.accountId, limit, offset),
+    );
+  }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Record a contribution payment for a pod membership.' })
+  @ApiOperation({
+    summary: 'Record a contribution payment for a pod membership.',
+  })
   @ApiCreatedResponse({
     description: 'Payment recorded and linked to a transaction.',
     type: RecordPaymentResultDto,

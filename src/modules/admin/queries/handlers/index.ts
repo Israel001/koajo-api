@@ -14,6 +14,10 @@ import { GetAdminPodStatsHandler } from './get-admin-pod-stats.handler';
 import { ListAllAdminAccountsHandler } from './list-all-admin-accounts.handler';
 import { ListAdminAnnouncementsHandler } from './list-admin-announcements.handler';
 import { ListAccountVerificationAttemptsHandler } from './list-account-verification-attempts.handler';
+import { ListPendingPodInvitesHandler } from './list-pending-pod-invites.handler';
+import { ListAdminAccountPaymentsHandler } from './list-admin-account-payments.handler';
+import { ListAdminAccountPayoutsHandler } from './list-admin-account-payouts.handler';
+import { ListAdminPayoutsHandler } from './list-admin-payouts.handler';
 
 export const AdminQueryHandlers = [
   AdminDashboardHandler,
@@ -32,6 +36,10 @@ export const AdminQueryHandlers = [
   ListAllAdminAccountsHandler,
   ListAdminAnnouncementsHandler,
   ListAccountVerificationAttemptsHandler,
+  ListPendingPodInvitesHandler,
+  ListAdminAccountPaymentsHandler,
+  ListAdminAccountPayoutsHandler,
+  ListAdminPayoutsHandler,
 ];
 
 export {
@@ -51,4 +59,8 @@ export {
   ListAllAdminAccountsHandler,
   ListAdminAnnouncementsHandler,
   ListAccountVerificationAttemptsHandler,
+  ListPendingPodInvitesHandler,
+  ListAdminAccountPaymentsHandler,
+  ListAdminAccountPayoutsHandler,
+  ListAdminPayoutsHandler,
 };

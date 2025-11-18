@@ -18,6 +18,7 @@ import { PodActivityService } from '../pods/services/pod-activity.service';
 import { JwtAuthGuard } from '../accounts/guards/jwt-auth.guard';
 import { AchievementsModule } from '../achievements/achievements.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { FinanceQueryHandlers } from './queries/handlers';
 
 @Module({
   imports: [
@@ -49,6 +50,11 @@ import { NotificationsModule } from '../notifications/notifications.module';
     }),
   ],
   controllers: [PaymentsController, PayoutsController, StripeWebhookController],
-  providers: [...FinanceCommandHandlers, JwtAuthGuard, PodActivityService],
+  providers: [
+    ...FinanceCommandHandlers,
+    ...FinanceQueryHandlers,
+    JwtAuthGuard,
+    PodActivityService,
+  ],
 })
 export class FinanceModule {}

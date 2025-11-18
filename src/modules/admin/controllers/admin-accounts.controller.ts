@@ -43,6 +43,8 @@ import {
   AdminAccountPodMembership,
   AdminAccountVerificationsListResult,
   AdminAccountsListResult,
+  AdminPaymentListResult,
+  AdminPayoutListResult,
 } from '../contracts/admin-results';
 import { ListAdminAccountsQuery } from '../queries/list-admin-accounts.query';
 import { GetAdminAccountQuery } from '../queries/get-admin-account.query';
@@ -53,6 +55,8 @@ import { PodStatus } from '../../pods/pod-status.enum';
 import {
   AdminAccountPodMembershipDto,
   AdminAccountVerificationsListResultDto,
+  AdminPaymentListResultDto,
+  AdminPayoutListResultDto,
 } from '../contracts/admin-swagger.dto';
 import { ListAccountVerificationAttemptsQuery } from '../queries/list-account-verification-attempts.query';
 import { UpdateUserProfileCommand } from '../../accounts/commands/update-user-profile.command';
@@ -68,6 +72,10 @@ import { UpdateAccountStatusCommand } from '../../accounts/commands/update-accou
 import { UpdateAccountStatusDto } from '../dto/update-account-status.dto';
 import { AdminAccountPodsQueryDto } from '../dto/account-pods-query.dto';
 import { DeleteAccountCommand } from '../../accounts/commands/delete-account.command';
+import { AdminPaymentQueryDto } from '../dto/admin-payment-query.dto';
+import { AdminPayoutQueryDto } from '../dto/admin-payout-query.dto';
+import { ListAdminAccountPaymentsQuery } from '../queries/list-admin-account-payments.query';
+import { ListAdminAccountPayoutsQuery } from '../queries/list-admin-account-payouts.query';
 
 @ApiTags('admin-accounts')
 @Controller({ path: 'admin/accounts', version: '1' })
@@ -197,6 +205,49 @@ export class AdminAccountsController {
     );
   }
 
+  @Get(':accountId/payments')
+  @ApiOperation({ summary: 'List payments recorded for an account' })
+  @ApiOkResponse({
+    description: 'Payments fetched.',
+    type: AdminPaymentListResultDto,
+  })
+  @RequireAdminPermissions(ADMIN_PERMISSION_VIEW_USERS)
+  async listPayments(
+    @Param('accountId') accountId: string,
+    @Query() query: AdminPaymentQueryDto,
+  ): Promise<AdminPaymentListResult> {
+    return this.queryBus.execute(
+      new ListAdminAccountPaymentsQuery(
+        accountId,
+        query.limit,
+        query.offset,
+        query.status ?? null,
+      ),
+    );
+  }
+
+  @Get(':accountId/payouts')
+  @ApiOperation({ summary: 'List payouts recorded for an account' })
+  @ApiOkResponse({
+    description: 'Payouts fetched.',
+    type: AdminPayoutListResultDto,
+  })
+  @RequireAdminPermissions(ADMIN_PERMISSION_VIEW_USERS)
+  async listPayouts(
+    @Param('accountId') accountId: string,
+    @Query() query: AdminPayoutQueryDto,
+  ): Promise<AdminPayoutListResult> {
+    return this.queryBus.execute(
+      new ListAdminAccountPayoutsQuery(
+        accountId,
+        query.limit,
+        query.offset,
+        query.status ?? null,
+        query.timeframe ?? null,
+      ),
+    );
+  }
+
   @Patch(':accountId/flags')
   @ApiOperation({
     summary: 'Update fraud or missed payment flags for an account',
@@ -314,7 +365,14 @@ export class AdminAccountsController {
       );
     }
 
-    return filtered.map((membership) =>
+    const sorted = filtered
+      .slice()
+      .sort(
+        (a, b) =>
+          (a.finalOrder ?? a.joinOrder) - (b.finalOrder ?? b.joinOrder),
+      );
+
+    return sorted.map((membership) =>
       this.toAdminAccountPodMembership(membership),
     );
   }

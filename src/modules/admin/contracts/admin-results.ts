@@ -191,6 +191,7 @@ export interface AdminPodMembershipSummary {
 
 export interface AdminPodDetail extends AdminPodSummary {
   memberships: AdminPodMembershipSummary[];
+  pendingInvites: AdminPodInviteSummary[];
 }
 
 export interface AdminPodsListResult {
@@ -236,6 +237,62 @@ export interface AdminPodStatistics {
   totalMembers: number;
   totalPendingInvites: number;
   totalIncompletePods: number;
+}
+
+export interface AdminPodInviteSummary {
+  id: string;
+  podId: string;
+  podPlanCode: string;
+  podName: string | null;
+  email: string;
+  inviteOrder: number;
+  invitedAt: string;
+  acceptedAt: string | null;
+  accountId: string | null;
+}
+
+export interface AdminPodInviteListResult {
+  total: number;
+  items: AdminPodInviteSummary[];
+}
+
+export interface AdminPaymentSummary {
+  id: string;
+  membershipId: string;
+  podId: string;
+  podPlanCode: string;
+  podName: string | null;
+  amount: string;
+  currency: string;
+  status: string;
+  stripeReference: string;
+  description: string | null;
+  recordedAt: string;
+}
+
+export interface AdminPaymentListResult {
+  total: number;
+  items: AdminPaymentSummary[];
+}
+
+export interface AdminPayoutSummary {
+  id: string;
+  membershipId: string;
+  podId: string;
+  podPlanCode: string;
+  podName: string | null;
+  amount: string;
+  fee: string;
+  currency: string;
+  status: string;
+  stripeReference: string;
+  description: string | null;
+  recordedAt: string;
+}
+
+export interface AdminPayoutListResult {
+  total: number;
+  items: AdminPayoutSummary[];
 }
 
 export interface AdminAnnouncementResult {

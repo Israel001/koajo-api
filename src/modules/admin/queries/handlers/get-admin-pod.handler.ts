@@ -4,8 +4,11 @@ import { EntityRepository } from '@mikro-orm/mysql';
 import { NotFoundException } from '@nestjs/common';
 import { GetAdminPodQuery } from '../get-admin-pod.query';
 import { PodEntity } from '../../../pods/entities/pod.entity';
-import { AdminPodDetail } from '../../contracts/admin-results';
+import { AdminPodDetail, AdminPodInviteSummary } from '../../contracts/admin-results';
 import { toAdminPodDetail } from './list-admin-pods.handler';
+import { PodInviteEntity } from '../../../pods/entities/pod-invite.entity';
+import { toAdminPodInviteSummary } from './list-pending-pod-invites.handler';
+import { PodType } from '../../../pods/pod-type.enum';
 
 @QueryHandler(GetAdminPodQuery)
 export class GetAdminPodHandler
@@ -14,6 +17,8 @@ export class GetAdminPodHandler
   constructor(
     @InjectRepository(PodEntity)
     podRepository: EntityRepository<PodEntity>,
+    @InjectRepository(PodInviteEntity)
+    private readonly inviteRepository: EntityRepository<PodInviteEntity>,
   ) {
     this.podRepository = podRepository;
   }
@@ -33,6 +38,16 @@ export class GetAdminPodHandler
     }
 
     await pod.memberships.init();
-    return toAdminPodDetail(pod);
+    let pendingInvites: AdminPodInviteSummary[] = [];
+
+    if (pod.type === PodType.CUSTOM) {
+      const invites = await this.inviteRepository.find(
+        { pod, acceptedAt: null },
+        { populate: ['pod', 'account'] as const, orderBy: { invitedAt: 'DESC' } },
+      );
+      pendingInvites = invites.map((invite) => toAdminPodInviteSummary(invite));
+    }
+
+    return toAdminPodDetail(pod, pendingInvites);
   }
 }
