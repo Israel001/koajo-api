@@ -1,4 +1,9 @@
-import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+  OnModuleInit,
+} from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { MikroORM, RequestContext } from '@mikro-orm/core';
 import { ProcessContributionNotificationsCommand } from './commands/process-contribution-notifications.command';

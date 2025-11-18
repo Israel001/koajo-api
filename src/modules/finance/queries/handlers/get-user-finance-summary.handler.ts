@@ -20,17 +20,15 @@ export class GetUserFinanceSummaryHandler
   async execute(
     query: GetUserFinanceSummaryQuery,
   ): Promise<UserFinanceSummary> {
-    const totalContributions = await this.sumColumn(
-      this.paymentRepository,
-      { account: query.accountId },
+    const totalContributions = await this.sumTable(
       'payments',
+      query.accountId,
       'amount',
     );
 
-    const totalPayouts = await this.sumColumn(
-      this.payoutRepository,
-      { account: query.accountId },
+    const totalPayouts = await this.sumTable(
       'payouts',
+      query.accountId,
       'amount',
     );
 
@@ -40,31 +38,17 @@ export class GetUserFinanceSummaryHandler
     };
   }
 
-  private async sumColumn(
-    repo: EntityRepository<any>,
-    where: Record<string, unknown>,
+  private async sumTable(
     tableName: string,
+    accountId: string,
     column: string,
   ): Promise<string> {
-    const alias = repo.getEntityName().toLowerCase();
-    const conditions: string[] = [];
-    const params: any = {};
-    Object.entries(where).forEach(([key, value], idx) => {
-      const param = `w${idx}`;
-      conditions.push(`${alias}.${key} = :${param}`);
-      params[param] = value;
-    });
-    const whereSql = conditions.length
-      ? `WHERE ${conditions.join(' AND ')}`
-      : '';
-    const sql = `SELECT COALESCE(SUM(${alias}.${column}), 0) as total FROM ${tableName} ${alias} ${whereSql}`;
-    const result = (await repo
-      .getEntityManager()
-      .getConnection()
-      .execute(sql, params)) as Array<{
-      total: string | number | null;
-    }>;
-    const totalVal = result[0]?.total ?? 0;
+    const em = this.paymentRepository.getEntityManager();
+    const rows = (await em.getConnection().execute(
+      `SELECT COALESCE(SUM(${column}), 0) as total FROM ${tableName} WHERE account_id = ?`,
+      [accountId],
+    )) as Array<{ total: string | number | null }>;
+    const totalVal = rows[0]?.total ?? 0;
     const numeric =
       typeof totalVal === 'number' ? totalVal : Number(totalVal ?? 0);
     return numeric.toFixed(2);
