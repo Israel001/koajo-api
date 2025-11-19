@@ -1,6 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsNotEmpty, IsNumber, IsPositive, IsString } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsPositive,
+  IsString,
+} from 'class-validator';
 
 export class MarkPodPayoutDto {
   @ApiProperty({ description: 'Pod membership identifier.' })
@@ -16,4 +22,12 @@ export class MarkPodPayoutDto {
   @IsNumber()
   @IsPositive()
   amount!: number;
+
+  @ApiProperty({
+    description: 'Optional note to associate with the payout.',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  description?: string | null;
 }

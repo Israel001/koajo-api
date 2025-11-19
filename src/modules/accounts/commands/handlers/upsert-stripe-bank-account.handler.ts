@@ -8,6 +8,7 @@ import { UpsertStripeBankAccountResult } from '../../contracts/auth-results';
 import { MailService } from '../../../../common/notification/mail.service';
 import { InAppNotificationService } from '../../../notifications/in-app-notification.service';
 import { InAppNotificationMessages } from '../../../notifications/in-app-notification.messages';
+import { encryptSensitiveValue } from '../../../../common/security/encryption.util';
 
 @Injectable()
 @CommandHandler(UpsertStripeBankAccountCommand)
@@ -61,6 +62,16 @@ export class UpsertStripeBankAccountHandler
     account.stripeConnectedAccountId = this.normalizeValue(
       command.connectedAccountId ?? '',
     );
+    if (command.routingNumber) {
+      account.bankRoutingNumberEncrypted = encryptSensitiveValue(
+        command.routingNumber,
+      );
+    }
+    if (command.accountNumber) {
+      account.bankAccountNumberEncrypted = encryptSensitiveValue(
+        command.accountNumber,
+      );
+    }
     if (!account.stripeBankAccountLinkedAt) {
       account.stripeBankAccountLinkedAt = now;
     }

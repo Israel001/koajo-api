@@ -37,7 +37,7 @@ export class MarkPodMembershipPaidHandler
       throw new BadRequestException('Amount must be greater than zero.');
     }
 
-    membership.paidOut = true;
+    membership.paidOut = false;
     membership.payoutDate = command.paidAt ?? new Date();
     membership.payoutAmount = command.amount.toFixed(2);
 

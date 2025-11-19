@@ -75,6 +75,16 @@ export class ListAdminPodsHandler
       qb.andWhere({ status: query.status });
     }
 
+    if (typeof query.hasMembers === 'boolean') {
+      qb.leftJoin('pod.memberships', 'membership');
+      qb.groupBy('pod.id');
+      if (query.hasMembers) {
+        qb.having('COUNT(membership.id) > 0');
+      } else {
+        qb.having('COUNT(membership.id) = 0');
+      }
+    }
+
     if (query.search) {
       const term = `%${query.search.trim()}%`;
       qb.andWhere({

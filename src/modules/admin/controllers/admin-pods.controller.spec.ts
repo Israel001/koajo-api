@@ -65,7 +65,15 @@ describe('AdminPodsController', () => {
       payoutDate: new Date(),
     } as any;
 
-    commandBus.execute.mockResolvedValue(membership);
+    commandBus.execute
+      .mockResolvedValueOnce(membership)
+      .mockResolvedValueOnce({
+        payoutId: 'payout-1',
+        status: 'processing',
+        stripeReference: 'ref',
+        amount: '500.00',
+        fee: '0.00',
+      });
 
     const result = await controller.markPayout('pod-1', {
       membershipId: 'membership-1',
@@ -73,7 +81,7 @@ describe('AdminPodsController', () => {
     } as any);
 
     expect(result.membershipId).toBe('membership-1');
-    expect(commandBus.execute).toHaveBeenCalled();
+    expect(commandBus.execute).toHaveBeenCalledTimes(2);
     const command =
       commandBus.execute.mock.calls[0][0] as MarkPodMembershipPaidCommand;
     expect(command.podId).toBe('pod-1');

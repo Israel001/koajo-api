@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
-import { IsNotEmpty, IsString, Length } from 'class-validator';
+import { IsNotEmpty, IsString, Length, IsOptional } from 'class-validator';
 
 export class UpsertStripeBankAccountDto {
   @ApiProperty({
@@ -72,7 +72,27 @@ export class UpsertStripeBankAccountDto {
     required: false,
   })
   @Expose({ name: 'connected_account_id' })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty({ message: 'connected_account_id is required when provided.' })
-  connectedAccountId?: string;
+  connectedAccountId?: string | null;
+
+  @ApiProperty({
+    name: 'routing_number',
+    description: 'Bank routing number.',
+    required: false,
+  })
+  @Expose({ name: 'routing_number' })
+  @IsOptional()
+  @IsString()
+  routingNumber?: string | null;
+
+  @ApiProperty({
+    name: 'account_number',
+    description: 'Bank account number.',
+    required: false,
+  })
+  @Expose({ name: 'account_number' })
+  @IsOptional()
+  @IsString()
+  accountNumber?: string | null;
 }

@@ -1,4 +1,14 @@
-import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
   ApiBearerAuth,
@@ -11,7 +21,10 @@ import {
 import { AdminPodsQueryDto } from '../dto/pods-query.dto';
 import { AdminPodActivityQueryDto } from '../dto/pod-activity-query.dto';
 import { AdminJwtGuard } from '../guards/admin-jwt.guard';
-import { AdminPermissionsGuard, RequireAdminPermissions } from '../guards/admin-permissions.guard';
+import {
+  AdminPermissionsGuard,
+  RequireAdminPermissions,
+} from '../guards/admin-permissions.guard';
 import { ADMIN_PERMISSION_VIEW_PODS } from '../admin-permission.constants';
 import {
   AdminPodDetail,
@@ -46,6 +59,11 @@ import { SwapPayoutPositionResultDto } from '../contracts/admin-swagger.dto';
 import { TriggerPayoutDto } from '../dto/trigger-payout.dto';
 import { InitiatePayoutCommand } from '../../finance/commands/initiate-payout.command';
 import { ADMIN_PERMISSION_TRIGGER_PAYOUTS } from '../admin-permission.constants';
+import { ListPodPendingInvitesQuery } from '../queries/list-pod-pending-invites.query';
+import { ConfigService } from '@nestjs/config';
+import { RecordPayoutCommand } from '../../finance/commands/record-payout.command';
+import { UpdatePayoutStatusDto } from '../dto/update-payout-status.dto';
+import { UpdatePayoutStatusCommand } from '../../finance/commands/update-payout-status.command';
 
 @ApiTags('admin-pods')
 @Controller({ path: 'admin/pods', version: '1' })
@@ -56,6 +74,7 @@ export class AdminPodsController {
   constructor(
     private readonly queryBus: QueryBus,
     private readonly commandBus: CommandBus,
+    private readonly configService: ConfigService,
   ) {}
 
   @Get('stats')
@@ -83,6 +102,7 @@ export class AdminPodsController {
         query.search ?? null,
         null,
         true,
+        query.hasMembers ?? null,
       ),
     );
   }
@@ -100,6 +120,8 @@ export class AdminPodsController {
         query.offset,
         query.search ?? null,
         PodStatus.OPEN,
+        undefined,
+        query.hasMembers ?? null,
       ),
     );
   }
@@ -116,8 +138,24 @@ export class AdminPodsController {
   ): Promise<AdminPodInviteListResult> {
     const limit = query.limit ?? 50;
     const offset = query.offset ?? 0;
+    return this.queryBus.execute(new ListPendingPodInvitesQuery(limit, offset));
+  }
+
+  @Get(':podId/pending-invites')
+  @ApiOperation({ summary: 'List pending invitations for a specific pod' })
+  @ApiOkResponse({
+    description: 'Pending invites for the pod fetched.',
+    type: AdminPodInviteListResultDto,
+  })
+  @RequireAdminPermissions(ADMIN_PERMISSION_VIEW_PODS)
+  async listPendingInvitesByPod(
+    @Param('podId') podId: string,
+    @Query() query: AdminListQueryDto,
+  ): Promise<AdminPodInviteListResult> {
+    const limit = query.limit ?? 50;
+    const offset = query.offset ?? 0;
     return this.queryBus.execute(
-      new ListPendingPodInvitesQuery(limit, offset),
+      new ListPodPendingInvitesQuery(podId, limit, offset),
     );
   }
 
@@ -155,7 +193,9 @@ export class AdminPodsController {
   }
 
   @Post(':podId/swap-payouts')
-  @ApiOperation({ summary: 'Swap payout positions for two members in a custom pod' })
+  @ApiOperation({
+    summary: 'Swap payout positions for two members in a custom pod',
+  })
   @ApiOkResponse({
     description: 'Payout positions swapped.',
     type: SwapPayoutPositionResultDto,
@@ -176,7 +216,8 @@ export class AdminPodsController {
 
   @Post(':podId/payouts/trigger')
   @ApiOperation({
-    summary: 'Manually trigger a payout for a pod member (ignores account flags).',
+    summary:
+      'Manually trigger a payout for a pod member (ignores account flags).',
   })
   @ApiOkResponse({
     description: 'Payout initiated.',
@@ -207,6 +248,36 @@ export class AdminPodsController {
     );
   }
 
+  @Patch(':podId/payouts/:payoutId/status')
+  @ApiOperation({
+    summary: 'Update the status of a manually recorded payout.',
+  })
+  @ApiOkResponse({
+    description: 'Payout status updated.',
+    schema: {
+      type: 'object',
+      properties: {
+        payoutId: { type: 'string' },
+        status: { type: 'string' },
+      },
+    },
+  })
+  @RequireAdminPermissions(ADMIN_PERMISSION_VIEW_PODS)
+  async updatePayoutStatus(
+    @Param('podId') podId: string,
+    @Param('payoutId') payoutId: string,
+    @Body() payload: UpdatePayoutStatusDto,
+  ): Promise<{ payoutId: string; status: string }> {
+    return this.commandBus.execute(
+      new UpdatePayoutStatusCommand(
+        payoutId,
+        podId,
+        payload.status,
+        payload.customStatus ?? null,
+      ),
+    );
+  }
+
   @Get()
   @ApiOperation({ summary: 'List pods' })
   @ApiOkResponse({ description: 'Pods fetched.' })
@@ -218,6 +289,8 @@ export class AdminPodsController {
         query.offset,
         query.search ?? null,
         query.status ?? null,
+        undefined,
+        query.hasMembers ?? null,
       ),
     );
   }
@@ -243,9 +316,7 @@ export class AdminPodsController {
     @Query() query: AdminPodActivityQueryDto,
   ): Promise<AdminPodActivity[]> {
     const limit = query.limit ?? 50;
-    return this.queryBus.execute(
-      new ListAdminPodActivitiesQuery(podId, limit),
-    );
+    return this.queryBus.execute(new ListAdminPodActivitiesQuery(podId, limit));
   }
 
   @Post(':podId/payouts')
@@ -259,6 +330,8 @@ export class AdminPodsController {
         podId: { type: 'string' },
         payoutAmount: { type: 'string' },
         payoutDate: { type: 'string', format: 'date-time', nullable: true },
+        payoutId: { type: 'string' },
+        payoutStatus: { type: 'string' },
       },
     },
   })
@@ -271,6 +344,8 @@ export class AdminPodsController {
     podId: string;
     payoutAmount: string | null;
     payoutDate: string | null;
+    payoutId: string | null;
+    payoutStatus: string | null;
   }> {
     const membership = await this.commandBus.execute(
       new MarkPodMembershipPaidCommand(
@@ -278,6 +353,30 @@ export class AdminPodsController {
         payload.membershipId,
         payload.amount,
         new Date(),
+        payload.description ?? null,
+      ),
+    );
+
+    if (!membership.account) {
+      throw new BadRequestException('Membership is not linked to an account.');
+    }
+
+    const stripeReference = `admin:${membership.id}:${Date.now()}`;
+    const currency =
+      this.configService.get<string>('stripe.defaultCurrency', {
+        infer: true,
+      }) ?? 'usd';
+
+    const payoutResult = await this.commandBus.execute(
+      new RecordPayoutCommand(
+        membership.account.id,
+        podId,
+        stripeReference,
+        payload.amount,
+        0,
+        currency,
+        'processing',
+        payload.description ?? 'admin-manual',
       ),
     );
 
@@ -288,6 +387,8 @@ export class AdminPodsController {
       payoutDate: membership.payoutDate
         ? membership.payoutDate.toISOString()
         : null,
+      payoutId: payoutResult.payoutId,
+      payoutStatus: payoutResult.status,
     };
   }
 }

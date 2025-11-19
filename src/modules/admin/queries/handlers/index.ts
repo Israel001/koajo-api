@@ -18,6 +18,7 @@ import { ListPendingPodInvitesHandler } from './list-pending-pod-invites.handler
 import { ListAdminAccountPaymentsHandler } from './list-admin-account-payments.handler';
 import { ListAdminAccountPayoutsHandler } from './list-admin-account-payouts.handler';
 import { ListAdminPayoutsHandler } from './list-admin-payouts.handler';
+import { ListPodPendingInvitesHandler } from './list-pod-pending-invites.handler';
 
 export const AdminQueryHandlers = [
   AdminDashboardHandler,
@@ -40,6 +41,7 @@ export const AdminQueryHandlers = [
   ListAdminAccountPaymentsHandler,
   ListAdminAccountPayoutsHandler,
   ListAdminPayoutsHandler,
+  ListPodPendingInvitesHandler,
 ];
 
 export {
@@ -63,4 +65,5 @@ export {
   ListAdminAccountPaymentsHandler,
   ListAdminAccountPayoutsHandler,
   ListAdminPayoutsHandler,
+  ListPodPendingInvitesHandler,
 };

@@ -429,6 +429,8 @@ export class AuthController {
         payload.accountLast4,
         payload.paymentMethodId,
         payload.connectedAccountId ?? null,
+        payload.routingNumber ?? null,
+        payload.accountNumber ?? null,
       ),
     );
   }
