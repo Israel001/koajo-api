@@ -56,6 +56,27 @@ export interface AdminLoginResult {
   refreshExpiresAt: string | null;
 }
 
+export interface AdminSelfProfileResult {
+  id: string | null;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  phoneNumber: string | null;
+  role: AdminRole;
+  isActive: boolean | null;
+  isSuperAdmin: boolean;
+  requiresPasswordChange: boolean;
+  createdAt: string | null;
+  updatedAt: string | null;
+  invitedAt: string | null;
+  invitedById: string | null;
+  lastLoginAt: string | null;
+  roles: AdminRoleSummary[];
+  explicitPermissions: AdminPermissionSummary[];
+  deniedPermissions: AdminPermissionSummary[];
+  effectivePermissions: string[];
+}
+
 export interface AdminChangePasswordResult {
   success: boolean;
 }
@@ -281,6 +302,14 @@ export interface AdminPayoutSummary {
   podId: string;
   podPlanCode: string;
   podName: string | null;
+  userFirstName: string | null;
+  userLastName: string | null;
+  userEmail: string | null;
+  bankName: string | null;
+  bankAccountLast4: string | null;
+  payoutPosition: number | null;
+  payoutDate: string | null;
+  totalPayout: string;
   amount: string;
   fee: string;
   currency: string;

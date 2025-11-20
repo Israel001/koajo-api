@@ -23,6 +23,14 @@ export interface PayoutSummary {
   podId: string;
   podName: string | null;
   podPlanCode: string;
+  userFirstName: string | null;
+  userLastName: string | null;
+  userEmail: string | null;
+  bankName: string | null;
+  bankAccountLast4: string | null;
+  payoutPosition: number | null;
+  payoutDate: string | null;
+  totalPayout: string;
   amount: string;
   fee: string;
   currency: string;
@@ -30,7 +38,6 @@ export interface PayoutSummary {
   stripeReference: string;
   description: string | null;
   recordedAt: string;
-  payoutDate: string | null;
 }
 
 export interface PayoutListResult {

@@ -75,13 +75,25 @@ export class ListAdminPodsHandler
       qb.andWhere({ status: query.status });
     }
 
-    if (typeof query.hasMembers === 'boolean') {
-      qb.leftJoin('pod.memberships', 'membership');
-      qb.groupBy('pod.id');
-      if (query.hasMembers) {
-        qb.having('COUNT(membership.id) > 0');
+    // Debug log for hasMembers filter
+    const normalizedHasMembers = query.hasMembers
+      ? query.hasMembers.toString().trim().toLowerCase()
+      : null;
+    // eslint-disable-next-line no-console
+    console.log(
+      'ListAdminPodsHandler.hasMembers',
+      query.hasMembers,
+      typeof query.hasMembers,
+      'normalized:',
+      normalizedHasMembers,
+    );
+    if (normalizedHasMembers === 'true' || normalizedHasMembers === 'false') {
+      const existsClause =
+        'EXISTS (SELECT 1 FROM pod_memberships pm WHERE pm.pod_id = pod.id)';
+      if (normalizedHasMembers === 'true') {
+        qb.andWhere(existsClause);
       } else {
-        qb.having('COUNT(membership.id) = 0');
+        qb.andWhere(`NOT ${existsClause}`);
       }
     }
 

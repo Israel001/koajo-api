@@ -6,6 +6,10 @@ import type { PayoutListResult } from '../../contracts/payment-summary';
 import { ListPodPayoutsQuery } from '../list-pod-payouts.query';
 import { PayoutEntity } from '../../entities/payout.entity';
 import { PodMembershipEntity } from '../../../pods/entities/pod-membership.entity';
+import {
+  calculateNetPayout,
+  getPayoutPosition,
+} from '../../utils/payout-calculator.util';
 
 @QueryHandler(ListPodPayoutsQuery)
 export class ListPodPayoutsHandler
@@ -51,7 +55,7 @@ export class ListPodPayoutsHandler
       query.sort === 'asc' ? { createdAt: 'ASC' } : { createdAt: 'DESC' };
 
     const [payouts, total] = await this.payoutRepository.findAndCount(where, {
-      populate: ['pod', 'membership'] as const,
+      populate: ['pod', 'membership', 'membership.pod', 'account'] as const,
       orderBy,
       limit,
       offset,
@@ -59,23 +63,34 @@ export class ListPodPayoutsHandler
 
     return {
       total,
-      items: payouts.map((payout) => ({
-        id: payout.id,
-        membershipId: payout.membership.id,
-        podId: payout.pod.id,
-        podName: payout.pod.name ?? null,
-        podPlanCode: payout.pod.planCode,
-        amount: payout.amount,
-        fee: payout.fee,
-        currency: payout.currency,
-        status: payout.status,
-        stripeReference: payout.stripeReference,
-        description: payout.description ?? null,
-        recordedAt: payout.createdAt.toISOString(),
-        payoutDate: payout.membership.payoutDate
-          ? payout.membership.payoutDate.toISOString()
-          : null,
-      })),
+      items: payouts.map((payout) => {
+        const membership = payout.membership;
+        const account = payout.account;
+        return {
+          id: payout.id,
+          membershipId: membership.id,
+          podId: payout.pod.id,
+          podName: payout.pod.name ?? null,
+          podPlanCode: payout.pod.planCode,
+          userFirstName: account.firstName ?? null,
+          userLastName: account.lastName ?? null,
+          userEmail: account.email,
+          bankName: account.stripeBankName ?? null,
+          bankAccountLast4: account.stripeBankAccountLast4 ?? null,
+          payoutPosition: getPayoutPosition(membership),
+          payoutDate: membership.payoutDate
+            ? membership.payoutDate.toISOString()
+            : null,
+          totalPayout: calculateNetPayout(membership),
+          amount: payout.amount,
+          fee: payout.fee,
+          currency: payout.currency,
+          status: payout.status,
+          stripeReference: payout.stripeReference,
+          description: payout.description ?? null,
+          recordedAt: payout.createdAt.toISOString(),
+        };
+      }),
     };
   }
 }

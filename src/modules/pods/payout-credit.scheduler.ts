@@ -43,7 +43,7 @@ export class PayoutCreditScheduler
   ) {}
 
   onModuleInit() {
-    this.scheduleNextRun();
+    // Disabled for now
   }
 
   onModuleDestroy() {

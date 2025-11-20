@@ -1,11 +1,11 @@
-import { BadRequestException, Body, Controller, HttpCode, HttpStatus, Post, Req, UseGuards } from '@nestjs/common';
-import { CommandBus } from '@nestjs/cqrs';
+import { BadRequestException, Body, Controller, Get, HttpCode, HttpStatus, Post, Req, UseGuards } from '@nestjs/common';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiBadRequestResponse, ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { AdminLoginCommand } from '../commands/admin-login.command';
 import { AdminRefreshAccessTokenCommand } from '../commands/admin-refresh-access-token.command';
-import type { AdminLoginResult } from '../contracts/admin-results';
-import { AdminLoginResultDto } from '../contracts/admin-swagger.dto';
+import type { AdminLoginResult, AdminSelfProfileResult, AdminUserDto } from '../contracts/admin-results';
+import { AdminLoginResultDto, AdminSelfProfileResultDto } from '../contracts/admin-swagger.dto';
 import { AdminLoginDto } from '../dto/admin-login.dto';
 import { AdminRefreshTokenDto } from '../dto/admin-refresh-token.dto';
 import { AdminJwtGuard, AdminAuthenticatedRequest, AuthenticatedAdmin } from '../guards/admin-jwt.guard';
@@ -25,11 +25,15 @@ import {
   AdminForgotPasswordResultDto,
   AdminResetPasswordResultDto,
 } from '../contracts/admin-swagger.dto';
+import { GetAdminUserQuery } from '../queries/get-admin-user.query';
 
 @ApiTags('admin-auth')
 @Controller({ path: 'admin/auth', version: '1' })
 export class AdminAuthController {
-  constructor(private readonly commandBus: CommandBus) {}
+  constructor(
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
+  ) {}
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
@@ -117,5 +121,44 @@ export class AdminAuthController {
     return this.commandBus.execute(
       new AdminRefreshAccessTokenCommand(payload.refreshToken),
     );
+  }
+
+  @Get('me')
+  @UseGuards(AdminJwtGuard)
+  @ApiBearerAuth('bearer')
+  @ApiOperation({ summary: 'Retrieve the authenticated admin profile' })
+  @ApiOkResponse({
+    description: 'Authenticated admin details.',
+    type: AdminSelfProfileResultDto,
+  })
+  async me(@Req() request: Request): Promise<AdminSelfProfileResult> {
+    const admin: AuthenticatedAdmin = (request as AdminAuthenticatedRequest).admin;
+    let profile: AdminUserDto | null = null;
+
+    if (admin.adminId) {
+      profile = await this.queryBus.execute(new GetAdminUserQuery(admin.adminId));
+    }
+
+    return {
+      id: profile?.id ?? admin.adminId,
+      email: profile?.email ?? admin.email,
+      firstName: profile?.firstName ?? null,
+      lastName: profile?.lastName ?? null,
+      phoneNumber: profile?.phoneNumber ?? null,
+      role: admin.role,
+      isActive: profile?.isActive ?? (admin.isSuperAdmin ? true : null),
+      isSuperAdmin: admin.isSuperAdmin,
+      requiresPasswordChange:
+        profile?.requiresPasswordChange ?? admin.requiresPasswordChange,
+      createdAt: profile?.createdAt ?? null,
+      updatedAt: profile?.updatedAt ?? null,
+      invitedAt: profile?.invitedAt ?? null,
+      invitedById: profile?.invitedById ?? null,
+      lastLoginAt: profile?.lastLoginAt ?? null,
+      roles: profile?.roles ?? [],
+      explicitPermissions: profile?.explicitPermissions ?? [],
+      deniedPermissions: profile?.deniedPermissions ?? [],
+      effectivePermissions: profile?.effectivePermissions ?? admin.permissions,
+    };
   }
 }

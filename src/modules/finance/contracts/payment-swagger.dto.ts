@@ -222,6 +222,30 @@ export class PayoutSummaryDto implements PayoutSummary {
   @ApiProperty({ description: 'Pod plan code associated with the payout.' })
   podPlanCode!: string;
 
+  @ApiProperty({ description: 'Recipient first name.', nullable: true })
+  userFirstName!: string | null;
+
+  @ApiProperty({ description: 'Recipient last name.', nullable: true })
+  userLastName!: string | null;
+
+  @ApiProperty({ description: 'Recipient email address.', nullable: true })
+  userEmail!: string | null;
+
+  @ApiProperty({ description: 'Bank name associated with the payout.', nullable: true })
+  bankName!: string | null;
+
+  @ApiProperty({ description: 'Last 4 digits of the bank account.', nullable: true })
+  bankAccountLast4!: string | null;
+
+  @ApiProperty({ description: 'Payout position within the pod.', nullable: true })
+  payoutPosition!: number | null;
+
+  @ApiProperty({ description: 'Scheduled payout date for the membership.', nullable: true })
+  payoutDate!: string | null;
+
+  @ApiProperty({ description: 'Total net payout after deductions.' })
+  totalPayout!: string;
+
   @ApiProperty({ description: 'Payout amount in major currency units.' })
   amount!: string;
 
@@ -242,9 +266,6 @@ export class PayoutSummaryDto implements PayoutSummary {
 
   @ApiProperty({ description: 'ISO 8601 timestamp when the payout was recorded.' })
   recordedAt!: string;
-
-  @ApiProperty({ description: 'ISO 8601 payout date for the membership, if available.', nullable: true })
-  payoutDate!: string | null;
 }
 
 export class PayoutListResultDto implements PayoutListResult {

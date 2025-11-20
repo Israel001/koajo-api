@@ -283,6 +283,13 @@ export class AdminPodsController {
   @ApiOkResponse({ description: 'Pods fetched.' })
   @RequireAdminPermissions(ADMIN_PERMISSION_VIEW_PODS)
   async list(@Query() query: AdminPodsQueryDto): Promise<AdminPodsListResult> {
+    // Debug log for hasMembers until filter bug is resolved
+    // eslint-disable-next-line no-console
+    console.log(
+      'AdminPodsController.list hasMembers',
+      query.hasMembers,
+      typeof query.hasMembers,
+    );
     return this.queryBus.execute(
       new ListAdminPodsQuery(
         query.limit,

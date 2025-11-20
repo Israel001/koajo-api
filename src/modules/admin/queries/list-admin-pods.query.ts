@@ -5,6 +5,6 @@ export class ListAdminPodsQuery {
     public readonly search?: string | null,
     public readonly status?: string | null,
     public readonly incompleteOnly?: boolean,
-    public readonly hasMembers?: boolean | null,
+    public readonly hasMembers?: string | null,
   ) {}
 }

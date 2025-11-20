@@ -1,5 +1,4 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
 import { IsEnum, IsInt, IsOptional, IsString, MaxLength, Min } from 'class-validator';
 import { PodStatus } from '../../pods/pod-status.enum';
 
@@ -35,18 +34,10 @@ export class AdminPodsQueryDto {
   status?: PodStatus;
 
   @ApiPropertyOptional({
-    description: 'Filter pods that have members (true) or no members (false).',
+    description:
+      'Filter pods that have members ("true") or no members ("false"). Leave empty to return both.',
   })
   @IsOptional()
-  @Transform(({ value }) => {
-    if (value === undefined || value === null || value === '') {
-      return undefined;
-    }
-    if (typeof value === 'boolean') {
-      return value;
-    }
-    const normalized = value.toString().toLowerCase();
-    return normalized === 'true' || normalized === '1';
-  })
-  hasMembers?: boolean;
+  @IsString()
+  hasMembers?: string;
 }

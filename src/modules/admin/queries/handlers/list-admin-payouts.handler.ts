@@ -3,7 +3,15 @@ import { InjectRepository } from '@mikro-orm/nestjs';
 import { EntityRepository } from '@mikro-orm/mysql';
 import { ListAdminPayoutsQuery } from '../list-admin-payouts.query';
 import { PayoutEntity } from '../../../finance/entities/payout.entity';
-import type { AdminPayoutListResult } from '../../contracts/admin-results';
+import type {
+  AdminPayoutListResult,
+  AdminPayoutSummary,
+} from '../../contracts/admin-results';
+import { PodMembershipEntity } from '../../../pods/entities/pod-membership.entity';
+import {
+  calculateNetPayout,
+  getPayoutPosition,
+} from '../../../finance/utils/payout-calculator.util';
 
 @QueryHandler(ListAdminPayoutsQuery)
 export class ListAdminPayoutsHandler
@@ -12,48 +20,143 @@ export class ListAdminPayoutsHandler
   constructor(
     @InjectRepository(PayoutEntity)
     private readonly payoutRepository: EntityRepository<PayoutEntity>,
+    @InjectRepository(PodMembershipEntity)
+    private readonly membershipRepository: EntityRepository<PodMembershipEntity>,
   ) {}
 
   async execute(query: ListAdminPayoutsQuery): Promise<AdminPayoutListResult> {
     const limit = query.limit ?? 50;
     const offset = query.offset ?? 0;
-    const where: Record<string, any> = {};
 
-    if (query.timeframe) {
-      const now = new Date();
-      if (query.timeframe === 'past') {
-        where.membership = { payoutDate: { $lt: now } } as any;
-      } else if (query.timeframe === 'upcoming') {
-        where.membership = { payoutDate: { $gte: now } } as any;
-      }
+    if (query.timeframe === 'upcoming') {
+      return this.listUpcomingPayouts(limit, offset);
     }
 
+    if (query.timeframe === 'past') {
+      return this.listRecordedPayouts(limit, offset);
+    }
+
+    const expanded = limit + offset;
+    const upcoming = await this.listUpcomingPayouts(expanded, 0);
+    const recorded = await this.listRecordedPayouts(expanded, 0);
+    const combinedItems = [...upcoming.items, ...recorded.items];
+    return {
+      total: upcoming.total + recorded.total,
+      items: combinedItems.slice(offset, offset + limit),
+    };
+  }
+
+  private async listRecordedPayouts(
+    limit: number,
+    offset: number,
+  ): Promise<AdminPayoutListResult> {
+    const where: Record<string, any> = { account: { $ne: null } };
+
     const [payouts, total] = await this.payoutRepository.findAndCount(where, {
-      populate: ['pod', 'membership'] as const,
-      orderBy:
-        query.timeframe === 'upcoming'
-          ? { membership: { payoutDate: 'ASC' } }
-          : { createdAt: 'DESC' },
+      populate: ['pod', 'membership', 'membership.account'] as const,
+      orderBy: { createdAt: 'DESC' },
       limit,
       offset,
     });
 
     return {
       total,
-      items: payouts.map((payout) => ({
-        id: payout.id,
-        membershipId: payout.membership.id,
-        podId: payout.pod.id,
-        podPlanCode: payout.pod.planCode,
-        podName: payout.pod.name ?? null,
-        amount: payout.amount,
-        fee: payout.fee,
-        currency: payout.currency,
-        status: payout.status,
-        stripeReference: payout.stripeReference,
-        description: payout.description ?? null,
-        recordedAt: payout.createdAt.toISOString(),
-      })),
+      items: payouts
+        .map((payout) =>
+          this.buildSummaryFromMembership(payout.membership, {
+            id: payout.id,
+            amount: payout.amount,
+            fee: payout.fee,
+            currency: payout.currency,
+            status: payout.status,
+            stripeReference: payout.stripeReference,
+            description: payout.description ?? null,
+            recordedAt: payout.createdAt.toISOString(),
+            payoutDate:
+              payout.membership.payoutDate?.toISOString() ??
+              payout.createdAt.toISOString(),
+          }),
+        )
+        .filter((item): item is AdminPayoutSummary => Boolean(item)),
+    };
+  }
+
+  private async listUpcomingPayouts(
+    limit: number,
+    offset: number,
+  ): Promise<AdminPayoutListResult> {
+    const now = new Date();
+    const [memberships, total] = await this.membershipRepository.findAndCount(
+      {
+        payoutDate: { $gte: now },
+        paidOut: false,
+        account: { $ne: null },
+      },
+      {
+        populate: ['pod', 'account'] as const,
+        orderBy: { payoutDate: 'ASC' },
+        limit,
+        offset,
+      },
+    );
+
+    return {
+      total,
+      items: memberships
+        .map((membership) =>
+          this.buildSummaryFromMembership(membership, {
+            id: `scheduled:${membership.id}`,
+            amount: calculateNetPayout(membership),
+            fee: '0.00',
+            currency: 'USD',
+            status: 'scheduled',
+            stripeReference: '',
+            description: 'Scheduled payout',
+            recordedAt:
+              membership.payoutDate?.toISOString() ??
+              new Date().toISOString(),
+            payoutDate: membership.payoutDate
+              ? membership.payoutDate.toISOString()
+              : null,
+          }),
+        )
+        .filter((item): item is AdminPayoutSummary => Boolean(item)),
+    };
+  }
+
+  private buildSummaryFromMembership(
+    membership: PodMembershipEntity,
+    overrides: Partial<AdminPayoutSummary>,
+  ): AdminPayoutSummary | null {
+    const account = membership.account;
+    const pod = membership.pod;
+    if (!account) {
+      return null;
+    }
+    const payoutPosition = getPayoutPosition(membership);
+    const totalPayout = calculateNetPayout(membership);
+    return {
+      id: overrides.id ?? '',
+      membershipId: membership.id,
+      podId: pod.id,
+      podPlanCode: pod.planCode,
+      podName: pod.name ?? null,
+      userFirstName: account.firstName ?? null,
+      userLastName: account.lastName ?? null,
+      userEmail: account.email,
+      bankName: account.stripeBankName ?? null,
+      bankAccountLast4: account.stripeBankAccountLast4 ?? null,
+      payoutPosition,
+      payoutDate:
+        overrides.payoutDate ?? membership.payoutDate?.toISOString() ?? null,
+      totalPayout,
+      amount: overrides.amount ?? totalPayout,
+      fee: overrides.fee ?? '0.00',
+      currency: overrides.currency ?? 'USD',
+      status: overrides.status ?? 'scheduled',
+      stripeReference: overrides.stripeReference ?? '',
+      description: overrides.description ?? null,
+      recordedAt: overrides.recordedAt ?? new Date().toISOString(),
     };
   }
 }

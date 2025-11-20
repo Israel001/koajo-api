@@ -1,5 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsInt, IsOptional, Min } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsIn, IsInt, IsOptional, Min } from 'class-validator';
 
 export class AdminPayoutQueryDto {
   @ApiPropertyOptional({ description: 'Maximum records to return.', default: 50 })
@@ -18,8 +19,11 @@ export class AdminPayoutQueryDto {
     description: 'Filter by payout timeframe.',
     enum: ['past', 'upcoming'],
   })
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.toLowerCase() : value,
+  )
   @IsOptional()
-  @IsEnum(['past', 'upcoming'])
+  @IsIn(['past', 'upcoming'])
   timeframe?: 'past' | 'upcoming';
 
   @ApiPropertyOptional({

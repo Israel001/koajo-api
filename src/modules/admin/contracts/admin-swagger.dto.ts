@@ -40,9 +40,41 @@ import type {
   AdminPaymentSummary,
   AdminPayoutListResult,
   AdminPayoutSummary,
+  AdminSelfProfileResult,
 } from './admin-results';
 import { AnnouncementChannel } from '../announcement-channel.enum';
 import { AnnouncementSeverity } from '../announcement-severity.enum';
+
+export class AdminPermissionSummaryDto implements AdminPermissionSummary {
+  @ApiProperty({ description: 'Permission identifier.' })
+  id!: string;
+
+  @ApiProperty({ description: 'Permission code.', example: 'admin.users.view' })
+  code!: string;
+
+  @ApiProperty({ description: 'Human-friendly permission name.', nullable: true })
+  name!: string | null;
+
+  @ApiProperty({ description: 'Describes what the permission allows.', nullable: true })
+  description!: string | null;
+}
+
+export class AdminRoleSummaryDto implements AdminRoleSummary {
+  @ApiProperty({ description: 'Role identifier.' })
+  id!: string;
+
+  @ApiProperty({ description: 'Role name.' })
+  name!: string;
+
+  @ApiProperty({ description: 'Role description.', nullable: true })
+  description!: string | null;
+
+  @ApiProperty({
+    description: 'Permissions associated with the role.',
+    type: [AdminPermissionSummaryDto],
+  })
+  permissions!: AdminPermissionSummaryDto[];
+}
 
 export class AdminLoginResultDto implements AdminLoginResult {
   @ApiProperty({ description: 'JWT access token for admin APIs.' })
@@ -76,6 +108,96 @@ export class AdminLoginResultDto implements AdminLoginResult {
   refreshExpiresAt!: string | null;
 }
 
+export class AdminSelfProfileResultDto implements AdminSelfProfileResult {
+  @ApiProperty({ description: 'Admin identifier.', nullable: true })
+  id!: string | null;
+
+  @ApiProperty({ description: 'Admin email address.' })
+  email!: string;
+
+  @ApiProperty({ description: 'Admin first name.', nullable: true })
+  firstName!: string | null;
+
+  @ApiProperty({ description: 'Admin last name.', nullable: true })
+  lastName!: string | null;
+
+  @ApiProperty({ description: 'Admin phone number.', nullable: true })
+  phoneNumber!: string | null;
+
+  @ApiProperty({ enum: AdminRole, description: 'Role assigned to the admin.' })
+  role!: AdminRole;
+
+  @ApiProperty({
+    description: 'Indicates whether the admin account is active.',
+    nullable: true,
+  })
+  isActive!: boolean | null;
+
+  @ApiProperty({
+    description: 'Flag to indicate whether the admin is the configured super admin.',
+  })
+  isSuperAdmin!: boolean;
+
+  @ApiProperty({
+    description: 'Whether the admin must change their password on next login.',
+  })
+  requiresPasswordChange!: boolean;
+
+  @ApiProperty({
+    description: 'ISO timestamp when the admin account was created.',
+    nullable: true,
+  })
+  createdAt!: string | null;
+
+  @ApiProperty({
+    description: 'ISO timestamp when the admin account was last updated.',
+    nullable: true,
+  })
+  updatedAt!: string | null;
+
+  @ApiProperty({
+    description: 'ISO timestamp when the admin invite was sent.',
+    nullable: true,
+  })
+  invitedAt!: string | null;
+
+  @ApiProperty({
+    description: 'Identifier for the admin who sent the invite.',
+    nullable: true,
+  })
+  invitedById!: string | null;
+
+  @ApiProperty({
+    description: 'ISO timestamp when the admin last logged in.',
+    nullable: true,
+  })
+  lastLoginAt!: string | null;
+
+  @ApiProperty({
+    description: 'Roles assigned to the admin.',
+    type: [AdminRoleSummaryDto],
+  })
+  roles!: AdminRoleSummaryDto[];
+
+  @ApiProperty({
+    description: 'Explicitly granted permissions.',
+    type: [AdminPermissionSummaryDto],
+  })
+  explicitPermissions!: AdminPermissionSummaryDto[];
+
+  @ApiProperty({
+    description: 'Explicitly denied permissions.',
+    type: [AdminPermissionSummaryDto],
+  })
+  deniedPermissions!: AdminPermissionSummaryDto[];
+
+  @ApiProperty({
+    description: 'Effective permission codes granted to the admin.',
+    type: [String],
+  })
+  effectivePermissions!: string[];
+}
+
 export class AdminChangePasswordResultDto
   implements AdminChangePasswordResult
 {
@@ -101,37 +223,6 @@ export class AdminResetPasswordResultDto
 
   @ApiProperty({ description: 'Indicates that the password reset was successful.' })
   reset!: boolean;
-}
-
-export class AdminPermissionSummaryDto implements AdminPermissionSummary {
-  @ApiProperty({ description: 'Permission identifier.' })
-  id!: string;
-
-  @ApiProperty({ description: 'Permission code.', example: 'admin.users.view' })
-  code!: string;
-
-  @ApiProperty({ description: 'Human-friendly permission name.', nullable: true })
-  name!: string | null;
-
-  @ApiProperty({ description: 'Describes what the permission allows.', nullable: true })
-  description!: string | null;
-}
-
-export class AdminRoleSummaryDto implements AdminRoleSummary {
-  @ApiProperty({ description: 'Role identifier.' })
-  id!: string;
-
-  @ApiProperty({ description: 'Role name.' })
-  name!: string;
-
-  @ApiProperty({ description: 'Role description.', nullable: true })
-  description!: string | null;
-
-  @ApiProperty({
-    description: 'Permissions associated with the role.',
-    type: [AdminPermissionSummaryDto],
-  })
-  permissions!: AdminPermissionSummaryDto[];
 }
 
 export class AdminUserDtoClass implements AdminUserDto {
@@ -693,6 +784,43 @@ export class AdminPayoutSummaryDto implements AdminPayoutSummary {
 
   @ApiProperty({ description: 'Pod name.', nullable: true })
   podName!: string | null;
+
+  @ApiProperty({ description: 'Member first name.', nullable: true })
+  userFirstName!: string | null;
+
+  @ApiProperty({ description: 'Member last name.', nullable: true })
+  userLastName!: string | null;
+
+  @ApiProperty({ description: 'Member email.', nullable: true })
+  userEmail!: string | null;
+
+  @ApiProperty({ description: 'Linked bank name.', nullable: true })
+  bankName!: string | null;
+
+  @ApiProperty({
+    description: 'Last four digits of linked bank account.',
+    nullable: true,
+  })
+  bankAccountLast4!: string | null;
+
+  @ApiProperty({
+    description:
+      'Payout position for the member (final order or join order).',
+    nullable: true,
+  })
+  payoutPosition!: number | null;
+
+  @ApiProperty({
+    description: 'ISO timestamp for the upcoming or completed payout.',
+    nullable: true,
+  })
+  payoutDate!: string | null;
+
+  @ApiProperty({
+    description:
+      'Total payout after platform deductions following the payout order.',
+  })
+  totalPayout!: string;
 
   @ApiProperty({ description: 'Payout amount.' })
   amount!: string;

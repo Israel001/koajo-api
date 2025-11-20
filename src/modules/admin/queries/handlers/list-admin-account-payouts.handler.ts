@@ -4,6 +4,10 @@ import { EntityRepository } from '@mikro-orm/mysql';
 import { ListAdminAccountPayoutsQuery } from '../list-admin-account-payouts.query';
 import { PayoutEntity } from '../../../finance/entities/payout.entity';
 import type { AdminPayoutListResult } from '../../contracts/admin-results';
+import {
+  calculateNetPayout,
+  getPayoutPosition,
+} from '../../../finance/utils/payout-calculator.util';
 
 @QueryHandler(ListAdminAccountPayoutsQuery)
 export class ListAdminAccountPayoutsHandler
@@ -38,7 +42,7 @@ export class ListAdminAccountPayoutsHandler
     }
 
     const [payouts, total] = await this.payoutRepository.findAndCount(where, {
-      populate: ['pod', 'membership'] as const,
+      populate: ['pod', 'membership', 'membership.pod', 'account'] as const,
       orderBy:
         query.timeframe === 'upcoming'
           ? { membership: { payoutDate: 'ASC' } }
@@ -49,20 +53,34 @@ export class ListAdminAccountPayoutsHandler
 
     return {
       total,
-      items: payouts.map((payout) => ({
-        id: payout.id,
-        membershipId: payout.membership.id,
-        podId: payout.pod.id,
-        podPlanCode: payout.pod.planCode,
-        podName: payout.pod.name ?? null,
-        amount: payout.amount,
-        fee: payout.fee,
-        currency: payout.currency,
-        status: payout.status,
-        stripeReference: payout.stripeReference,
-        description: payout.description ?? null,
-        recordedAt: payout.createdAt.toISOString(),
-      })),
+      items: payouts.map((payout) => {
+        const membership = payout.membership;
+        const account = payout.account;
+        return {
+          id: payout.id,
+          membershipId: membership.id,
+          podId: payout.pod.id,
+          podPlanCode: payout.pod.planCode,
+          podName: payout.pod.name ?? null,
+          userFirstName: account.firstName ?? null,
+          userLastName: account.lastName ?? null,
+          userEmail: account.email,
+          bankName: account.stripeBankName ?? null,
+          bankAccountLast4: account.stripeBankAccountLast4 ?? null,
+          payoutPosition: getPayoutPosition(membership),
+          payoutDate: membership.payoutDate
+            ? membership.payoutDate.toISOString()
+            : null,
+          totalPayout: calculateNetPayout(membership),
+          amount: payout.amount,
+          fee: payout.fee,
+          currency: payout.currency,
+          status: payout.status,
+          stripeReference: payout.stripeReference,
+          description: payout.description ?? null,
+          recordedAt: payout.createdAt.toISOString(),
+        };
+      }),
     };
   }
 }
