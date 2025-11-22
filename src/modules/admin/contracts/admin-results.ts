@@ -309,7 +309,8 @@ export interface AdminPayoutSummary {
   bankAccountLast4: string | null;
   payoutPosition: number | null;
   payoutDate: string | null;
-  totalPayout: string;
+  totalPayout: string | null;
+  podValue: string;
   amount: string;
   fee: string;
   currency: string;

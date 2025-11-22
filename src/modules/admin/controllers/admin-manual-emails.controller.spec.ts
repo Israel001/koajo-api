@@ -5,14 +5,20 @@ import { SendManualEmailDto } from '../dto/manual-email.dto';
 import { MANUAL_EMAIL_TEMPLATES } from '../constants/manual-email-templates.constant';
 import { AdminJwtGuard } from '../guards/admin-jwt.guard';
 import { AdminPermissionsGuard } from '../guards/admin-permissions.guard';
+import { AdminActivityService } from '../services/admin-activity.service';
+import { AdminActivityAction } from '../admin-activity-action.enum';
 
 describe('AdminManualEmailsController', () => {
   let controller: AdminManualEmailsController;
   let mailService: { sendManualTemplateEmail: jest.Mock };
+  let adminActivityService: { record: jest.Mock };
 
   beforeEach(async () => {
     mailService = {
       sendManualTemplateEmail: jest.fn(),
+    };
+    adminActivityService = {
+      record: jest.fn(),
     };
 
     const builder = Test.createTestingModule({
@@ -21,6 +27,10 @@ describe('AdminManualEmailsController', () => {
         {
           provide: MailService,
           useValue: mailService,
+        },
+        {
+          provide: AdminActivityService,
+          useValue: adminActivityService,
         },
       ],
     });
@@ -56,7 +66,7 @@ describe('AdminManualEmailsController', () => {
       ],
     };
 
-    const result = await controller.sendManualTemplate(dto);
+    const result = await controller.sendManualTemplate(dto, adminRequest());
     expect(mailService.sendManualTemplateEmail).toHaveBeenCalledWith({
       templateCode: 'dispute_acknowledgement',
       subject: "We've acknowledged your dispute",
@@ -73,6 +83,15 @@ describe('AdminManualEmailsController', () => {
       requested: 1,
       sent: 1,
     });
+    expect(adminActivityService.record).toHaveBeenCalledWith(
+      AdminActivityAction.SEND_MANUAL_EMAIL,
+      'admin-1',
+      expect.objectContaining({
+        templateCode: 'dispute_acknowledgement',
+        requested: 1,
+        sent: 1,
+      }),
+    );
   });
 
   it('throws when template code is invalid', async () => {
@@ -81,10 +100,11 @@ describe('AdminManualEmailsController', () => {
       recipients: [{ email: 'user@example.com' }],
     };
 
-    await expect(controller.sendManualTemplate(dto)).rejects.toThrow(
+    await expect(controller.sendManualTemplate(dto, adminRequest())).rejects.toThrow(
       'Unsupported manual email template.',
     );
     expect(mailService.sendManualTemplateEmail).not.toHaveBeenCalled();
+    expect(adminActivityService.record).not.toHaveBeenCalled();
   });
 
   it('throws when required variables are missing', async () => {
@@ -93,9 +113,16 @@ describe('AdminManualEmailsController', () => {
       recipients: [{ email: 'user@example.com', variables: {} }],
     };
 
-    await expect(controller.sendManualTemplate(dto)).rejects.toThrow(
+    await expect(controller.sendManualTemplate(dto, adminRequest())).rejects.toThrow(
       /Missing required variable/,
     );
     expect(mailService.sendManualTemplateEmail).not.toHaveBeenCalled();
   });
 });
+
+const adminRequest = () =>
+  ({
+    admin: {
+      adminId: 'admin-1',
+    },
+  }) as any;

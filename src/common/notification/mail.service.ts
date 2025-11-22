@@ -665,6 +665,55 @@ export class MailService {
     });
   }
 
+  async sendMissedContributionEmail(options: {
+    email: string;
+    amount: string | number;
+    firstName?: string | null;
+    reason?: string;
+  }): Promise<void> {
+    if (!(await this.shouldSendEmail(options.email, 'system'))) {
+      return;
+    }
+
+    const subject = "We couldn't process your contribution";
+    const formattedAmount =
+      typeof options.amount === 'number'
+        ? options.amount.toFixed(2)
+        : Number.isFinite(Number.parseFloat(String(options.amount)))
+          ? Number.parseFloat(String(options.amount)).toFixed(2)
+          : String(options.amount);
+
+    const replacements = {
+      amount: formattedAmount,
+      firstName:
+        options.firstName?.trim() ||
+        (options.email ? options.email.split('@')[0] : 'there'),
+    };
+
+    let htmlBody: string;
+    try {
+      htmlBody = await this.notificationTemplateService.render(
+        'missed_contribution',
+        replacements,
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Falling back to default missed contribution template: ${(error as Error).message}`,
+      );
+      htmlBody = `
+        <p>Hi ${replacements.firstName},</p>
+        <p>We couldn't process your contribution of $${formattedAmount}. Please retry in your dashboard.</p>
+        <p>If you need help, reach us at support@koajo.com.</p>
+      `;
+    }
+
+    await this.queueSystemEmail({
+      to: options.email,
+      subject,
+      html: htmlBody,
+    });
+  }
+
   private async queueSystemEmail(options: {
     to: string;
     subject: string;

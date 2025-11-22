@@ -23,6 +23,7 @@ import { InAppNotificationMessages } from '../../../notifications/in-app-notific
 import { CustomPodCadence } from '../../../pods/custom-pod-cadence.enum';
 import { nextContributionWindowStart } from '../../../pods/pod.utils';
 import { PodType } from '../../../pods/pod-type.enum';
+import { MailService } from '../../../../common/notification/mail.service';
 
 @Injectable()
 @CommandHandler(RecordPaymentCommand)
@@ -40,6 +41,7 @@ export class RecordPaymentHandler
     private readonly activityService: PodActivityService,
     private readonly inAppNotificationService: InAppNotificationService,
     private readonly configService: ConfigService,
+    private readonly mailService: MailService,
   ) {}
 
   async execute(command: RecordPaymentCommand): Promise<RecordPaymentResult> {
@@ -162,11 +164,20 @@ export class RecordPaymentHandler
       );
       this.advanceNextContributionDate(pod);
     } else {
+      const wasFlagged = account.missedPaymentFlag;
       account.flagMissedPayment(`payment_status:${status}`);
       await this.inAppNotificationService.createNotification(
         account,
         InAppNotificationMessages.contributionFailed(),
       );
+      if (!wasFlagged) {
+        await this.mailService.sendMissedContributionEmail({
+          email: account.email,
+          amount: pod.amount,
+          firstName: account.firstName ?? null,
+          reason: `payment_status:${status}`,
+        });
+      }
     }
 
     return {

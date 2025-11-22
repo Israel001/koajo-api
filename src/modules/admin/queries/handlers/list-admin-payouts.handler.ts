@@ -10,6 +10,7 @@ import type {
 import { PodMembershipEntity } from '../../../pods/entities/pod-membership.entity';
 import {
   calculateNetPayout,
+  calculateGrossPayout,
   getPayoutPosition,
 } from '../../../finance/utils/payout-calculator.util';
 
@@ -72,6 +73,7 @@ export class ListAdminPayoutsHandler
             stripeReference: payout.stripeReference,
             description: payout.description ?? null,
             recordedAt: payout.createdAt.toISOString(),
+            totalPayout: payout.amount,
             payoutDate:
               payout.membership.payoutDate?.toISOString() ??
               payout.createdAt.toISOString(),
@@ -115,6 +117,7 @@ export class ListAdminPayoutsHandler
             recordedAt:
               membership.payoutDate?.toISOString() ??
               new Date().toISOString(),
+            totalPayout: null,
             payoutDate: membership.payoutDate
               ? membership.payoutDate.toISOString()
               : null,
@@ -134,7 +137,12 @@ export class ListAdminPayoutsHandler
       return null;
     }
     const payoutPosition = getPayoutPosition(membership);
-    const totalPayout = calculateNetPayout(membership);
+    const podValue = calculateGrossPayout(membership).toFixed(2);
+    const calculatedNet = calculateNetPayout(membership);
+    const totalPayout =
+      typeof overrides.totalPayout !== 'undefined'
+        ? overrides.totalPayout
+        : null;
     return {
       id: overrides.id ?? '',
       membershipId: membership.id,
@@ -149,8 +157,9 @@ export class ListAdminPayoutsHandler
       payoutPosition,
       payoutDate:
         overrides.payoutDate ?? membership.payoutDate?.toISOString() ?? null,
+      podValue,
       totalPayout,
-      amount: overrides.amount ?? totalPayout,
+      amount: overrides.amount ?? calculatedNet,
       fee: overrides.fee ?? '0.00',
       currency: overrides.currency ?? 'USD',
       status: overrides.status ?? 'scheduled',

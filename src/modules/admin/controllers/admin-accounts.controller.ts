@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
@@ -76,6 +77,10 @@ import { AdminPaymentQueryDto } from '../dto/admin-payment-query.dto';
 import { AdminPayoutQueryDto } from '../dto/admin-payout-query.dto';
 import { ListAdminAccountPaymentsQuery } from '../queries/list-admin-account-payments.query';
 import { ListAdminAccountPayoutsQuery } from '../queries/list-admin-account-payouts.query';
+import { AdminActivityService } from '../services/admin-activity.service';
+import { AdminActivityAction } from '../admin-activity-action.enum';
+import type { Request } from 'express';
+import type { AdminAuthenticatedRequest } from '../guards/admin-jwt.guard';
 
 @ApiTags('admin-accounts')
 @Controller({ path: 'admin/accounts', version: '1' })
@@ -86,6 +91,7 @@ export class AdminAccountsController {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
+    private readonly adminActivityService: AdminActivityService,
   ) {}
 
   @Get()
@@ -171,10 +177,24 @@ export class AdminAccountsController {
   async updateStatus(
     @Param('accountId') accountId: string,
     @Body() payload: UpdateAccountStatusDto,
+    @Req() req: Request,
   ): Promise<{ isActive: boolean }> {
+    const admin = (req as AdminAuthenticatedRequest).admin;
+
     const account = await this.commandBus.execute(
       new UpdateAccountStatusCommand(accountId, payload.isActive),
     );
+
+    if (!payload.isActive) {
+      await this.adminActivityService.record(
+        AdminActivityAction.DEACTIVATE_ACCOUNT,
+        admin.adminId,
+        {
+          accountId,
+          isActive: account.isActive,
+        },
+      );
+    }
 
     return {
       isActive: account.isActive,
@@ -266,11 +286,14 @@ export class AdminAccountsController {
   async updateFlags(
     @Param('accountId') accountId: string,
     @Body() payload: UpdateAccountFlagsDto,
+    @Req() req: Request,
   ): Promise<{
     fraudReview: boolean;
     missedPayment: boolean;
     overheat: boolean;
   }> {
+    const admin = (req as AdminAuthenticatedRequest).admin;
+
     const account = await this.commandBus.execute(
       new UpdateAccountFlagsCommand(
         accountId,
@@ -278,6 +301,17 @@ export class AdminAccountsController {
         payload.missedPayment,
         payload.overheat,
       ),
+    );
+
+    await this.adminActivityService.record(
+      AdminActivityAction.FLAG_ACCOUNT,
+      admin.adminId,
+      {
+        accountId,
+        fraudReview: account.requiresFraudReview,
+        missedPayment: account.missedPaymentFlag,
+        overheat: account.overheatFlag,
+      },
     );
 
     return {
@@ -301,8 +335,24 @@ export class AdminAccountsController {
   @RequireAdminPermissions(ADMIN_PERMISSION_MANAGE_USER_NOTIFICATIONS)
   async removeBankAccount(
     @Param('accountId') accountId: string,
+    @Req() req: Request,
   ): Promise<{ removed: boolean }> {
-    await this.commandBus.execute(new RemoveAccountBankCommand(accountId));
+    const admin = (req as AdminAuthenticatedRequest).admin;
+
+    const account = await this.commandBus.execute(
+      new RemoveAccountBankCommand(accountId),
+    );
+
+    await this.adminActivityService.record(
+      AdminActivityAction.REMOVE_BANK_ACCOUNT,
+      admin.adminId,
+      {
+        accountId,
+        bankName: account.stripeBankName ?? null,
+        bankLast4: account.stripeBankAccountLast4 ?? null,
+      },
+    );
+
     return { removed: true };
   }
 
@@ -315,8 +365,20 @@ export class AdminAccountsController {
   @RequireAdminPermissions(ADMIN_PERMISSION_DELETE_USERS)
   async deleteAccount(
     @Param('accountId') accountId: string,
+    @Req() req: Request,
   ): Promise<DeleteAccountResult> {
-    return this.commandBus.execute(new DeleteAccountCommand(accountId));
+    const admin = (req as AdminAuthenticatedRequest).admin;
+    const result = await this.commandBus.execute(
+      new DeleteAccountCommand(accountId),
+    );
+
+    await this.adminActivityService.record(
+      AdminActivityAction.DELETE_ACCOUNT,
+      admin.adminId,
+      { accountId, deletedAt: result.deleted_at },
+    );
+
+    return result;
   }
 
   @Get(':accountId/achievements')

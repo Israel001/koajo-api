@@ -818,9 +818,15 @@ export class AdminPayoutSummaryDto implements AdminPayoutSummary {
 
   @ApiProperty({
     description:
-      'Total payout after platform deductions following the payout order.',
+      'Total payout recorded for the member (null for upcoming payouts).',
+    nullable: true,
   })
-  totalPayout!: string;
+  totalPayout!: string | null;
+
+  @ApiProperty({
+    description: 'Total contribution amount for the pod lifecycle.',
+  })
+  podValue!: string;
 
   @ApiProperty({ description: 'Payout amount.' })
   amount!: string;

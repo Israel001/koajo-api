@@ -17,6 +17,7 @@ import { PaymentEntity } from '../../../finance/entities/payment.entity';
 import { isSuccessfulPaymentStatus } from '../../../achievements/achievement.helpers';
 import { InAppNotificationService } from '../../../notifications/in-app-notification.service';
 import { InAppNotificationMessages } from '../../../notifications/in-app-notification.messages';
+import { MailService } from '../../../../common/notification/mail.service';
 
 @CommandHandler(ProcessContributionNotificationsCommand)
 export class ProcessContributionNotificationsHandler
@@ -28,6 +29,7 @@ export class ProcessContributionNotificationsHandler
     @InjectRepository(PaymentEntity)
     private readonly paymentRepository: EntityRepository<PaymentEntity>,
     private readonly inAppNotificationService: InAppNotificationService,
+    private readonly mailService: MailService,
   ) {}
 
   async execute(
@@ -103,9 +105,18 @@ export class ProcessContributionNotificationsHandler
       );
 
       if (reference >= windowEnd && !chargedMemberships.has(membership.id)) {
+        const wasFlagged = account.missedPaymentFlag;
         account.flagMissedPayment(
           `contribution_missed:${windowStart.toISOString()}`,
         );
+        if (!wasFlagged) {
+          await this.mailService.sendMissedContributionEmail({
+            email: account.email,
+            amount: pod.amount,
+            firstName: account.firstName ?? null,
+            reason: 'contribution_missed',
+          });
+        }
         this.advanceNextContributionDate(pod);
       }
     }

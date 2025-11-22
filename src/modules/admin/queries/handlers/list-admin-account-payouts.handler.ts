@@ -5,7 +5,7 @@ import { ListAdminAccountPayoutsQuery } from '../list-admin-account-payouts.quer
 import { PayoutEntity } from '../../../finance/entities/payout.entity';
 import type { AdminPayoutListResult } from '../../contracts/admin-results';
 import {
-  calculateNetPayout,
+  calculateGrossPayout,
   getPayoutPosition,
 } from '../../../finance/utils/payout-calculator.util';
 
@@ -56,6 +56,11 @@ export class ListAdminAccountPayoutsHandler
       items: payouts.map((payout) => {
         const membership = payout.membership;
         const account = payout.account;
+        const isUpcoming =
+          !membership.paidOut &&
+          membership.payoutDate !== null &&
+          typeof membership.payoutDate !== 'undefined' &&
+          membership.payoutDate.getTime() > Date.now();
         return {
           id: payout.id,
           membershipId: membership.id,
@@ -71,7 +76,8 @@ export class ListAdminAccountPayoutsHandler
           payoutDate: membership.payoutDate
             ? membership.payoutDate.toISOString()
             : null,
-          totalPayout: calculateNetPayout(membership),
+          totalPayout: isUpcoming ? null : payout.amount,
+          podValue: calculateGrossPayout(membership).toFixed(2),
           amount: payout.amount,
           fee: payout.fee,
           currency: payout.currency,

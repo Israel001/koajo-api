@@ -43,6 +43,8 @@ import { AdminAnnouncementEntity } from './entities/admin-announcement.entity';
 import { AdminAnnouncementRecipientEntity } from './entities/admin-announcement-recipient.entity';
 import { AdminPermissionSyncService } from './services/admin-permission-sync.service';
 import { StripeIdentityService } from './services/stripe-identity.service';
+import { AdminActivityEntity } from './entities/admin-activity.entity';
+import { AdminActivityService } from './services/admin-activity.service';
 
 @Module({
   imports: [
@@ -66,6 +68,7 @@ import { StripeIdentityService } from './services/stripe-identity.service';
       AccountVerificationAttemptEntity,
       AdminAnnouncementEntity,
       AdminAnnouncementRecipientEntity,
+      AdminActivityEntity,
     ]),
     AchievementsModule,
     NotificationsModule,
@@ -107,6 +110,7 @@ import { StripeIdentityService } from './services/stripe-identity.service';
     AdminPasswordResetService,
     AdminPermissionSyncService,
     StripeIdentityService,
+    AdminActivityService,
   ],
 })
 export class AdminModule {}

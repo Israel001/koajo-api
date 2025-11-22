@@ -25,6 +25,7 @@ import {
 } from './pod.utils';
 import { RecordPaymentCommand } from '../finance/commands/record-payment.command';
 import { PodType } from './pod-type.enum';
+import { MailService } from '../../common/notification/mail.service';
 
 // const RUN_INTERVAL_MS = 24 * 60 * 60 * 1000; // daily fallback
 // const RUN_INTERVAL_MS = 60000; // every minute (debug)
@@ -50,6 +51,7 @@ export class ContributionDebitScheduler
     private readonly paymentRepository: EntityRepository<PaymentEntity>,
     @InjectRepository(AccountEntity)
     private readonly accountRepository: EntityRepository<AccountEntity>,
+    private readonly mailService: MailService,
   ) {
     const secret =
       this.configService.get<string>('stripe.secretKey', { infer: true }) ?? '';
@@ -195,8 +197,17 @@ export class ContributionDebitScheduler
         (paymentMethod.us_bank_account as any)?.status ?? 'unknown';
 
       if (paymentMethod.type !== 'us_bank_account') {
+        const wasFlagged = account.missedPaymentFlag;
         account.flagMissedPayment('payment_method_unverified');
         await this.accountRepository.getEntityManager().flush();
+        if (!wasFlagged) {
+          await this.mailService.sendMissedContributionEmail({
+            email: account.email,
+            amount: pod.amount,
+            firstName: account.firstName ?? null,
+            reason: 'payment_method_unverified',
+          });
+        }
         this.logger.warn(
           `Payment method type not supported for auto-debit (account ${account.id}, pod ${pod.id}, type=${paymentMethod.type})`,
         );
@@ -260,15 +271,33 @@ export class ContributionDebitScheduler
         return;
       }
 
+      const wasFlagged = account.missedPaymentFlag;
       account.flagMissedPayment(`payment_status:${intent.status}`);
       await this.accountRepository.getEntityManager().flush();
+      if (!wasFlagged) {
+        await this.mailService.sendMissedContributionEmail({
+          email: account.email,
+          amount: pod.amount,
+          firstName: account.firstName ?? null,
+          reason: `payment_status:${intent.status}`,
+        });
+      }
     } catch (error) {
       this.logger.error(
         `Failed to auto-debit account ${account.id} for pod ${pod.id}: ${(error as Error).message}`,
       );
       this.logStripeError(error);
+      const wasFlagged = account.missedPaymentFlag;
       account.flagMissedPayment('auto_debit_failed');
       await this.accountRepository.getEntityManager().flush();
+      if (!wasFlagged) {
+        await this.mailService.sendMissedContributionEmail({
+          email: account.email,
+          amount: pod.amount,
+          firstName: account.firstName ?? null,
+          reason: 'auto_debit_failed',
+        });
+      }
     }
   }
 

@@ -4,6 +4,7 @@ import {
   Controller,
   Get,
   Post,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -24,13 +25,20 @@ import {
   MANUAL_EMAIL_TEMPLATES,
 } from '../constants/manual-email-templates.constant';
 import { SendManualEmailDto } from '../dto/manual-email.dto';
+import { AdminActivityService } from '../services/admin-activity.service';
+import { AdminActivityAction } from '../admin-activity-action.enum';
+import type { Request } from 'express';
+import type { AdminAuthenticatedRequest } from '../guards/admin-jwt.guard';
 
 @ApiTags('admin-manual-emails')
 @Controller({ path: 'admin/email-templates/manual', version: '1' })
 @UseGuards(AdminJwtGuard, AdminPermissionsGuard)
 @ApiBearerAuth('bearer')
 export class AdminManualEmailsController {
-  constructor(private readonly mailService: MailService) {}
+  constructor(
+    private readonly mailService: MailService,
+    private readonly adminActivityService: AdminActivityService,
+  ) {}
 
   @Get()
   @ApiOperation({
@@ -62,7 +70,9 @@ export class AdminManualEmailsController {
   @RequireAdminPermissions(ADMIN_PERMISSION_MANAGE_USER_NOTIFICATIONS)
   async sendManualTemplate(
     @Body() payload: SendManualEmailDto,
+    @Req() req: Request,
   ): Promise<{ templateCode: string; requested: number; sent: number }> {
+    const admin = (req as AdminAuthenticatedRequest).admin;
     const template = MANUAL_EMAIL_TEMPLATE_MAP.get(payload.templateCode);
     if (!template) {
       throw new BadRequestException('Unsupported manual email template.');
@@ -107,6 +117,18 @@ export class AdminManualEmailsController {
       recipients: sanitizedRecipients,
       reason: `manual:${template.code}`,
     });
+
+    await this.adminActivityService.record(
+      AdminActivityAction.SEND_MANUAL_EMAIL,
+      admin.adminId,
+      {
+        templateCode: template.code,
+        subject,
+        recipients: sanitizedRecipients.map((recipient) => recipient.email),
+        requested: sanitizedRecipients.length,
+        sent,
+      },
+    );
 
     return {
       templateCode: template.code,

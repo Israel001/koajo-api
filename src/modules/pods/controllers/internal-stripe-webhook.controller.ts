@@ -26,6 +26,7 @@ import { TransactionEntity } from '../../finance/entities/transaction.entity';
 import { CompleteMembershipCommand } from '../commands/complete-membership.command';
 import { TransactionType } from '../../finance/transaction-type.enum';
 import { RecordPayoutCommand } from '../../finance/commands/record-payout.command';
+import { MailService } from '../../../common/notification/mail.service';
 
 @Controller({ path: 'pods/stripe/webhook', version: '1' })
 export class InternalStripeWebhookController {
@@ -42,6 +43,7 @@ export class InternalStripeWebhookController {
     private readonly payoutRepository: EntityRepository<PayoutEntity>,
     @InjectRepository(TransactionEntity)
     private readonly transactionRepository: EntityRepository<TransactionEntity>,
+    private readonly mailService: MailService,
   ) {}
 
   @Post()
@@ -124,10 +126,19 @@ export class InternalStripeWebhookController {
       }) ?? 'usd').toUpperCase();
 
     if (receivedCents !== expectedCents || currency !== defaultCurrency) {
+      const wasFlagged = account.missedPaymentFlag;
       account.flagMissedPayment('amount_or_currency_mismatch');
       pod.nextContributionDate = addDays(startOfDay(new Date()), 1);
       await this.accountRepository.getEntityManager().flush();
       await this.podRepository.getEntityManager().flush();
+      if (!wasFlagged) {
+        await this.mailService.sendMissedContributionEmail({
+          email: account.email,
+          amount: pod.amount,
+          firstName: account.firstName ?? null,
+          reason: 'amount_or_currency_mismatch',
+        });
+      }
       return;
     }
 
@@ -152,10 +163,19 @@ export class InternalStripeWebhookController {
       return;
     }
 
+    const wasFlagged = account.missedPaymentFlag;
     account.flagMissedPayment(`payment_status:${intent.status}`);
     pod.nextContributionDate = addDays(startOfDay(new Date()), 1);
     await this.accountRepository.getEntityManager().flush();
     await this.podRepository.getEntityManager().flush();
+    if (!wasFlagged) {
+      await this.mailService.sendMissedContributionEmail({
+        email: account.email,
+        amount: pod.amount,
+        firstName: account.firstName ?? null,
+        reason: `payment_status:${intent.status}`,
+      });
+    }
   }
 
   private async handlePayoutIntent(intent: Stripe.PaymentIntent): Promise<void> {

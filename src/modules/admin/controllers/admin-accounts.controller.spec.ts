@@ -17,11 +17,14 @@ import { ListAccountVerificationAttemptsQuery } from '../queries/list-account-ve
 import { UpdateUserProfileCommand } from '../../accounts/commands/update-user-profile.command';
 import { AdminJwtGuard } from '../guards/admin-jwt.guard';
 import { AdminPermissionsGuard } from '../guards/admin-permissions.guard';
+import { AdminActivityService } from '../services/admin-activity.service';
+import { AdminActivityAction } from '../admin-activity-action.enum';
 
 describe('AdminAccountsController', () => {
   let controller: AdminAccountsController;
   let commandBus: { execute: jest.Mock };
   let queryBus: { execute: jest.Mock };
+  let adminActivityService: { record: jest.Mock };
 
   beforeEach(async () => {
     commandBus = {
@@ -29,6 +32,9 @@ describe('AdminAccountsController', () => {
     };
     queryBus = {
       execute: jest.fn(),
+    };
+    adminActivityService = {
+      record: jest.fn(),
     };
 
     const moduleBuilder = Test.createTestingModule({
@@ -41,6 +47,10 @@ describe('AdminAccountsController', () => {
         {
           provide: QueryBus,
           useValue: queryBus,
+        },
+        {
+          provide: AdminActivityService,
+          useValue: adminActivityService,
         },
       ],
     });
@@ -104,11 +114,16 @@ describe('AdminAccountsController', () => {
 
     const result = await controller.updateStatus('acc-1', {
       isActive: false,
-    } as any);
+    } as any, adminRequest());
 
     expect(result).toEqual({ isActive: false });
     expect(commandBus.execute).toHaveBeenCalledWith(
       expect.any(UpdateAccountStatusCommand),
+    );
+    expect(adminActivityService.record).toHaveBeenCalledWith(
+      AdminActivityAction.DEACTIVATE_ACCOUNT,
+      'admin-1',
+      expect.objectContaining({ accountId: 'acc-1', isActive: false }),
     );
   });
 
@@ -142,22 +157,44 @@ describe('AdminAccountsController', () => {
     const result = await controller.updateFlags('acc-1', {
       fraudReview: false,
       overheat: false,
-    } as any);
+    } as any, adminRequest());
 
     expect(result).toEqual({ fraudReview: false, missedPayment: true, overheat: false });
     expect(commandBus.execute).toHaveBeenCalledWith(
       expect.any(UpdateAccountFlagsCommand),
     );
+    expect(adminActivityService.record).toHaveBeenCalledWith(
+      AdminActivityAction.FLAG_ACCOUNT,
+      'admin-1',
+      expect.objectContaining({
+        accountId: 'acc-1',
+        fraudReview: false,
+        missedPayment: true,
+        overheat: false,
+      }),
+    );
   });
 
   it('removes bank account connection', async () => {
-    commandBus.execute.mockResolvedValue(undefined);
+    commandBus.execute.mockResolvedValue({
+      stripeBankName: 'Test Bank',
+      stripeBankAccountLast4: '9876',
+    });
 
-    const result = await controller.removeBankAccount('acc-1');
+    const result = await controller.removeBankAccount('acc-1', adminRequest());
 
     expect(result).toEqual({ removed: true });
     expect(commandBus.execute).toHaveBeenCalledWith(
       expect.any(RemoveAccountBankCommand),
+    );
+    expect(adminActivityService.record).toHaveBeenCalledWith(
+      AdminActivityAction.REMOVE_BANK_ACCOUNT,
+      'admin-1',
+      expect.objectContaining({
+        accountId: 'acc-1',
+        bankName: 'Test Bank',
+        bankLast4: '9876',
+      }),
     );
   });
 
@@ -165,11 +202,19 @@ describe('AdminAccountsController', () => {
     const expected = { success: true, deleted_at: new Date().toISOString() };
     commandBus.execute.mockResolvedValue(expected);
 
-    const result = await controller.deleteAccount('acc-1');
+    const result = await controller.deleteAccount('acc-1', adminRequest());
 
     expect(result).toBe(expected);
     expect(commandBus.execute).toHaveBeenCalledWith(
       expect.any(DeleteAccountCommand),
+    );
+    expect(adminActivityService.record).toHaveBeenCalledWith(
+      AdminActivityAction.DELETE_ACCOUNT,
+      'admin-1',
+      expect.objectContaining({
+        accountId: 'acc-1',
+        deletedAt: expected.deleted_at,
+      }),
     );
   });
 
@@ -215,6 +260,13 @@ describe('AdminAccountsController', () => {
     );
   });
 });
+
+const adminRequest = () =>
+  ({
+    admin: {
+      adminId: 'admin-1',
+    },
+  }) as any;
 
 const buildMembership = (status: PodStatus) =>
   ({
