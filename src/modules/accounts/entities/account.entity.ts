@@ -67,6 +67,15 @@ export class AccountEntity {
   @Property({ columnType: 'varchar(128)', nullable: true })
   stripeCustomerId?: string | null;
 
+  @Property({ columnType: 'varchar(128)', nullable: true })
+  stripeRecipientId?: string | null;
+
+  @Property({ columnType: 'varchar(64)', nullable: true })
+  payoutStatus?: string | null;
+
+  @Property({ columnType: 'varchar(128)', nullable: true })
+  payoutMethodId?: string | null;
+
   @Property({ type: 'json', nullable: true })
   stripeCustomerAddress?: Record<string, unknown> | null;
 

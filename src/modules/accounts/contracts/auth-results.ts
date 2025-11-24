@@ -56,6 +56,9 @@ export interface LoginCustomerSummary {
   id: string;
   ssnLast4: string | null;
   address: Record<string, unknown> | null;
+  recipientId: string | null;
+  payoutStatus: string | null;
+  payoutMethodId: string | null;
 }
 
 export interface LoginBankAccountSummary {
@@ -145,6 +148,9 @@ export interface CurrentUserResult {
     id: string;
     ssn_last4: string | null;
     address: Record<string, unknown> | null;
+    recipient_id: string | null;
+    payout_status: string | null;
+    payout_method_id: string | null;
   } | null;
   bank_account: {
     id: string;
@@ -179,6 +185,9 @@ export interface UpsertStripeCustomerResult {
   id: string;
   ssn_last4: string | null;
   address: Record<string, unknown> | null;
+  recipient_id: string | null;
+  payout_status: string | null;
+  payout_method_id: string | null;
 }
 
 export interface UpsertStripeBankAccountResult {

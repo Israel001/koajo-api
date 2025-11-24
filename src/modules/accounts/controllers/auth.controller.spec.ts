@@ -628,12 +628,18 @@ describe('AuthController', () => {
         customerId: 'cus_123',
         ssnLast4: '1234',
         address: { line1: '123 Road' },
+        stripeRecipientId: 'rp_123',
+        payoutStatus: 'enabled',
+        payoutMethodId: 'pm_123',
       };
 
       const expected: UpsertStripeCustomerResult = {
         id: dto.customerId,
         ssn_last4: null,
         address: dto.address!,
+        recipient_id: dto.stripeRecipientId!,
+        payout_status: dto.payoutStatus!,
+        payout_method_id: dto.payoutMethodId!,
       };
 
       commandBus.execute.mockResolvedValue(expected);
@@ -654,6 +660,9 @@ describe('AuthController', () => {
       expect(command.stripeCustomerId).toBe(dto.customerId);
       expect(command.ssnLast4).toBe(dto.ssnLast4);
       expect(command.address).toEqual(dto.address);
+      expect(command.stripeRecipientId).toBe(dto.stripeRecipientId);
+      expect(command.payoutStatus).toBe(dto.payoutStatus);
+      expect(command.payoutMethodId).toBe(dto.payoutMethodId);
     });
   });
 
@@ -756,6 +765,9 @@ describe('AuthController', () => {
         stripeIdentityResultId: 'res_456',
         stripeCustomerId: 'cus_123',
         stripeCustomerAddress: { line1: '123 Road' },
+        stripeRecipientId: 'rp_123',
+        payoutStatus: 'enabled',
+        payoutMethodId: 'pm_123',
         stripeBankAccountId: 'ba_123',
         stripeBankAccountCustomerId: 'cus_123',
         stripeBankAccountLinkedAt: bankLinkedAt,
@@ -810,6 +822,9 @@ describe('AuthController', () => {
           id: 'cus_123',
           ssn_last4: '1234',
           address: { line1: '123 Road' },
+          recipient_id: 'rp_123',
+          payout_status: 'enabled',
+          payout_method_id: 'pm_123',
         },
         bank_account: {
           id: 'ba_123',

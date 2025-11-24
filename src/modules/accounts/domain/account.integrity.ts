@@ -18,6 +18,9 @@ export const accountChecksumFields = (
   account.stripeIdentityId ?? '',
   account.stripeIdentityResultId ?? '',
   account.stripeCustomerId ?? '',
+  account.stripeRecipientId ?? '',
+  account.payoutStatus ?? '',
+  account.payoutMethodId ?? '',
   account.stripeBankAccountId ?? '',
   account.stripeBankAccountLinkedAt
     ? account.stripeBankAccountLinkedAt.getTime()

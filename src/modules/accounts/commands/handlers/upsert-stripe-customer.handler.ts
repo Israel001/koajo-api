@@ -30,6 +30,9 @@ export class UpsertStripeCustomerHandler
 
     account.stripeCustomerId = command.stripeCustomerId.trim();
     account.stripeCustomerAddress = command.address ?? null;
+    account.stripeRecipientId = command.stripeRecipientId?.trim() ?? null;
+    account.payoutStatus = command.payoutStatus?.trim() ?? null;
+    account.payoutMethodId = command.payoutMethodId?.trim() ?? null;
 
     const em = this.accountRepository.getEntityManager();
     await em.persistAndFlush(account);
@@ -38,6 +41,9 @@ export class UpsertStripeCustomerHandler
       id: account.stripeCustomerId,
       ssn_last4: account.stripeBankAccountLast4 ?? null,
       address: account.stripeCustomerAddress ?? null,
+      recipient_id: account.stripeRecipientId ?? null,
+      payout_status: account.payoutStatus ?? null,
+      payout_method_id: account.payoutMethodId ?? null,
     };
   }
 }

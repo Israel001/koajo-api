@@ -51,6 +51,9 @@ export const buildLoginUserResult = (
           id: account.stripeCustomerId,
           ssnLast4: account.stripeBankAccountLast4 ?? null,
           address: account.stripeCustomerAddress ?? null,
+          recipientId: account.stripeRecipientId ?? null,
+          payoutStatus: account.payoutStatus ?? null,
+          payoutMethodId: account.payoutMethodId ?? null,
         }
       : null,
     bankAccount: account.stripeBankAccountId

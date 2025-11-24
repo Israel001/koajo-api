@@ -187,6 +187,9 @@ export class AuthController {
             id: account.stripeCustomerId,
             ssn_last4: account.stripeBankAccountLast4 ?? null,
             address: account.stripeCustomerAddress ?? null,
+            recipient_id: account.stripeRecipientId ?? null,
+            payout_status: account.payoutStatus ?? null,
+            payout_method_id: account.payoutMethodId ?? null,
           }
         : null,
       bank_account: account.stripeBankAccountId
@@ -398,6 +401,9 @@ export class AuthController {
         payload.customerId,
         payload.ssnLast4 ?? null,
         payload.address ?? null,
+        payload.stripeRecipientId ?? null,
+        payload.payoutStatus ?? null,
+        payload.payoutMethodId ?? null,
       ),
     );
   }

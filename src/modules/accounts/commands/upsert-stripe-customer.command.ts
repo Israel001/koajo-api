@@ -4,5 +4,8 @@ export class UpsertStripeCustomerCommand {
     public readonly stripeCustomerId: string,
     public readonly ssnLast4: string | null,
     public readonly address: Record<string, unknown> | null,
+    public readonly stripeRecipientId: string | null,
+    public readonly payoutStatus: string | null,
+    public readonly payoutMethodId: string | null,
   ) {}
 }

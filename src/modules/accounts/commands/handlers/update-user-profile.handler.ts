@@ -174,6 +174,9 @@ export class UpdateUserProfileHandler
       id: account.stripeCustomerId,
       ssn_last4: account.stripeBankAccountLast4 ?? null,
       address: account.stripeCustomerAddress ?? null,
+      recipient_id: account.stripeRecipientId ?? null,
+      payout_status: account.payoutStatus ?? null,
+      payout_method_id: account.payoutMethodId ?? null,
     };
   }
 

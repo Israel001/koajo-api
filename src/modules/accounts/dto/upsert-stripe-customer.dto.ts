@@ -25,4 +25,34 @@ export class UpsertStripeCustomerDto {
   @ApiProperty({ description: 'Customer address object.', required: false, type: Object })
   @IsOptional()
   address?: Record<string, unknown>;
+
+  @ApiProperty({
+    name: 'stripe_recipient_id',
+    description: 'Stripe recipient identifier (external account).',
+    required: false,
+  })
+  @Expose({ name: 'stripe_recipient_id' })
+  @IsOptional()
+  @IsString()
+  stripeRecipientId?: string;
+
+  @ApiProperty({
+    name: 'payout_status',
+    description: 'Payout status for the customer.',
+    required: false,
+  })
+  @Expose({ name: 'payout_status' })
+  @IsOptional()
+  @IsString()
+  payoutStatus?: string;
+
+  @ApiProperty({
+    name: 'payout_method_id',
+    description: 'Identifier of the payout method.',
+    required: false,
+  })
+  @Expose({ name: 'payout_method_id' })
+  @IsOptional()
+  @IsString()
+  payoutMethodId?: string;
 }

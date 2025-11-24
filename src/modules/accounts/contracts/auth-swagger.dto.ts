@@ -229,6 +229,24 @@ class LoginCustomerSummaryDto implements LoginCustomerSummary {
     type: Object,
   })
   address!: Record<string, unknown> | null;
+
+  @ApiProperty({
+    description: 'Stripe recipient identifier tied to payouts.',
+    nullable: true,
+  })
+  recipientId!: string | null;
+
+  @ApiProperty({
+    description: 'Payout status for the customer.',
+    nullable: true,
+  })
+  payoutStatus!: string | null;
+
+  @ApiProperty({
+    description: 'Identifier of the payout method.',
+    nullable: true,
+  })
+  payoutMethodId!: string | null;
 }
 
 class LoginBankAccountSummaryDto implements LoginBankAccountSummary {
@@ -626,6 +644,24 @@ class StripeCustomerDto implements UpsertStripeCustomerResult {
     type: Object,
   })
   address!: Record<string, unknown> | null;
+
+  @ApiProperty({
+    description: 'Stripe recipient identifier tied to payouts.',
+    nullable: true,
+  })
+  recipient_id!: string | null;
+
+  @ApiProperty({
+    description: 'Payout status for the customer.',
+    nullable: true,
+  })
+  payout_status!: string | null;
+
+  @ApiProperty({
+    description: 'Identifier of the payout method.',
+    nullable: true,
+  })
+  payout_method_id!: string | null;
 }
 
 class StripeBankAccountDto implements UpsertStripeBankAccountResult {

@@ -4,7 +4,6 @@ import {
   Headers,
   HttpCode,
   HttpStatus,
-  Logger,
   Post,
   Req,
 } from '@nestjs/common';
@@ -31,8 +30,6 @@ import { MailService } from '../../../common/notification/mail.service';
 
 @Controller({ path: 'pods/stripe/webhook', version: '1' })
 export class InternalStripeWebhookController {
-  private readonly logger = new Logger(InternalStripeWebhookController.name);
-
   constructor(
     private readonly configService: ConfigService,
     private readonly commandBus: CommandBus,
@@ -64,28 +61,6 @@ export class InternalStripeWebhookController {
     const rawBody = (req as any).rawBody;
     const isRawBuffer = Buffer.isBuffer(rawBody);
     const isBodyBuffer = Buffer.isBuffer(req.body);
-    const rawSummary = isRawBuffer
-      ? { isBuffer: true, length: (rawBody as Buffer).length }
-      : { isBuffer: false, type: typeof rawBody };
-    const bodySummary = isBodyBuffer
-      ? { isBuffer: true, length: (req.body as Buffer).length }
-      : { isBuffer: false, type: typeof req.body };
-
-    this.logger.log({
-      msg: 'Incoming Stripe webhook',
-      path: req.path,
-      method: req.method,
-      contentType: req.headers['content-type'],
-      hasSignature: Boolean(signature),
-      hasWebhookSecret: Boolean(webhookSecret),
-      rawBody: rawSummary,
-      body: bodySummary,
-      bodyType: typeof req.body,
-      bodyKeys:
-        req.body && typeof req.body === 'object'
-          ? Object.keys(req.body)
-          : null,
-    });
 
     let event: Stripe.Event;
     try {
@@ -106,17 +81,10 @@ export class InternalStripeWebhookController {
         event = req.body;
       }
     } catch (error) {
-      this.logger.error('Stripe webhook signature verification failed', error as Error);
       throw new BadRequestException(
         `Webhook signature verification failed: ${(error as Error).message}`,
       );
     }
-
-    this.logger.log({
-      msg: 'Stripe webhook verified',
-      eventId: event.id,
-      eventType: event.type,
-    });
 
     if (
       event.type === 'payment_intent.succeeded' ||
