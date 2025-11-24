@@ -1,12 +1,20 @@
 import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import express from 'express';
 import swaggerUi from 'swagger-ui-express';
 import { AppModule } from './app.module';
 import { createValidationExceptionFactory } from './common/validation/validation-exception.factory';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { rawBody: true });
+
+  // Use raw body for Stripe webhook signature verification
+  app.use(
+    '/v1/pods/stripe/webhook',
+    express.raw({ type: 'application/json' }),
+  );
+
   app.enableVersioning({
     type: VersioningType.URI,
     defaultVersion: '1',

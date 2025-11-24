@@ -15,6 +15,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { AccountInactivityScheduler } from './account-inactivity.scheduler';
 import { AccountNotificationEntity } from './entities/account-notification.entity';
+import { PodMembershipEntity } from '../pods/entities/pod-membership.entity';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { AccountNotificationEntity } from './entities/account-notification.entit
       AccountPasswordResetEntity,
       AccountVerificationAttemptEntity,
       AccountNotificationEntity,
+      PodMembershipEntity,
     ]),
     NotificationsModule,
     JwtModule.registerAsync({

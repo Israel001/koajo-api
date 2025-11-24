@@ -36,6 +36,10 @@ export class NotificationTemplateService {
     return replaceTemplateVariables(body, variables);
   }
 
+  async listAll(): Promise<NotificationTemplateEntity[]> {
+    return this.templateRepository.findAll();
+  }
+
   invalidate(code?: string) {
     if (!code) {
       this.cache.clear();

@@ -29,6 +29,7 @@ import { AdminActivityService } from '../services/admin-activity.service';
 import { AdminActivityAction } from '../admin-activity-action.enum';
 import type { Request } from 'express';
 import type { AdminAuthenticatedRequest } from '../guards/admin-jwt.guard';
+import { NotificationTemplateService } from '../../notifications/notification-template.service';
 
 @ApiTags('admin-manual-emails')
 @Controller({ path: 'admin/email-templates/manual', version: '1' })
@@ -38,6 +39,7 @@ export class AdminManualEmailsController {
   constructor(
     private readonly mailService: MailService,
     private readonly adminActivityService: AdminActivityService,
+    private readonly notificationTemplateService: NotificationTemplateService,
   ) {}
 
   @Get()
@@ -48,8 +50,8 @@ export class AdminManualEmailsController {
     description: 'Manual templates fetched.',
   })
   @RequireAdminPermissions(ADMIN_PERMISSION_MANAGE_USER_NOTIFICATIONS)
-  listManualTemplates() {
-    return MANUAL_EMAIL_TEMPLATES;
+  async listManualTemplates() {
+    return this.notificationTemplateService.listAll();
   }
 
   @Post('send')

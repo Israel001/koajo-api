@@ -2,16 +2,17 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { MailService } from '../../../common/notification/mail.service';
 import { AdminManualEmailsController } from './admin-manual-emails.controller';
 import { SendManualEmailDto } from '../dto/manual-email.dto';
-import { MANUAL_EMAIL_TEMPLATES } from '../constants/manual-email-templates.constant';
 import { AdminJwtGuard } from '../guards/admin-jwt.guard';
 import { AdminPermissionsGuard } from '../guards/admin-permissions.guard';
 import { AdminActivityService } from '../services/admin-activity.service';
 import { AdminActivityAction } from '../admin-activity-action.enum';
+import { NotificationTemplateService } from '../../notifications/notification-template.service';
 
 describe('AdminManualEmailsController', () => {
   let controller: AdminManualEmailsController;
   let mailService: { sendManualTemplateEmail: jest.Mock };
   let adminActivityService: { record: jest.Mock };
+  let notificationTemplateService: { listAll: jest.Mock };
 
   beforeEach(async () => {
     mailService = {
@@ -19,6 +20,9 @@ describe('AdminManualEmailsController', () => {
     };
     adminActivityService = {
       record: jest.fn(),
+    };
+    notificationTemplateService = {
+      listAll: jest.fn().mockResolvedValue([{ code: 'welcome', body: '<p>Hi</p>' }]),
     };
 
     const builder = Test.createTestingModule({
@@ -31,6 +35,10 @@ describe('AdminManualEmailsController', () => {
         {
           provide: AdminActivityService,
           useValue: adminActivityService,
+        },
+        {
+          provide: NotificationTemplateService,
+          useValue: notificationTemplateService,
         },
       ],
     });
@@ -51,7 +59,7 @@ describe('AdminManualEmailsController', () => {
 
   it('returns manual templates list', () => {
     const result = controller.listManualTemplates();
-    expect(result).toEqual(MANUAL_EMAIL_TEMPLATES);
+    expect(result).resolves.toEqual([{ code: 'welcome', body: '<p>Hi</p>' }]);
   });
 
   it('sends manual email with validated payload', async () => {

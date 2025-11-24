@@ -5,6 +5,7 @@ import { EntityRepository } from '@mikro-orm/mysql';
 import { UpdateAccountFlagsCommand } from '../update-account-flags.command';
 import { AccountEntity } from '../../entities/account.entity';
 import { MailService } from '../../../../common/notification/mail.service';
+import { PodMembershipEntity } from '../../../pods/entities/pod-membership.entity';
 
 @Injectable()
 @CommandHandler(UpdateAccountFlagsCommand)
@@ -14,6 +15,8 @@ export class UpdateAccountFlagsHandler
   constructor(
     @InjectRepository(AccountEntity)
     private readonly accountRepository: EntityRepository<AccountEntity>,
+    @InjectRepository(PodMembershipEntity)
+    private readonly membershipRepository: EntityRepository<PodMembershipEntity>,
     private readonly mailService: MailService,
   ) {}
 
@@ -49,6 +52,8 @@ export class UpdateAccountFlagsHandler
       }
     }
 
+    const wasMissedPayment = account.missedPaymentFlag;
+
     if (typeof command.missedPayment !== 'undefined') {
       if (command.missedPayment) {
         account.flagMissedPayment(
@@ -73,6 +78,23 @@ export class UpdateAccountFlagsHandler
       await this.mailService.sendRequestForInformationEmail({
         email: account.email,
         firstName: account.firstName ?? account.email.split('@')[0],
+      });
+    }
+
+    if (command.missedPayment === true && !wasMissedPayment) {
+      const latestMembership = await this.membershipRepository.findOne(
+        { account },
+        { populate: ['pod'] as const, orderBy: { joinedAt: 'DESC' } },
+      );
+      const amount =
+        latestMembership?.pod?.amount !== undefined
+          ? latestMembership.pod.amount
+          : 0;
+      await this.mailService.sendMissedContributionEmail({
+        email: account.email,
+        amount,
+        firstName: account.firstName ?? null,
+        reason: account.missedPaymentReason ?? 'manual_update',
       });
     }
 
