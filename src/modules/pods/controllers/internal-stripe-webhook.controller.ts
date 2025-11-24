@@ -63,9 +63,14 @@ export class InternalStripeWebhookController {
 
     const rawBody = (req as any).rawBody;
     const isRawBuffer = Buffer.isBuffer(rawBody);
+    const isBodyBuffer = Buffer.isBuffer(req.body);
     const rawSummary = isRawBuffer
       ? { isBuffer: true, length: (rawBody as Buffer).length }
       : { isBuffer: false, type: typeof rawBody };
+    const bodySummary = isBodyBuffer
+      ? { isBuffer: true, length: (req.body as Buffer).length }
+      : { isBuffer: false, type: typeof req.body };
+
     this.logger.log({
       msg: 'Incoming Stripe webhook',
       path: req.path,
@@ -74,6 +79,7 @@ export class InternalStripeWebhookController {
       hasSignature: Boolean(signature),
       hasWebhookSecret: Boolean(webhookSecret),
       rawBody: rawSummary,
+      body: bodySummary,
       bodyType: typeof req.body,
       bodyKeys:
         req.body && typeof req.body === 'object'
@@ -86,9 +92,11 @@ export class InternalStripeWebhookController {
       if (webhookSecret && signature) {
         const payload =
           rawBody ??
-          (typeof req.body === 'string'
-            ? req.body
-            : JSON.stringify(req.body));
+          (isBodyBuffer
+            ? (req.body as Buffer)
+            : typeof req.body === 'string'
+              ? req.body
+              : JSON.stringify(req.body));
         event = stripe.webhooks.constructEvent(
           payload,
           signature,
