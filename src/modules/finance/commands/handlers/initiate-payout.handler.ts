@@ -63,12 +63,11 @@ export class InitiatePayoutHandler
     }
 
     if (
-      !account.stripeCustomerId ||
-      !account.stripePaymentMethodId ||
-      !account.stripeConnectedAccountId
+      !account.stripeRecipientId ||
+      !account.payoutMethodId
     ) {
       throw new BadRequestException(
-        'Stripe customer, payment method, and connected account are required to initiate payout.',
+        'Stripe recipient and payout method are required to initiate payout.',
       );
     }
 
@@ -88,33 +87,31 @@ export class InitiatePayoutHandler
     }
 
     const stripe = this.getStripeClient();
+    const stripeV2 = (stripe as any).v2;
+    if (!stripeV2?.moneyManagement?.outboundPayments) {
+      throw new BadRequestException('Stripe v2 outbound payments are unavailable.');
+    }
     const currency =
       this.configService.get<string>('stripe.defaultCurrency', { infer: true }) ??
       'usd';
 
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: netCents,
-      currency: currency.toLowerCase(),
-      customer: account.stripeCustomerId,
-      payment_method: account.stripePaymentMethodId,
-      payment_method_types: ['us_bank_account'],
-      confirm: true,
-      off_session: true,
-      setup_future_usage: 'off_session',
-      transfer_data: {
-        destination: account.stripeConnectedAccountId,
+    const outboundPayment = await stripeV2.moneyManagement.outboundPayments.create(
+      {
+        amount: { value: this.formatMinor(netCents), currency: currency.toLowerCase() },
+        destination_payment_method: account.payoutMethodId,
+        description: command.description ?? 'pod-payout',
+        metadata: {
+          type: 'payout',
+          podId: pod.id,
+          membershipId: membership.id,
+          accountId: account.id,
+          feeCents: feeCents.toString(),
+          grossCents: grossCents.toString(),
+          netCents: netCents.toString(),
+        },
       },
-      metadata: {
-        type: 'payout',
-        podId: pod.id,
-        membershipId: membership.id,
-        accountId: account.id,
-        feeCents: feeCents.toString(),
-        grossCents: grossCents.toString(),
-        netCents: netCents.toString(),
-      },
-      description: command.description ?? 'pod-payout',
-    });
+      { stripeContext: account.stripeRecipientId },
+    );
 
     const fee = this.formatMinor(feeCents);
     const netAmount = this.formatMinor(netCents);
@@ -124,11 +121,11 @@ export class InitiatePayoutHandler
         account,
         pod,
         membership,
-        stripeReference: paymentIntent.id,
+        stripeReference: outboundPayment.id,
         amount: netAmount,
         fee,
         currency: currency.toUpperCase(),
-        status: paymentIntent.status,
+        status: outboundPayment.status ?? 'processing',
         description: command.description ?? 'pod-payout',
       },
       { partial: true },
@@ -140,10 +137,10 @@ export class InitiatePayoutHandler
         pod,
         membership,
         payout,
-        stripeReference: paymentIntent.id,
+        stripeReference: outboundPayment.id,
         amount: netAmount,
         currency: currency.toUpperCase(),
-        status: paymentIntent.status,
+        status: outboundPayment.status ?? 'processing',
         description: command.description ?? 'pod-payout',
         type: TransactionType.PAYOUT,
       },
@@ -158,7 +155,7 @@ export class InitiatePayoutHandler
     return {
       payoutId: payout.id,
       status: payout.status,
-      stripeReference: paymentIntent.id,
+      stripeReference: outboundPayment.id,
       amount: payout.amount,
       fee: payout.fee,
     };

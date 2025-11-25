@@ -401,7 +401,7 @@ export class AuthController {
         payload.customerId,
         payload.ssnLast4 ?? null,
         payload.address ?? null,
-        payload.stripeRecipientId ?? null,
+        payload.recipientId ?? null,
         payload.payoutStatus ?? null,
         payload.payoutMethodId ?? null,
       ),

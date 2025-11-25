@@ -15,16 +15,7 @@ import { PayoutEntity } from '../finance/entities/payout.entity';
 import { addDays, startOfDay } from './pod.utils';
 import { InitiatePayoutCommand } from '../finance/commands/initiate-payout.command';
 
-const ACTIVE_STATUSES = [
-  'processing',
-  'succeeded',
-  'paid',
-  'requires_action',
-  'requires_payment_method',
-  'requires_confirmation',
-  'requires_capture',
-  'pending',
-];
+const ACTIVE_STATUSES = ['processing', 'pending', 'posted', 'paid', 'succeeded'];
 
 @Injectable()
 export class PayoutCreditScheduler
@@ -43,7 +34,7 @@ export class PayoutCreditScheduler
   ) {}
 
   onModuleInit() {
-    // Disabled for now
+    // Disabled by default; enable by calling scheduleNextRun().
   }
 
   onModuleDestroy() {

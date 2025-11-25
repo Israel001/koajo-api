@@ -628,7 +628,7 @@ describe('AuthController', () => {
         customerId: 'cus_123',
         ssnLast4: '1234',
         address: { line1: '123 Road' },
-        stripeRecipientId: 'rp_123',
+        recipientId: 'rp_123',
         payoutStatus: 'enabled',
         payoutMethodId: 'pm_123',
       };
@@ -637,7 +637,7 @@ describe('AuthController', () => {
         id: dto.customerId,
         ssn_last4: null,
         address: dto.address!,
-        recipient_id: dto.stripeRecipientId!,
+        recipient_id: dto.recipientId!,
         payout_status: dto.payoutStatus!,
         payout_method_id: dto.payoutMethodId!,
       };
@@ -660,7 +660,7 @@ describe('AuthController', () => {
       expect(command.stripeCustomerId).toBe(dto.customerId);
       expect(command.ssnLast4).toBe(dto.ssnLast4);
       expect(command.address).toEqual(dto.address);
-      expect(command.stripeRecipientId).toBe(dto.stripeRecipientId);
+      expect(command.stripeRecipientId).toBe(dto.recipientId);
       expect(command.payoutStatus).toBe(dto.payoutStatus);
       expect(command.payoutMethodId).toBe(dto.payoutMethodId);
     });

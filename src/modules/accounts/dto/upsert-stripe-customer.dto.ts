@@ -22,19 +22,23 @@ export class UpsertStripeCustomerDto {
   @IsString()
   ssnLast4?: string;
 
-  @ApiProperty({ description: 'Customer address object.', required: false, type: Object })
+  @ApiProperty({
+    description: 'Customer address object.',
+    required: false,
+    type: Object,
+  })
   @IsOptional()
   address?: Record<string, unknown>;
 
   @ApiProperty({
-    name: 'stripe_recipient_id',
+    name: 'recipient_id',
     description: 'Stripe recipient identifier (external account).',
     required: false,
   })
-  @Expose({ name: 'stripe_recipient_id' })
+  @Expose({ name: 'recipient_id' })
   @IsOptional()
   @IsString()
-  stripeRecipientId?: string;
+  recipientId?: string;
 
   @ApiProperty({
     name: 'payout_status',
