@@ -14,7 +14,7 @@ export class CreateAdminRoleDto {
   description?: string;
 
   @ApiPropertyOptional({
-    description: 'List of permission codes that should be linked to the role.',
+    description: 'List of permission IDs (passed as permissionCodes) that should be linked to the role.',
     type: [String],
   })
   @IsOptional()

@@ -54,13 +54,13 @@ export class CreateAdminRoleHandler
 
     const permissions = permissionCodes?.length
       ? await this.permissionRepository.find({
-          code: { $in: permissionCodes.map((code) => code.trim()) },
+          id: { $in: permissionCodes.map((id) => id.trim()) },
         })
       : [];
 
     if (permissionCodes && permissions.length !== permissionCodes.length) {
-      const found = new Set(permissions.map((permission) => permission.code));
-      const missing = permissionCodes.filter((code) => !found.has(code));
+      const found = new Set(permissions.map((permission) => permission.id));
+      const missing = permissionCodes.filter((id) => !found.has(id));
       throw new NotFoundException(
         `The following permissions do not exist: ${missing.join(', ')}`,
       );

@@ -42,17 +42,17 @@ export class SetAdminRolePermissionsHandler
       throw new NotFoundException('Role not found.');
     }
 
-    const uniqueCodes = Array.from(
-      new Set(command.permissionCodes.map((code) => code.trim()).filter(Boolean)),
+    const uniqueIds = Array.from(
+      new Set(command.permissionCodes.map((id) => id.trim()).filter(Boolean)),
     );
 
-    const permissions = uniqueCodes.length
-      ? await this.permissionRepository.find({ code: { $in: uniqueCodes } })
+    const permissions = uniqueIds.length
+      ? await this.permissionRepository.find({ id: { $in: uniqueIds } })
       : [];
 
-    if (permissions.length !== uniqueCodes.length) {
-      const found = new Set(permissions.map((permission) => permission.code));
-      const missing = uniqueCodes.filter((code) => !found.has(code));
+    if (permissions.length !== uniqueIds.length) {
+      const found = new Set(permissions.map((permission) => permission.id));
+      const missing = uniqueIds.filter((id) => !found.has(id));
       throw new NotFoundException(
         `The following permissions do not exist: ${missing.join(', ')}`,
       );
