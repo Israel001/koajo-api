@@ -162,6 +162,13 @@ export class InternalStripeWebhookController {
       );
       this.advanceNextContributionDate(pod);
       await this.podRepository.getEntityManager().flush();
+
+      await this.mailService.sendPaymentSuccessEmail({
+        email: account.email,
+        amount: pod.amount,
+        nextContributionDate: pod.nextContributionDate ?? null,
+        firstName: account.firstName ?? null,
+      });
       return;
     }
 

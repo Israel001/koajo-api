@@ -714,6 +714,69 @@ export class MailService {
     });
   }
 
+  async sendPaymentSuccessEmail(options: {
+    email: string;
+    amount: string | number;
+    nextContributionDate?: Date | null;
+    firstName?: string | null;
+  }): Promise<void> {
+    if (!(await this.shouldSendEmail(options.email, 'system'))) {
+      return;
+    }
+
+    const subject = 'Payment Success (Contribution)';
+    const formattedAmount =
+      typeof options.amount === 'number'
+        ? options.amount.toFixed(2)
+        : Number.isFinite(Number.parseFloat(String(options.amount)))
+          ? Number.parseFloat(String(options.amount)).toFixed(2)
+          : String(options.amount);
+
+    const formattedDate =
+      options.nextContributionDate instanceof Date
+        ? options.nextContributionDate.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+          })
+        : '';
+
+    const replacements = {
+      amount: formattedAmount,
+      date: formattedDate,
+      firstName:
+        options.firstName?.trim() ||
+        (options.email ? options.email.split('@')[0] : 'there'),
+    };
+
+    let htmlBody: string;
+    try {
+      htmlBody = await this.notificationTemplateService.render(
+        'payment_success',
+        replacements,
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Falling back to default payment success template: ${(error as Error).message}`,
+      );
+      htmlBody = `
+        <p>Hi ${replacements.firstName},</p>
+        <p>We received your contribution of $${formattedAmount}. Thank you!</p>
+        ${
+          formattedDate
+            ? `<p>Your next contribution is scheduled for ${formattedDate}.</p>`
+            : ''
+        }
+      `;
+    }
+
+    await this.queueSystemEmail({
+      to: options.email,
+      subject,
+      html: htmlBody,
+    });
+  }
+
   private async queueSystemEmail(options: {
     to: string;
     subject: string;
